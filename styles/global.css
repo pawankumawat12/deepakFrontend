@@ -59,7 +59,13 @@ button {
   flex: 1;
   width: min(100%, 1200px);
   margin: 0 auto;
-  padding: 1.5rem 1rem 1rem;
+  padding: 6.5rem 1rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-content {
+    padding: 8rem 1rem 12rem;
+  }
 }
 
 .shadow-glow {
@@ -109,6 +115,74 @@ button {
 
 .animate-fade-up {
   animation: fadeUp 0.28s ease-out both;
+}
+
+/* product details image zoom-in */
+.detail-img { transform: scale(.98); opacity: 0; transition: transform 420ms cubic-bezier(.22,.9,.31,1), opacity 420ms ease-out; }
+.detail-img.revealed { transform: scale(1); opacity: 1; }
+
+.btn-accent {
+  background: linear-gradient(90deg,var(--color-primary), #d97706 80%);
+  color: white;
+}
+
+/* Hero-specific helpers */
+.hero-slide {
+  transition: transform 0.7s cubic-bezier(.22,.9,.31,1), opacity 0.6s;
+}
+
+@media (max-width: 768px) {
+  .hero-slide { height: 52vh; }
+}
+
+/* horizontal scrollbar helpers */
+.scrollbar-x {
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+/* Webkit scrollbar */
+.touch-pan-x::-webkit-scrollbar {
+  height: 10px;
+}
+.touch-pan-x::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg,var(--color-primary), #d97706 80%);
+  border-radius: 999px;
+}
+.touch-pan-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.snap-x { scroll-snap-type: x mandatory; }
+.snap-center { scroll-snap-align: center; }
+
+/* product reveal animation */
+.product-card {
+  transform: translateY(12px);
+  opacity: 0;
+  transition: transform 420ms cubic-bezier(.22,.9,.31,1), opacity 420ms ease-out;
+}
+.product-card.product-seen {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.product-card img { transition: transform 300ms ease; }
+.product-card:hover img { transform: scale(1.03); }
+
+/* pagination buttons */
+.pagination .active { background: var(--color-primary); color: white; }
+
+
+
+/* bottom cart bar */
+.cart-bar {
+  left: 1rem;
+  right: 1rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+@media (min-width: 1024px) {
+  .cart-bar { right: 2rem; left: auto; }
 }
 
 .dropdown-panel {

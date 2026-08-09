@@ -1,9 +1,16 @@
-import React from 'react'
+import React from "react";
+import Hero from "../components/Hero";
+import PopularPreview from "../components/PopularPreview";
+import HomeProductsStrip from "../components/HomeProductsStrip";
 
 const page = () => {
   return (
-    <div>page</div>
-  )
-}
+    <main>
+      <Hero />
+      <PopularPreview />
+      <HomeProductsStrip />
+    </main>
+  );
+};
 
-export default page
+export default page;

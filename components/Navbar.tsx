@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
+import { ShoppingCart } from "lucide-react";
+import cartStore from "./cart/store";
 import { Home, Menu, Info, Phone, User, LayoutDashboard, LogOut } from "lucide-react";
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -19,16 +22,31 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+    useEffect(() => {
+      function updateCart() {
+        const c = cartStore.getCart();
+        const sum = c.reduce((acc, it) => acc + it.qty, 0);
+        setCartCount(sum);
+      }
+      updateCart();
+      window.addEventListener("sfc_cart_updated", updateCart);
+      return () => window.removeEventListener("sfc_cart_updated", updateCart);
+    }, []);
+
+    // compute a safe count at render-time (fallback if state isn't available yet)
+    const renderCartCount = typeof window !== "undefined" ? cartStore.getCart().reduce((a, b) => a + b.qty, 0) : cartCount;
+
   const mobileTabs = [
     { label: "Home", icon: Home, href: "/" },
     { label: "Menu", icon: Menu, href: "/menu" },
+    { label: "Cart", icon: ShoppingCart, href: "/cart" },
     { label: "About", icon: Info, href: "/about" },
     { label: "Contact", icon: Phone, href: "/contact" },
   ];
 
   return (
     <>
-      <header className="md:hidden border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 shadow-[0_10px_30px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+      <header className="fixed top-0 inset-x-0 z-50 md:hidden border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 shadow-[0_10px_30px_rgba(15,23,42,0.12)] backdrop-blur-xl">
         <div className="relative overflow-hidden px-4 py-4">
           <div className="absolute left-4 top-2 h-2 w-2 rounded-full bg-[var(--color-primary)] opacity-80 animate-twinkle" />
           <div className="absolute right-6 top-8 h-3 w-3 rounded-full bg-[var(--color-gold)] opacity-80 animate-float" />
@@ -44,9 +62,11 @@ const Navbar = () => {
                 <p className="text-[0.72rem] text-[var(--color-text-muted)]">Modern cafe experience</p>
               </div>
             </Link>
-            <Link href="/menu" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-secondary)]/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-secondary-dark)] transition duration-300 hover:bg-[var(--color-secondary)]/20 hover:text-[var(--color-secondary-dark)]">
-              Order
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/menu" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-secondary)]/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-secondary-dark)] transition duration-300 hover:bg-[var(--color-secondary)]/20 hover:text-[var(--color-secondary-dark)]">
+                Order
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -58,12 +78,17 @@ const Navbar = () => {
               <li key={item.label} className="min-w-[4.5rem]">
                 <Link
                   href={item.href}
-                  className="flex flex-col items-center justify-center rounded-3xl px-3 py-2 text-[0.68rem] font-semibold text-[var(--color-text-secondary)] transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
+                  className={`relative flex flex-col items-center justify-center rounded-3xl px-3 py-2 text-[0.68rem] font-semibold text-[var(--color-text-secondary)] transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)] ${item.label === "Cart" ? "bg-[var(--color-primary)]/10 text-[var(--color-primary-dark)]" : ""}`}
                 >
                   <span className="text-xl">
                     <item.icon size={20} />
                   </span>
                   {item.label}
+                  {item.label === "Cart" && renderCartCount > 0 && (
+                    <span className="absolute -right-1 top-0 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[var(--color-primary)] px-1.5 text-[0.6rem] font-bold text-white">
+                      {renderCartCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}
@@ -105,8 +130,7 @@ const Navbar = () => {
           )}
         </div>
       </nav>
-
-      <div className="hidden md:block border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 shadow-[0_10px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <div className="hidden md:block md:fixed md:top-0 md:inset-x-0 md:z-50 md:border-b md:border-[var(--color-border)] md:bg-[var(--bg-surface)]/95 md:shadow-[0_10px_40px_rgba(15,23,42,0.08)] md:backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-8 px-6 py-4">
           <Link className="flex items-center gap-3" href="/">
             <span className="inline-flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-[var(--color-primary)]/15 text-[var(--color-primary-dark)] text-2xl shadow-glow">
@@ -135,54 +159,63 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <div className="relative" ref={profileRef}>
-            <button
-              type="button"
-              onClick={() => setDropdownOpen((open) => !open)}
-              aria-expanded={dropdownOpen}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-secondary)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-secondary-dark)] transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-[var(--color-secondary)]/20"
-            >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-secondary)]/15 text-lg shadow-sm">
-                <User size={18} />
-              </span>
-              Profile
-              <span className="text-xs text-[var(--color-text-muted)]">▾</span>
-            </button>
+          <div className="flex items-center gap-3">
+            <Link href="/cart" className="relative inline-flex items-center rounded-full px-3 py-2 text-sm font-medium">
+              <ShoppingCart size={18} />
+              {renderCartCount > 0 && <span className="absolute -right-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-white">{renderCartCount}</span>}
+            </Link>
 
-            {dropdownOpen && (
-              <div className="dropdown-panel absolute right-0 mt-3 w-56 rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--bg-surface)]/98 p-3 shadow-xl shadow-[0_30px_70px_rgba(15,23,42,0.18)] backdrop-blur-2xl">
-                <Link
-                  href="/dashboard"
-                  className="block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
-                >
-                  <div className="flex items-center gap-2">
-                    <LayoutDashboard size={16} />
-                    Dashboard
-                  </div>
-                </Link>
-                <Link
-                  href="/profile"
-                  className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
-                >
-                  <div className="flex items-center gap-2">
-                    <User size={16} />
-                    Profile
-                  </div>
-                </Link>
-                <Link
-                  href="/logout"
-                  className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-error)] transition duration-300 hover:bg-[var(--color-error)]/10"
-                >
-                  <div className="flex items-center gap-2">
-                    <LogOut size={16} />
-                    Logout
-                  </div>
-                </Link>
-              </div>
-            )}
+            <div className="relative" ref={profileRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((open) => !open)}
+                aria-expanded={dropdownOpen}
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-secondary)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-secondary-dark)] transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-[var(--color-secondary)]/20"
+              >
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-secondary)]/15 text-lg shadow-sm">
+                  <User size={18} />
+                </span>
+                Profile
+                <span className="text-xs text-[var(--color-text-muted)]">▾</span>
+              </button>
+
+              {dropdownOpen && (
+                <div className="dropdown-panel absolute right-0 mt-3 w-56 rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--bg-surface)]/98 p-3 shadow-xl shadow-[0_30px_70px_rgba(15,23,42,0.18)] backdrop-blur-2xl">
+                  <Link
+                    href="/dashboard"
+                    className="block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <LayoutDashboard size={16} />
+                      Dashboard
+                    </div>
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <User size={16} />
+                      Profile
+                    </div>
+                  </Link>
+                  <Link
+                    href="/logout"
+                    className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-error)] transition duration-300 hover:bg-[var(--color-error)]/10"
+                  >
+                    <div className="flex items-center gap-2">
+                      <LogOut size={16} />
+                      Logout
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* mobile floating cart badge to avoid covering bottom nav */}
     </>
   );
 };
