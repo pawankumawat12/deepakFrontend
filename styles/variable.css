@@ -1,0 +1,41 @@
+:root {
+  /* ---------- BRAND (Bakery - Bakingo inspired) ---------- */
+  --color-primary: #e91e63;          /* signature pink/magenta */
+  --color-primary-dark: #c2185b;
+  --color-primary-light: #f8bbd0;
+  --color-primary-50: #fdf2f6;
+
+  --color-secondary: #ff6f61;        /* coral accent */
+  --color-secondary-dark: #e6564a;
+
+  /* ---------- CAFE TONES ---------- */
+  --color-coffee: #4b2e2b;
+  --color-coffee-dark: #2f1b18;
+  --color-coffee-light: #7b5347;
+
+  --color-caramel: #b06a3a;
+  --color-latte: #f3e5d8;
+  --color-cream: #fffaf3;
+  --color-gold: #d4a24c;
+
+  /* ---------- NEUTRALS / TEXT ---------- */
+  --color-white: #ffffff;
+  --color-black: #1a1a1a;
+  --color-text-primary: #2b1f1c;
+  --color-text-secondary: #6f5d56;
+  --color-text-muted: #a89a91;
+  --color-border: #ecdfd5;
+
+  /* ---------- BACKGROUNDS ---------- */
+  --bg-body: var(--color-cream);
+  --bg-surface: var(--color-white);
+  --bg-muted: var(--color-latte);
+  --bg-footer: var(--color-coffee-dark);
+
+  /* ---------- STATUS ---------- */
+  --color-success: #4caf50;
+  --color-warning: #f9a825;
+  --color-error: #e53935;
+  --color-discount: #2e7d32;
+  --color-star: #ffb400;
+}
