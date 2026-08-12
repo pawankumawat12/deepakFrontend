@@ -13,13 +13,11 @@ import {
   CheckCircle2,
   XCircle,
   RotateCcw,
+  MessageCircle,
 } from "lucide-react";
+import OrderChat from "./OrderChat";
 
-type OrderStatus =
-  | "Delivered"
-  | "Preparing"
-  | "Out for Delivery"
-  | "Cancelled";
+type OrderStatus = "Delivered" | "Preparing" | "Out for Delivery" | "Cancelled";
 
 type Order = {
   id: string;
@@ -126,7 +124,13 @@ const orders: Order[] = [
   },
 ];
 
-const filters = ["All", "Preparing", "Out for Delivery", "Delivered", "Cancelled"];
+const filters = [
+  "All",
+  "Preparing",
+  "Out for Delivery",
+  "Delivered",
+  "Cancelled",
+];
 
 function formatRupee(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
@@ -166,7 +170,7 @@ function statusClasses(status: OrderStatus) {
 
 export default function Orders() {
   const [activeFilter, setActiveFilter] = useState("All");
-
+  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
   const filteredOrders = useMemo(() => {
     if (activeFilter === "All") return orders;
 
@@ -175,15 +179,12 @@ export default function Orders() {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
-
       {/* =====================================================
           HEADER
       ===================================================== */}
 
       <section className="bg-[var(--color-chocolate-dark)]">
-
         <div className="mx-auto max-w-6xl px-5 py-9 sm:px-8 md:py-12">
-
           <Link
             href="/profile"
             className="
@@ -203,9 +204,7 @@ export default function Orders() {
           </Link>
 
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-
             <div>
-
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--color-primary-light)]">
                 SFC Cafe
               </p>
@@ -218,7 +217,6 @@ export default function Orders() {
                 Track your current order and quickly reorder your favourite
                 food.
               </p>
-
             </div>
 
             <Link
@@ -244,11 +242,8 @@ export default function Orders() {
               <ShoppingBag size={16} />
               Order Again
             </Link>
-
           </div>
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -256,11 +251,8 @@ export default function Orders() {
       ===================================================== */}
 
       <section className="mx-auto max-w-6xl px-5 pt-7 sm:px-8">
-
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-
           <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
-
             <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">
               Total Orders
             </p>
@@ -268,11 +260,9 @@ export default function Orders() {
             <p className="mt-2 text-2xl font-black text-[var(--color-text-primary)]">
               24
             </p>
-
           </div>
 
           <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
-
             <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">
               Delivered
             </p>
@@ -280,11 +270,9 @@ export default function Orders() {
             <p className="mt-2 text-2xl font-black text-[var(--color-primary)]">
               21
             </p>
-
           </div>
 
           <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
-
             <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">
               Preparing
             </p>
@@ -292,23 +280,16 @@ export default function Orders() {
             <p className="mt-2 text-2xl font-black text-[var(--color-secondary)]">
               1
             </p>
-
           </div>
 
           <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
-
             <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">
               Cancelled
             </p>
 
-            <p className="mt-2 text-2xl font-black text-red-500">
-              2
-            </p>
-
+            <p className="mt-2 text-2xl font-black text-red-500">2</p>
           </div>
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -316,11 +297,8 @@ export default function Orders() {
       ===================================================== */}
 
       <section className="mx-auto max-w-6xl px-5 pt-8 sm:px-8">
-
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-
           {filters.map((filter) => {
-
             const active = activeFilter === filter;
 
             return (
@@ -348,9 +326,7 @@ export default function Orders() {
               </button>
             );
           })}
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -358,9 +334,7 @@ export default function Orders() {
       ===================================================== */}
 
       <section className="mx-auto max-w-6xl px-5 py-6 pb-16 sm:px-8">
-
         {filteredOrders.length === 0 ? (
-
           <div
             className="
               rounded-[2rem]
@@ -373,7 +347,6 @@ export default function Orders() {
               shadow-sm
             "
           >
-
             <div
               className="
                 mx-auto
@@ -414,15 +387,10 @@ export default function Orders() {
             >
               Explore Menu
             </Link>
-
           </div>
-
         ) : (
-
           <div className="space-y-5">
-
             {filteredOrders.map((order) => (
-
               <article
                 key={order.id}
                 className="
@@ -436,7 +404,6 @@ export default function Orders() {
                   hover:shadow-md
                 "
               >
-
                 {/* Order top */}
 
                 <div
@@ -453,11 +420,8 @@ export default function Orders() {
                     sm:px-6
                   "
                 >
-
                   <div>
-
                     <div className="flex items-center gap-2">
-
                       <h2 className="text-sm font-black text-[var(--color-text-primary)]">
                         #{order.id}
                       </h2>
@@ -479,11 +443,9 @@ export default function Orders() {
                         <StatusIcon status={order.status} />
                         {order.status}
                       </span>
-
                     </div>
 
                     <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] text-[var(--color-text-muted)]">
-
                       <span className="flex items-center gap-1">
                         <Clock3 size={12} />
                         {order.date} · {order.time}
@@ -495,13 +457,10 @@ export default function Orders() {
                         <MapPin size={12} />
                         {order.address}
                       </span>
-
                     </div>
-
                   </div>
 
                   <div className="text-left sm:text-right">
-
                     <p className="text-[9px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                       Order Total
                     </p>
@@ -509,19 +468,14 @@ export default function Orders() {
                     <p className="mt-1 text-lg font-black text-[var(--color-text-primary)]">
                       {formatRupee(order.total)}
                     </p>
-
                   </div>
-
                 </div>
 
                 {/* Products */}
 
                 <div className="p-5 sm:px-6">
-
                   <div className="space-y-3">
-
                     {order.items.map((item) => (
-
                       <div
                         key={item.name}
                         className="
@@ -530,7 +484,6 @@ export default function Orders() {
                           gap-3
                         "
                       >
-
                         <img
                           src={item.img}
                           alt={item.name}
@@ -544,7 +497,6 @@ export default function Orders() {
                         />
 
                         <div className="min-w-0 flex-1">
-
                           <p className="truncate text-xs font-bold text-[var(--color-text-primary)]">
                             {item.name}
                           </p>
@@ -552,17 +504,13 @@ export default function Orders() {
                           <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                             Qty: {item.qty}
                           </p>
-
                         </div>
 
                         <p className="text-xs font-bold text-[var(--color-text-primary)]">
                           {formatRupee(item.price * item.qty)}
                         </p>
-
                       </div>
-
                     ))}
-
                   </div>
 
                   {/* Bottom */}
@@ -581,9 +529,7 @@ export default function Orders() {
                       sm:justify-between
                     "
                   >
-
                     <div className="flex items-center gap-2">
-
                       <div
                         className="
                           flex
@@ -600,7 +546,6 @@ export default function Orders() {
                       </div>
 
                       <div>
-
                         <p className="text-[9px] font-bold text-[var(--color-text-muted)]">
                           Payment
                         </p>
@@ -608,13 +553,10 @@ export default function Orders() {
                         <p className="text-[10px] font-bold text-[var(--color-text-primary)]">
                           {order.payment}
                         </p>
-
                       </div>
-
                     </div>
 
                     <div className="flex gap-2">
-
                       {order.status === "Delivered" && (
                         <button
                           type="button"
@@ -641,9 +583,36 @@ export default function Orders() {
                       )}
 
                       {order.status === "Preparing" && (
-                        <button
-                          type="button"
-                          className="
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setChatOrderId(order.id)}
+                            className="
+    inline-flex
+    items-center
+    justify-center
+    gap-2
+    rounded-xl
+    border
+    border-[var(--color-primary)]
+    bg-[var(--color-primary-50)]
+    px-4
+    py-2.5
+    text-[10px]
+    font-bold
+    text-[var(--color-primary)]
+    transition
+    hover:bg-[var(--color-primary)]
+    hover:text-white
+  "
+                          >
+                            <MessageCircle size={14} />
+                            Chat
+                          </button>
+
+                          <button
+                            type="button"
+                            className="
                             inline-flex
                             items-center
                             justify-center
@@ -659,10 +628,11 @@ export default function Orders() {
                             transition
                             hover:bg-[var(--color-primary-dark)]
                           "
-                        >
-                          Track Order
-                          <ChevronRight size={14} />
-                        </button>
+                          >
+                            Track Order
+                            <ChevronRight size={14} />
+                          </button>
+                        </>
                       )}
 
                       {order.status === "Cancelled" && (
@@ -713,23 +683,21 @@ export default function Orders() {
                         Details
                         <ChevronRight size={13} />
                       </button>
-
                     </div>
-
                   </div>
-
                 </div>
-
               </article>
-
             ))}
-
           </div>
-
         )}
-
       </section>
-
+      {chatOrderId && (
+        <OrderChat
+          open={true}
+          orderId={chatOrderId}
+          onClose={() => setChatOrderId(null)}
+        />
+      )}
     </main>
   );
 }

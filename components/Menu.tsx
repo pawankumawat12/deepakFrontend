@@ -989,7 +989,7 @@ export default function Menu() {
             cart-bar
             fixed
             inset-x-3
-            bottom-4
+            bottom-25
             z-50
             mx-auto
             max-w-lg
@@ -1056,7 +1056,7 @@ export default function Menu() {
                 items-center
                 gap-2
                 rounded-xl
-                bg-white
+                bg-[var(--color-primary)]
                 px-4
                 text-xs
                 font-black
