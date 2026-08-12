@@ -2,17 +2,15 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   ShoppingCart,
   Home,
   Menu as MenuIcon,
-  Info,
   Phone,
   User,
   LayoutDashboard,
   LogOut,
-  Search,
   Leaf,
   Heart,
   X,
@@ -21,12 +19,13 @@ import {
 } from "lucide-react";
 
 import cartStore from "./cart/store";
+import LoginModal from "./LoginModal";
 
 const Navbar = () => {
   const pathname = usePathname();
-const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
   const profileRef = useRef<HTMLDivElement>(null);
@@ -427,6 +426,15 @@ const router = useRouter();
 
               {/* Order Now */}
 
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="mr-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--bg-surface)] px-5 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                <User size={18} />
+                Sign in
+              </button>
+
               <Link
                 href="/menu"
                 className="
@@ -505,18 +513,27 @@ const router = useRouter();
 
             {/* Mobile Cart */}
 
-            <Link
-              href="/cart"
-              className="
-                relative
-                flex h-11 w-11
-                items-center justify-center
-                rounded-full
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
-              "
-            >
-              <ShoppingCart size={21} />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="rounded-full border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                Sign in
+              </button>
+
+              <Link
+                href="/cart"
+                className="
+                  relative
+                  flex h-11 w-11
+                  items-center justify-center
+                  rounded-full
+                  bg-[var(--color-primary-50)]
+                  text-[var(--color-primary)]
+                "
+              >
+                <ShoppingCart size={21} />
 
                 <span
                   className="
@@ -535,14 +552,11 @@ const router = useRouter();
                 >
                   0
                 </span>
-            </Link>
-          </div>
+              </Link>
+            </div>
+        </div>
         </div>
       </header>
-
-      {/* =========================================================
-          MOBILE / PWA BOTTOM NAVIGATION
-      ========================================================= */}
 
       <nav
         className="
@@ -794,6 +808,8 @@ const router = useRouter();
           </div>
         </div>
       </nav>
+
+      <LoginModal open={authOpen} onClose={() => setAuthOpen(false)} />
 
       {/* =========================================================
           MOBILE CONTENT SPACING
