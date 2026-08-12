@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="app-shell">
         <Navbar />
-        <main className="page-content">{children}</main>
+        <main>{children}</main>
         <Footer />
       </body>
     </html>

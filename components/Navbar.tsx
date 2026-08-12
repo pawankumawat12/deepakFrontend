@@ -2,220 +2,807 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import { ShoppingCart } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  ShoppingCart,
+  Home,
+  Menu as MenuIcon,
+  Info,
+  Phone,
+  User,
+  LayoutDashboard,
+  LogOut,
+  Search,
+  Leaf,
+  Heart,
+  X,
+  ChevronDown,
+  Bell,
+} from "lucide-react";
+
 import cartStore from "./cart/store";
-import { Home, Menu, Info, Phone, User, LayoutDashboard, LogOut } from "lucide-react";
 
 const Navbar = () => {
+  const pathname = usePathname();
+const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  /* ---------------- CART COUNT ---------------- */
+
+  useEffect(() => {
+    const updateCart = () => {
+      const cart = cartStore.getCart();
+
+      const count = cart.reduce(
+        (acc, item) => acc + item.qty,
+        0
+      );
+
+      setCartCount(count);
+    };
+
+    updateCart();
+
+    window.addEventListener("sfc_cart_updated", updateCart);
+
+    return () => {
+      window.removeEventListener(
+        "sfc_cart_updated",
+        updateCart
+      );
+    };
+  }, []);
+
+  /* ---------------- CLOSE PROFILE OUTSIDE ---------------- */
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
   }, []);
 
-    useEffect(() => {
-      function updateCart() {
-        const c = cartStore.getCart();
-        const sum = c.reduce((acc, it) => acc + it.qty, 0);
-        setCartCount(sum);
-      }
-      updateCart();
-      window.addEventListener("sfc_cart_updated", updateCart);
-      return () => window.removeEventListener("sfc_cart_updated", updateCart);
-    }, []);
+  /* ---------------- CART SAFE COUNT ---------------- */
 
-    // compute a safe count at render-time (fallback if state isn't available yet)
-    const renderCartCount = typeof window !== "undefined" ? cartStore.getCart().reduce((a, b) => a + b.qty, 0) : cartCount;
+
+  /* ---------------- ACTIVE ROUTE ---------------- */
+
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  /* ---------------- NAVIGATION ---------------- */
+
+  const desktopLinks = [
+    {
+      label: "Home",
+      href: "/",
+    },
+    {
+      label: "Menu",
+      href: "/menu",
+    },
+    {
+      label: "About Us",
+      href: "/about",
+    },
+    {
+      label: "Contact Us",
+      href: "/contact",
+    },
+  ];
 
   const mobileTabs = [
-    { label: "Home", icon: Home, href: "/" },
-    { label: "Menu", icon: Menu, href: "/menu" },
-    { label: "Cart", icon: ShoppingCart, href: "/cart" },
-    { label: "About", icon: Info, href: "/about" },
-    { label: "Contact", icon: Phone, href: "/contact" },
+    {
+      label: "Home",
+      icon: Home,
+      href: "/",
+    },
+    {
+      label: "Menu",
+      icon: MenuIcon,
+      href: "/menu",
+    },
+    {
+      label: "Cart",
+      icon: ShoppingCart,
+      href: "/cart",
+    },
+    {
+      label: "Offers",
+      icon: Heart,
+      href: "/offers",
+    },
   ];
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 md:hidden border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 shadow-[0_10px_30px_rgba(15,23,42,0.12)] backdrop-blur-xl">
-        <div className="relative overflow-hidden px-4 py-4">
-          <div className="absolute left-4 top-2 h-2 w-2 rounded-full bg-[var(--color-primary)] opacity-80 animate-twinkle" />
-          <div className="absolute right-6 top-8 h-3 w-3 rounded-full bg-[var(--color-gold)] opacity-80 animate-float" />
-          <div className="relative flex items-center justify-between gap-3">
-            <Link className="flex items-center gap-3" href="/">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-[1.5rem] bg-[var(--color-primary)]/15 text-[var(--color-primary-dark)] text-2xl shadow-glow">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary-dark)]">
-                  <Home size={22} />
-                </span>
-              </span>
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--color-primary-dark)]">SFC Cafe</p>
-                <p className="text-[0.72rem] text-[var(--color-text-muted)]">Modern cafe experience</p>
+      {/* =========================================================
+          DESKTOP NAVBAR
+      ========================================================= */}
+
+      <header className="hidden md:block fixed top-0 inset-x-0 z-50">
+        <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
+
+          <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6">
+
+            {/* ---------------- LOGO ---------------- */}
+
+            <Link
+              href="/"
+              className="group flex shrink-0 items-center gap-3"
+            >
+              <div
+                className="
+                  flex h-12 w-12 items-center justify-center
+                  rounded-2xl
+                  bg-[var(--color-primary)]
+                  text-white
+                  shadow-lg
+                  transition
+                  duration-300
+                  group-hover:scale-105
+                "
+              >
+                <Leaf size={25} strokeWidth={2.2} />
+              </div>
+
+              <div className="leading-none">
+                <p className="text-[17px] font-extrabold tracking-tight text-[var(--color-text-primary)]">
+                  SFC<span className="text-[var(--color-primary)]"> Cafe</span>
+                </p>
+
+                <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-[var(--color-text-muted)]">
+                  Fast Food Cafe
+                </p>
               </div>
             </Link>
+
+            {/* ---------------- DESKTOP LINKS ---------------- */}
+
+            <nav
+              className="flex items-center gap-1"
+              aria-label="Desktop navigation"
+            >
+              {desktopLinks.map((item) => {
+                const active = isActive(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`
+                      relative
+                      px-4 py-3
+                      text-sm
+                      font-semibold
+                      transition-all
+                      duration-200
+                      ${
+                        active
+                          ? "text-[var(--color-primary)]"
+                          : "text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
+                      }
+                    `}
+                  >
+                    {item.label}
+
+                    {active && (
+                      <span className="absolute bottom-0 left-1/2 h-[3px] w-7 -translate-x-1/2 rounded-full bg-[var(--color-primary)]" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* ---------------- RIGHT ACTIONS ---------------- */}
+
             <div className="flex items-center gap-2">
-              <Link href="/menu" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-secondary)]/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-secondary-dark)] transition duration-300 hover:bg-[var(--color-secondary)]/20 hover:text-[var(--color-secondary-dark)]">
-                Order
+      <Link
+                href="/notifications"
+                aria-label="Cart"
+                className="
+                  relative
+                  flex h-10 w-10 items-center justify-center
+                  rounded-full
+                  text-[var(--color-text-primary)]
+                  transition
+                  hover:bg-[var(--color-primary-50)]
+                  hover:text-[var(--color-primary)]
+                "
+              >
+                <Bell size={20} />
+
+                  <span
+                    className="
+                      absolute
+                      -right-0.5
+                      -top-0.5
+                      flex
+                      h-5
+                      min-w-5
+                      items-center
+                      justify-center
+                      rounded-full
+                      bg-[var(--color-primary)]
+                      px-1
+                      text-[10px]
+                      font-bold
+                      text-white
+                    "
+                  >
+                    0
+                  </span>
+              </Link>
+
+          
+
+              {/* Cart */}
+
+              <Link
+                href="/cart"
+                aria-label="Cart"
+                className="
+                  relative
+                  flex h-10 w-10 items-center justify-center
+                  rounded-full
+                  text-[var(--color-text-primary)]
+                  transition
+                  hover:bg-[var(--color-primary-50)]
+                  hover:text-[var(--color-primary)]
+                "
+              >
+                <ShoppingCart size={20} />
+
+                  <span
+                    className="
+                      absolute
+                      -right-0.5
+                      -top-0.5
+                      flex
+                      h-5
+                      min-w-5
+                      items-center
+                      justify-center
+                      rounded-full
+                      bg-[var(--color-primary)]
+                      px-1
+                      text-[10px]
+                      font-bold
+                      text-white
+                    "
+                  >
+                    0
+                  </span>
+              </Link>
+
+              {/* Profile */}
+
+              <div
+                ref={profileRef}
+                className="relative ml-1"
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDropdownOpen((open) => !open)
+                  }
+                  aria-expanded={dropdownOpen}
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    rounded-full
+                    border
+                    border-[var(--color-border)]
+                    bg-[var(--color-cream)]
+                    px-3
+                    py-1.5
+                    text-sm
+                    font-semibold
+                    text-[var(--color-text-primary)]
+                    transition
+                    hover:border-[var(--color-primary)]
+                    hover:bg-[var(--color-primary-50)]
+                  "
+                >
+                  <span
+                    className="
+                      flex h-8 w-8 items-center justify-center
+                      rounded-full
+                      bg-[var(--color-primary)]
+                      text-white
+                    "
+                  >
+                    <User size={17} />
+                  </span>
+
+                  <span>Profile</span>
+
+                  <ChevronDown
+                    size={15}
+                    className={`
+                      transition-transform
+                      ${dropdownOpen ? "rotate-180" : ""}
+                    `}
+                  />
+                </button>
+
+                {/* Profile Dropdown */}
+
+                {dropdownOpen && (
+                  <div
+                    className="
+                      absolute
+                      right-0
+                      top-[calc(100%+12px)]
+                      w-56
+                      overflow-hidden
+                      rounded-2xl
+                      border
+                      border-[var(--color-border)]
+                      bg-white
+                      p-2
+                      shadow-[0_20px_50px_rgba(45,27,15,0.15)]
+                    "
+                  >
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setDropdownOpen(false)}
+                      className="
+                        flex items-center gap-3
+                        rounded-xl
+                        px-4 py-3
+                        text-sm font-semibold
+                        text-[var(--color-text-primary)]
+                        transition
+                        hover:bg-[var(--color-primary-50)]
+                        hover:text-[var(--color-primary)]
+                      "
+                    >
+                      <LayoutDashboard size={17} />
+                      Dashboard
+                    </Link>
+
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="
+                        flex items-center gap-3
+                        rounded-xl
+                        px-4 py-3
+                        text-sm font-semibold
+                        text-[var(--color-text-primary)]
+                        transition
+                        hover:bg-[var(--color-primary-50)]
+                        hover:text-[var(--color-primary)]
+                      "
+                    >
+                      <User size={17} />
+                      Profile
+                    </Link>
+
+                    <div className="my-1 h-px bg-[var(--color-border)]" />
+
+                    <Link
+                      href="/logout"
+                      onClick={() => setDropdownOpen(false)}
+                      className="
+                        flex items-center gap-3
+                        rounded-xl
+                        px-4 py-3
+                        text-sm font-semibold
+                        text-[var(--color-error)]
+                        transition
+                        hover:bg-red-50
+                      "
+                    >
+                      <LogOut size={17} />
+                      Logout
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Now */}
+
+              <Link
+                href="/menu"
+                className="
+                  ml-2
+                  inline-flex
+                  h-11
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[var(--color-primary)]
+                  px-6
+                  text-sm
+                  font-bold
+                  text-white
+                  shadow-[0_8px_20px_rgba(79,125,22,0.22)]
+                  transition-all
+                  duration-200
+                  hover:-translate-y-0.5
+                  hover:bg-[var(--color-primary-dark)]
+                  hover:shadow-[0_10px_25px_rgba(79,125,22,0.30)]
+                "
+              >
+                Order Now
               </Link>
             </div>
           </div>
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--color-border)] bg-[var(--bg-surface)]/98 px-3 py-3 shadow-[0_-18px_40px_rgba(15,23,42,0.16)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
-        <div className="relative">
-          <ul className="mx-auto flex max-w-5xl items-center justify-between gap-1 overflow-x-auto px-1">
-            {mobileTabs.map((item) => (
-              <li key={item.label} className="min-w-[4.5rem]">
-                <Link
-                  href={item.href}
-                  className={`relative flex flex-col items-center justify-center rounded-3xl px-3 py-2 text-[0.68rem] font-semibold text-[var(--color-text-secondary)] transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)] ${item.label === "Cart" ? "bg-[var(--color-primary)]/10 text-[var(--color-primary-dark)]" : ""}`}
-                >
-                  <span className="text-xl">
-                    <item.icon size={20} />
-                  </span>
-                  {item.label}
-                  {item.label === "Cart" && renderCartCount > 0 && (
-                    <span className="absolute -right-1 top-0 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[var(--color-primary)] px-1.5 text-[0.6rem] font-bold text-white">
-                      {renderCartCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-            <li className="min-w-[4.5rem]">
-              <button
-                type="button"
-                onClick={() => setDropdownOpen((open) => !open)}
-                className="flex flex-col items-center justify-center rounded-3xl px-3 py-2 text-[0.68rem] font-semibold text-[var(--color-text-secondary)] transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
-              >
-                <span className="text-xl">
-                  <User size={20} />
-                </span>
-                Profile
-              </button>
-            </li>
-          </ul>
+      {/* =========================================================
+          MOBILE / PWA TOP BAR
+      ========================================================= */}
 
-          {dropdownOpen && (
-            <div className="absolute bottom-20 left-1/2 z-50 w-[calc(100%-1.5rem)] -translate-x-1/2 rounded-[1.75rem] border border-[var(--color-border)] bg-[var(--bg-surface)]/98 p-3 shadow-xl shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-2xl animate-fade-up">
-              <Link
-                href="/dashboard"
-                className="block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/profile"
-                className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
-              >
-                Profile
-              </Link>
-              <Link
-                href="/logout"
-                className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-error)] transition duration-300 hover:bg-[var(--color-error)]/10"
-              >
-                Logout
-              </Link>
-            </div>
-          )}
-        </div>
-      </nav>
-      <div className="hidden md:block md:fixed md:top-0 md:inset-x-0 md:z-50 md:border-b md:border-[var(--color-border)] md:bg-[var(--bg-surface)]/95 md:shadow-[0_10px_40px_rgba(15,23,42,0.08)] md:backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-8 px-6 py-4">
-          <Link className="flex items-center gap-3" href="/">
-            <span className="inline-flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-[var(--color-primary)]/15 text-[var(--color-primary-dark)] text-2xl shadow-glow">
-              <Home size={24} />
-            </span>
-            <div>
-              <p className="text-base font-bold uppercase tracking-[0.2em] text-[var(--color-primary-dark)]">SFC Cafe</p>
-              <p className="text-sm text-[var(--color-text-muted)]">Bakery app</p>
-            </div>
-          </Link>
+      <header className="md:hidden fixed top-0 inset-x-0 z-50">
 
-          <nav className="flex items-center gap-2" aria-label="Desktop navigation">
-            {[
-              { label: "Home", href: "/" },
-              { label: "Menu", href: "/menu" },
-              { label: "About Us", href: "/about" },
-              { label: "Contact Us", href: "/contact" },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="rounded-full border border-[var(--color-border)] bg-[var(--color-cream)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition duration-300 ease-out hover:-translate-y-0.5 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-white)]"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+        <div
+          className="
+            border-b
+            border-[var(--color-border)]
+            bg-[var(--bg-surface)]/95
+            backdrop-blur-xl
+            shadow-[0_4px_20px_rgba(45,27,15,0.08)]
+          "
+        >
+          <div className="flex h-[68px] items-center justify-between px-4">
 
-          <div className="flex items-center gap-3">
-            <Link href="/cart" className="relative inline-flex items-center rounded-full px-3 py-2 text-sm font-medium">
-              <ShoppingCart size={18} />
-              {renderCartCount > 0 && <span className="absolute -right-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-white">{renderCartCount}</span>}
+            {/* Logo */}
+
+            <Link
+              href="/"
+              className="flex items-center gap-2.5"
+            >
+              <div
+                className="
+                  flex h-10 w-10
+                  items-center justify-center
+                  rounded-xl
+                  bg-[var(--color-primary)]
+                  text-white
+                  shadow-md
+                "
+              >
+                <Leaf size={21} />
+              </div>
+
+              <div className="leading-none">
+                <p className="text-[15px] font-extrabold text-[var(--color-text-primary)]">
+                  SFC<span className="text-[var(--color-primary)]"> Cafe</span>
+                </p>
+
+                <p className="mt-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  Fast Food
+                </p>
+              </div>
             </Link>
 
-            <div className="relative" ref={profileRef}>
-              <button
-                type="button"
-                onClick={() => setDropdownOpen((open) => !open)}
-                aria-expanded={dropdownOpen}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-secondary)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-secondary-dark)] transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-[var(--color-secondary)]/20"
-              >
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-secondary)]/15 text-lg shadow-sm">
-                  <User size={18} />
-                </span>
-                Profile
-                <span className="text-xs text-[var(--color-text-muted)]">▾</span>
-              </button>
+            {/* Mobile Cart */}
 
-              {dropdownOpen && (
-                <div className="dropdown-panel absolute right-0 mt-3 w-56 rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--bg-surface)]/98 p-3 shadow-xl shadow-[0_30px_70px_rgba(15,23,42,0.18)] backdrop-blur-2xl">
-                  <Link
-                    href="/dashboard"
-                    className="block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <LayoutDashboard size={16} />
-                      Dashboard
-                    </div>
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition duration-300 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary-dark)]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <User size={16} />
-                      Profile
-                    </div>
-                  </Link>
-                  <Link
-                    href="/logout"
-                    className="mt-2 block rounded-3xl px-4 py-3 text-sm font-semibold text-[var(--color-error)] transition duration-300 hover:bg-[var(--color-error)]/10"
-                  >
-                    <div className="flex items-center gap-2">
-                      <LogOut size={16} />
-                      Logout
-                    </div>
-                  </Link>
-                </div>
-              )}
-            </div>
+            <Link
+              href="/cart"
+              className="
+                relative
+                flex h-11 w-11
+                items-center justify-center
+                rounded-full
+                bg-[var(--color-primary-50)]
+                text-[var(--color-primary)]
+              "
+            >
+              <ShoppingCart size={21} />
+
+                <span
+                  className="
+                    absolute
+                    -right-1
+                    -top-1
+                    flex h-5 min-w-5
+                    items-center justify-center
+                    rounded-full
+                    bg-[var(--color-primary)]
+                    px-1
+                    text-[10px]
+                    font-bold
+                    text-white
+                  "
+                >
+                  0
+                </span>
+            </Link>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* mobile floating cart badge to avoid covering bottom nav */}
+      {/* =========================================================
+          MOBILE / PWA BOTTOM NAVIGATION
+      ========================================================= */}
+
+      <nav
+        className="
+          md:hidden
+          fixed
+          bottom-0
+          inset-x-0
+          z-50
+          border-t
+          border-[var(--color-border)]
+          bg-white/95
+          px-2
+          pt-2
+          backdrop-blur-xl
+          shadow-[0_-8px_30px_rgba(45,27,15,0.12)]
+        "
+        style={{
+          paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
+        }}
+        aria-label="Mobile navigation"
+      >
+        <div className="mx-auto flex max-w-md items-center justify-around">
+
+          {mobileTabs.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`
+                  relative
+                  flex
+                  min-w-[62px]
+                  flex-col
+                  items-center
+                  justify-center
+                  gap-1
+                  rounded-2xl
+                  px-2
+                  py-2
+                  text-[10px]
+                  font-semibold
+                  transition-all
+                  duration-200
+                  ${
+                    active
+                      ? "text-[var(--color-primary)]"
+                      : "text-[var(--color-text-muted)]"
+                  }
+                `}
+              >
+                {/* Active pill */}
+
+                {active && (
+                  <span
+                    className="
+                      absolute
+                      -top-2
+                      h-1
+                      w-7
+                      rounded-full
+                      bg-[var(--color-primary)]
+                    "
+                  />
+                )}
+
+                <span
+                  className={`
+                    relative
+                    flex h-8 w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    transition
+                    ${
+                      active
+                        ? "bg-[var(--color-primary-50)]"
+                        : ""
+                    }
+                  `}
+                >
+                  <Icon
+                    size={20}
+                    strokeWidth={active ? 2.5 : 2}
+                  />
+
+                  {/* Cart Badge */}
+
+                  {item.label === "Cart" &&
+                      <span
+                        className="
+                          absolute
+                          -right-1
+                          -top-1
+                          flex h-4 min-w-4
+                          items-center justify-center
+                          rounded-full
+                          bg-[var(--color-primary)]
+                          px-1
+                          text-[8px]
+                          font-bold
+                          text-white
+                        "
+                      >
+                        0
+                      </span>
+                    }
+                </span>
+
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* Profile */}
+
+          <div className="relative min-w-[62px]">
+
+            <button
+              type="button"
+              onClick={() =>
+                setMobileProfileOpen(
+                  (open) => !open
+                )
+              }
+              className={`
+                flex
+                w-full
+                flex-col
+                items-center
+                justify-center
+                gap-1
+                rounded-2xl
+                px-2
+                py-2
+                text-[10px]
+                font-semibold
+                transition
+                ${
+                  mobileProfileOpen
+                    ? "text-[var(--color-primary)]"
+                    : "text-[var(--color-text-muted)]"
+                }
+              `}
+            >
+              <span
+                className={`
+                  flex h-8 w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  ${
+                    mobileProfileOpen
+                      ? "bg-[var(--color-primary-50)]"
+                      : ""
+                  }
+                `}
+              >
+                <User
+                  size={20}
+                  strokeWidth={
+                    mobileProfileOpen ? 2.5 : 2
+                  }
+                />
+              </span>
+
+              <span>Profile</span>
+            </button>
+
+            {/* Mobile Profile Menu */}
+
+            {mobileProfileOpen && (
+              <div
+                className="
+                  absolute
+                  bottom-[68px]
+                  right-0
+                  w-48
+                  overflow-hidden
+                  rounded-2xl
+                  border
+                  border-[var(--color-border)]
+                  bg-white
+                  p-2
+                  shadow-[0_15px_45px_rgba(45,27,15,0.18)]
+                "
+              >
+                <Link
+                  href="/dashboard"
+                  onClick={() =>
+                    setMobileProfileOpen(false)
+                  }
+                  className="
+                    flex items-center gap-3
+                    rounded-xl
+                    px-3 py-3
+                    text-sm font-semibold
+                    text-[var(--color-text-primary)]
+                    hover:bg-[var(--color-primary-50)]
+                    hover:text-[var(--color-primary)]
+                  "
+                >
+                  <LayoutDashboard size={17} />
+                  Dashboard
+                </Link>
+
+                <Link
+                  href="/profile"
+                  onClick={() =>
+                    setMobileProfileOpen(false)
+                  }
+                  className="
+                    flex items-center gap-3
+                    rounded-xl
+                    px-3 py-3
+                    text-sm font-semibold
+                    text-[var(--color-text-primary)]
+                    hover:bg-[var(--color-primary-50)]
+                    hover:text-[var(--color-primary)]
+                  "
+                >
+                  <User size={17} />
+                  Profile
+                </Link>
+
+                <div className="my-1 h-px bg-[var(--color-border)]" />
+
+                <Link
+                  href="/logout"
+                  onClick={() =>
+                    setMobileProfileOpen(false)
+                  }
+                  className="
+                    flex items-center gap-3
+                    rounded-xl
+                    px-3 py-3
+                    text-sm font-semibold
+                    text-[var(--color-error)]
+                    hover:bg-red-50
+                  "
+                >
+                  <LogOut size={17} />
+                  Logout
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* =========================================================
+          MOBILE CONTENT SPACING
+      ========================================================= */}
+
+      <div className="md:hidden h-[68px]" />
+
+      {/* Bottom navigation ke liye page content ko space */}
+      <div className="md:hidden h-[78px]" />
     </>
   );
 };

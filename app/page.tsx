@@ -1,14 +1,22 @@
 import React from "react";
 import Hero from "../components/Hero";
 import PopularPreview from "../components/PopularPreview";
-import HomeProductsStrip from "../components/HomeProductsStrip";
+import PopularProducts from "@/components/PopularProducts";
+import SpecialOffers from "@/components/SpecialOffers";
+import WhyChooseUs from "@/components/WhyChooseUs";
+import CustomerReviews from "@/components/CustomerReviews";
+import LocationContact from "@/components/LocationContact";
 
 const page = () => {
   return (
     <main>
       <Hero />
       <PopularPreview />
-      <HomeProductsStrip />
+      <PopularProducts />
+      <SpecialOffers />
+      <WhyChooseUs />
+      <CustomerReviews />
+      <LocationContact />
     </main>
   );
 };

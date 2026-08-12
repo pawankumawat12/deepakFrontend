@@ -1,52 +1,487 @@
+"use client";
+
 import React from "react";
+import Link from "next/link";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock3,
+  ArrowRight,
+  Heart,
+} from "lucide-react";
 
-const Footer = () => {
+const quickLinks = [
+  {
+    label: "Home",
+    href: "/",
+  },
+  {
+    label: "Menu",
+    href: "/menu",
+  },
+  {
+    label: "Offers",
+    href: "/offers",
+  },
+  {
+    label: "About Us",
+    href: "/about",
+  },
+  {
+    label: "Contact",
+    href: "/contact",
+  },
+];
+
+const helpLinks = [
+  {
+    label: "My Orders",
+    href: "/orders",
+  },
+  {
+    label: "Cart",
+    href: "/cart",
+  },
+  {
+    label: "Privacy Policy",
+    href: "/privacy-policy",
+  },
+  {
+    label: "Terms & Conditions",
+    href: "/terms",
+  },
+  {
+    label: "Refund Policy",
+    href: "/refund-policy",
+  },
+];
+
+export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="border-t border-[var(--color-border)] bg-[var(--bg-footer)] text-[var(--color-cream)]">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[1.2fr_1fr_0.8fr] md:px-6">
-        <div className="space-y-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/90">Contact</p>
-          <p className="text-sm text-[var(--color-cream)]/80">Need help with an order or want to partner with us? Reach out anytime.</p>
-          <div className="space-y-1 text-sm text-[var(--color-cream)]/80">
-            <p>📍 12 Baker Street, Sweet City</p>
-            <p>📞 +91 98765 43210</p>
-            <p>✉️ hello@bakingo.com</p>
-          </div>
-        </div>
+    <footer className="bg-[var(--bg-footer)] text-white">
 
-        <div className="space-y-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/90">Subscribe</p>
-          <p className="text-sm text-[var(--color-cream)]/80">Get bakery updates, fresh deals, and exclusive offers in your inbox.</p>
-          <form className="flex flex-col gap-3 sm:flex-row">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="h-12 w-full rounded-3xl border border-[var(--color-border)] bg-[var(--bg-body)] px-4 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:ring-4 focus:ring-[var(--color-primary)]/10"
-            />
-            <button
-              type="submit"
-              className="h-12 rounded-3xl bg-[var(--color-primary)] px-5 text-sm font-semibold text-[var(--color-white)] transition hover:bg-[var(--color-primary-dark)]"
+      {/* =====================================================
+          MAIN FOOTER
+      ===================================================== */}
+
+      <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
+
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]">
+
+          {/* =================================================
+              BRAND
+          ================================================= */}
+
+          <div>
+
+            {/* Logo */}
+
+            <Link
+              href="/"
+              className="inline-flex items-center gap-3"
             >
-              Subscribe
-            </button>
-          </form>
-        </div>
+              <div
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[var(--color-primary)]
+                  text-lg
+                  font-black
+                  text-white
+                  shadow-lg
+                "
+              >
+                S
+              </div>
 
-        <div className="space-y-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/90">Legal</p>
-          <div className="grid gap-2 text-sm text-[var(--color-cream)]/80">
-            <a href="/terms" className="transition hover:text-[var(--color-white)]">Terms of Service</a>
-            <a href="/privacy" className="transition hover:text-[var(--color-white)]">Privacy Policy</a>
-            <a href="/faq" className="transition hover:text-[var(--color-white)]">FAQs</a>
+              <div>
+                <span className="block text-xl font-black tracking-tight">
+                  SFC Cafe
+                </span>
+
+                <span className="block text-[9px] font-medium uppercase tracking-[0.2em] text-white/50">
+                  Fresh • Fast • Delicious
+                </span>
+              </div>
+            </Link>
+
+            {/* Description */}
+
+            <p
+              className="
+                mt-5
+                max-w-sm
+                text-sm
+                leading-6
+                text-white/60
+              "
+            >
+              Freshly prepared food, delicious flavors and
+              quick service. Your favorite food is just a few
+              clicks away.
+            </p>
+
+            {/* Social */}
+
+            <div className="mt-6 flex items-center gap-2">
+
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-white/5
+                  text-white/70
+                  transition
+                  hover:bg-[var(--color-primary)]
+                  hover:text-white
+                "
+              >
+                <span className="text-sm font-bold">f</span>
+              </a>
+
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-white/5
+                  text-white/70
+                  transition
+                  hover:bg-[var(--color-primary)]
+                  hover:text-white
+                "
+              >
+            <span className="text-sm font-bold">ig</span>
+              </a>
+
+              <a
+                href="#"
+                aria-label="Twitter"
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-white/5
+                  text-white/70
+                  transition
+                  hover:bg-[var(--color-primary)]
+                  hover:text-white
+                "
+              >
+<span className="text-sm font-bold">𝕏</span>              </a>
+
+            </div>
+          </div>
+
+          {/* =================================================
+              QUICK LINKS
+          ================================================= */}
+
+          <div>
+
+            <h3
+              className="
+                text-sm
+                font-black
+                uppercase
+                tracking-wider
+                text-white
+              "
+            >
+              Quick Links
+            </h3>
+
+            <ul className="mt-5 space-y-3">
+
+              {quickLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      text-sm
+                      text-white/55
+                      transition
+                      hover:gap-2.5
+                      hover:text-[var(--color-primary-light)]
+                    "
+                  >
+                    <ArrowRight size={12} />
+
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+
+            </ul>
+          </div>
+
+          {/* =================================================
+              CUSTOMER HELP
+          ================================================= */}
+
+          <div>
+
+            <h3
+              className="
+                text-sm
+                font-black
+                uppercase
+                tracking-wider
+                text-white
+              "
+            >
+              Customer Help
+            </h3>
+
+            <ul className="mt-5 space-y-3">
+
+              {helpLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      text-sm
+                      text-white/55
+                      transition
+                      hover:gap-2.5
+                      hover:text-[var(--color-primary-light)]
+                    "
+                  >
+                    <ArrowRight size={12} />
+
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+
+            </ul>
+          </div>
+
+          {/* =================================================
+              CONTACT
+          ================================================= */}
+
+          <div>
+
+            <h3
+              className="
+                text-sm
+                font-black
+                uppercase
+                tracking-wider
+                text-white
+              "
+            >
+              Visit Us
+            </h3>
+
+            <div className="mt-5 space-y-4">
+
+              {/* Address */}
+
+              <div className="flex gap-3">
+
+                <MapPin
+                  size={18}
+                  className="mt-0.5 shrink-0 text-[var(--color-primary-light)]"
+                />
+
+                <p className="text-sm leading-6 text-white/55">
+                  123 Main Street,
+                  <br />
+                  Jaipur, Rajasthan 302017
+                </p>
+
+              </div>
+
+              {/* Phone */}
+
+              <a
+                href="tel:+919876543210"
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  text-sm
+                  text-white/55
+                  transition
+                  hover:text-white
+                "
+              >
+                <Phone
+                  size={17}
+                  className="text-[var(--color-primary-light)]"
+                />
+
+                +91 98765 43210
+              </a>
+
+              {/* Email */}
+
+              <a
+                href="mailto:hello@sfccafe.com"
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  break-all
+                  text-sm
+                  text-white/55
+                  transition
+                  hover:text-white
+                "
+              >
+                <Mail
+                  size={17}
+                  className="shrink-0 text-[var(--color-primary-light)]"
+                />
+
+                hello@sfccafe.com
+              </a>
+
+              {/* Timing */}
+
+              <div className="flex gap-3">
+
+                <Clock3
+                  size={17}
+                  className="mt-0.5 shrink-0 text-[var(--color-primary-light)]"
+                />
+
+                <div className="text-sm text-white/55">
+                  <p>Mon - Fri: 10 AM - 11 PM</p>
+                  <p>Sat - Sun: 9 AM - 11:30 PM</p>
+                </div>
+
+              </div>
+
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="border-t border-[rgba(255,255,255,0.08)] px-4 py-4 text-center text-xs text-[var(--color-cream)]/70 md:px-6">
-        <p>© 2026 Bakingo-inspired bakery app. Designed for mobile-first bakery browsing.</p>
+        {/* =====================================================
+            MOBILE ORDER CTA
+        ===================================================== */}
+
+        <div
+          className="
+            mt-10
+            rounded-2xl
+            border
+            border-white/10
+            bg-white/5
+            p-4
+            sm:hidden
+          "
+        >
+          <div className="flex items-center justify-between gap-4">
+
+            <div>
+              <p className="text-sm font-black">
+                Hungry already?
+              </p>
+
+              <p className="mt-1 text-[11px] text-white/50">
+                Order your favorite food now.
+              </p>
+            </div>
+
+            <Link
+              href="/menu"
+              className="
+                shrink-0
+                rounded-xl
+                bg-[var(--color-primary)]
+                px-4
+                py-2.5
+                text-xs
+                font-bold
+                text-white
+              "
+            >
+              Order Now
+            </Link>
+
+          </div>
+        </div>
+
+        {/* =====================================================
+            DIVIDER
+        ===================================================== */}
+
+        <div className="my-8 h-px bg-white/10" />
+
+        {/* =====================================================
+            BOTTOM BAR
+        ===================================================== */}
+
+        <div
+          className="
+            flex
+            flex-col
+            gap-4
+            text-center
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+            sm:text-left
+          "
+        >
+
+          <p className="text-xs text-white/40">
+            © {currentYear} SFC Cafe. All rights reserved.
+          </p>
+
+          <p
+            className="
+              flex
+              items-center
+              justify-center
+              gap-1.5
+              text-xs
+              text-white/40
+            "
+          >
+            Made with
+
+            <Heart
+              size={12}
+              fill="currentColor"
+              className="text-[var(--color-secondary)]"
+            />
+
+            for food lovers
+          </p>
+
+        </div>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}

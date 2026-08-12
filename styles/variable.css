@@ -1,41 +1,87 @@
 :root {
-  /* ---------- BRAND (Bakery - Bakingo inspired) ---------- */
-  --color-primary: #e91e63;          /* signature pink/magenta */
-  --color-primary-dark: #c2185b;
-  --color-primary-light: #f8bbd0;
-  --color-primary-50: #fdf2f6;
+  --color-primary: #4f7d16;          
+  --color-primary-dark: #355b0b;     
+  --color-primary-light: #7ca83b;    
+  --color-primary-50: #f1f6e8;
 
-  --color-secondary: #ff6f61;        /* coral accent */
-  --color-secondary-dark: #e6564a;
+  --color-secondary: #f5a623;       
+  --color-secondary-dark: #d8890b;
+  --color-green: #4f7d16;
+  --color-green-dark: #294500;
+  --color-green-light: #8aaa55;
 
-  /* ---------- CAFE TONES ---------- */
-  --color-coffee: #4b2e2b;
-  --color-coffee-dark: #2f1b18;
-  --color-coffee-light: #7b5347;
+  --color-brown: #4a2e1d;
+  --color-brown-dark: #2d1b0f;
+  --color-brown-light: #795548;
 
-  --color-caramel: #b06a3a;
-  --color-latte: #f3e5d8;
-  --color-cream: #fffaf3;
-  --color-gold: #d4a24c;
+  --color-cream: #fff8e8;
+  --color-beige: #f5ead5;
+  --color-gold: #d99b27;
 
-  /* ---------- NEUTRALS / TEXT ---------- */
   --color-white: #ffffff;
-  --color-black: #1a1a1a;
-  --color-text-primary: #2b1f1c;
-  --color-text-secondary: #6f5d56;
-  --color-text-muted: #a89a91;
-  --color-border: #ecdfd5;
+  --color-black: #171717;
 
-  /* ---------- BACKGROUNDS ---------- */
-  --bg-body: var(--color-cream);
-  --bg-surface: var(--color-white);
-  --bg-muted: var(--color-latte);
-  --bg-footer: var(--color-coffee-dark);
+  --color-text-primary: #30241d;
+  --color-text-secondary: #66574d;
+  --color-text-muted: #9b8f86;
 
-  /* ---------- STATUS ---------- */
-  --color-success: #4caf50;
-  --color-warning: #f9a825;
-  --color-error: #e53935;
-  --color-discount: #2e7d32;
-  --color-star: #ffb400;
+  --color-border: #e7dccb;
+
+  --bg-body: #fff8e8;
+  --bg-surface: #ffffff;
+  --bg-muted: #f5ead5;
+  --bg-footer: #294500;
+
+  --color-success: #4f7d16;
+  --color-warning: #f5a623;
+  --color-error: #d64545;
+  --color-discount: #3f7d20;
+  --color-star: #f5a623;
 }
+
+
+/* 
+
+:root {
+  --color-primary: #E85D04;          
+  --color-primary-dark: #B94300;    
+  --color-primary-light: #FF7A21;    
+  --color-primary-50: #FFF3E8;
+
+  --color-secondary: #F4A261;       
+  --color-secondary-dark: #D97932;
+
+  --color-orange: #E85D04;
+  --color-orange-dark: #A83B00;
+  --color-orange-light: #FF8C42;
+
+  --color-cheese: #FFC857;          
+  --color-cheese-dark: #E5A900;
+
+  --color-chocolate: #3A2118;        
+  --color-chocolate-dark: #24130E;
+  --color-chocolate-light: #684233;
+
+  --color-cream: #FFF7ED;
+  --color-beige: #F5E6D3;
+
+  --color-white: #FFFFFF;
+  --color-black: #17120F;
+
+  --color-text-primary: #2A1A14;
+  --color-text-secondary: #705E54;
+  --color-text-muted: #A3948A;
+
+  --color-border: #EBDDCF;
+
+  --bg-body: #FFF7ED;
+  --bg-surface: #FFFFFF;
+  --bg-muted: #F5E6D3;
+  --bg-footer: #24130E;
+
+  --color-success: #3F7D20;
+  --color-warning: #F4A261;
+  --color-error: #D64545;
+  --color-discount: #E85D04;
+  --color-star: #FFC857;
+} */
