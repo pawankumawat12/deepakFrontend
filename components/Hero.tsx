@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import CafeLoader from '../app/CafeLoader';
 import {
   ArrowRight,
   ChevronLeft,
@@ -124,9 +125,6 @@ export default function Hero() {
   return (
     <main className="w-full overflow-hidden bg-[var(--bg-body)]">
 
-      {/* =====================================================
-          HERO
-      ===================================================== */}
 
       <section className="relative min-h-[720px] overflow-hidden bg-[var(--color-cream)]">
 
@@ -726,10 +724,9 @@ export default function Hero() {
                 rounded-full
                 transition-all
                 duration-300
-                ${
-                  i === index
-                    ? "w-8 bg-[var(--color-primary)]"
-                    : "w-2 bg-[var(--color-primary)]/25"
+                ${i === index
+                  ? "w-8 bg-[var(--color-primary)]"
+                  : "w-2 bg-[var(--color-primary)]/25"
                 }
               `}
             />
@@ -737,9 +734,6 @@ export default function Hero() {
         </div>
       </section>
 
-      {/* =====================================================
-          CATEGORY NAVIGATION
-      ===================================================== */}
 
       <section className="relative z-20 px-4 md:px-8">
 
@@ -754,7 +748,7 @@ export default function Hero() {
             shadow-[0_15px_40px_rgba(79,125,22,0.22)]
           "
         >
-        
+
         </div>
       </section>
 
