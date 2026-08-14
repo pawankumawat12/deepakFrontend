@@ -1,3 +1,5 @@
+import z from "zod";
+
 export const emailLoginSchema = z.object({
     email: z
       .string()

@@ -59,6 +59,9 @@ export default function LoginModal({
     }
   })
 
+  const onSubmit = (data: any) => {
+    
+  }
 
 
   useEffect(() => {
