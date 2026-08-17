@@ -29,7 +29,9 @@ const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
-  const user = useSelector((state: { auth: { user: { name?: string } | null } }) => state.auth.user);
+  const user = useSelector(
+    (state: { auth: { user: { name?: string } | null } }) => state.auth.user
+  );
   const [logoutRequest] = useLogoutMutation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
@@ -41,23 +43,18 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logoutRequest().unwrap();
-    } catch {
-    }
+    } catch {}
     dispatch(logout());
     setDropdownOpen(false);
     setMobileProfileOpen(false);
     router.replace("/");
   };
 
-
   useEffect(() => {
     const updateCart = () => {
       const cart = cartStore.getCart();
 
-      const count = cart.reduce(
-        (acc, item) => acc + item.qty,
-        0
-      );
+      const count = cart.reduce((acc, item) => acc + item.qty, 0);
 
       setCartCount(count);
     };
@@ -67,10 +64,7 @@ const Navbar = () => {
     window.addEventListener("sfc_cart_updated", updateCart);
 
     return () => {
-      window.removeEventListener(
-        "sfc_cart_updated",
-        updateCart
-      );
+      window.removeEventListener("sfc_cart_updated", updateCart);
     };
   }, []);
 
@@ -96,15 +90,11 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   /* ---------------- CART SAFE COUNT ---------------- */
-
 
   /* ---------------- ACTIVE ROUTE ---------------- */
 
@@ -168,15 +158,10 @@ const Navbar = () => {
 
       <header className="hidden md:block fixed top-0 inset-x-0 z-50">
         <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
-
           <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6">
-
             {/* ---------------- LOGO ---------------- */}
 
-            <Link
-              href="/"
-              className="group flex shrink-0 items-center gap-3"
-            >
+            <Link href="/" className="group flex shrink-0 items-center gap-3">
               <div
                 className="
                   flex h-12 w-12 items-center justify-center
@@ -223,9 +208,10 @@ const Navbar = () => {
                       font-semibold
                       transition-all
                       duration-200
-                      ${active
-                        ? "text-[var(--color-primary)]"
-                        : "text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
+                      ${
+                        active
+                          ? "text-[var(--color-primary)]"
+                          : "text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
                       }
                     `}
                   >
@@ -279,8 +265,6 @@ const Navbar = () => {
                 </span>
               </Link>
 
-
-
               {/* Cart */}
 
               <Link
@@ -322,17 +306,13 @@ const Navbar = () => {
 
               {/* Profile */}
 
-              {user && 
-              <div
-                ref={profileRef}
-                className="relative ml-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setDropdownOpen((open) => !open)
-                  }
-                  aria-expanded={dropdownOpen}
-                  className="
+              {user && (
+                <div ref={profileRef} className="relative ml-1">
+                  <button
+                    type="button"
+                    onClick={() => setDropdownOpen((open) => !open)}
+                    aria-expanded={dropdownOpen}
+                    className="
                     flex
                     items-center
                     gap-2
@@ -349,34 +329,34 @@ const Navbar = () => {
                     hover:border-[var(--color-primary)]
                     hover:bg-[var(--color-primary-50)]
                   "
-                >
-                  <span
-                    className="
+                  >
+                    <span
+                      className="
                       flex h-8 w-8 items-center justify-center
                       rounded-full
                       bg-[var(--color-primary)]
                       text-white
                     "
-                  >
-                    <User size={17} />
-                  </span>
+                    >
+                      <User size={17} />
+                    </span>
 
-                  <span>{user?.name?.split(" ")[0] ?? "Profile"}</span>
+                    <span>{user?.name?.split(" ")[0] ?? "Profile"}</span>
 
-                  <ChevronDown
-                    size={15}
-                    className={`
+                    <ChevronDown
+                      size={15}
+                      className={`
                       transition-transform
                       ${dropdownOpen ? "rotate-180" : ""}
                     `}
-                  />
-                </button>
+                    />
+                  </button>
 
-                {/* Profile Dropdown */}
+                  {/* Profile Dropdown */}
 
-                {dropdownOpen && (
-                  <div
-                    className="
+                  {dropdownOpen && (
+                    <div
+                      className="
                       absolute
                       right-0
                       top-[calc(100%+12px)]
@@ -389,8 +369,8 @@ const Navbar = () => {
                       p-2
                       shadow-[0_20px_50px_rgba(45,27,15,0.15)]
                     "
-                  >
-                    {/* <Link
+                    >
+                      {/* <Link
                       href="/dashboard"
                       onClick={() => setDropdownOpen(false)}
                       className="
@@ -408,10 +388,10 @@ const Navbar = () => {
                       Dashboard
                     </Link> */}
 
-                    <Link
-                      href="/profile"
-                      onClick={() => setDropdownOpen(false)}
-                      className="
+                      <Link
+                        href="/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className="
                         flex items-center gap-3
                         rounded-xl
                         px-4 py-3
@@ -421,17 +401,17 @@ const Navbar = () => {
                         hover:bg-[var(--color-primary-50)]
                         hover:text-[var(--color-primary)]
                       "
-                    >
-                      <User size={17} />
-                      Profile
-                    </Link>
+                      >
+                        <User size={17} />
+                        Profile
+                      </Link>
 
-                    <div className="my-1 h-px bg-[var(--color-border)]" />
+                      <div className="my-1 h-px bg-[var(--color-border)]" />
 
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="
                         flex items-center gap-3
                         rounded-xl
                         px-4 py-3
@@ -440,25 +420,27 @@ const Navbar = () => {
                         transition
                         hover:bg-red-50
                       "
-                    >
-                      <LogOut size={17} />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-              }
+                      >
+                        <LogOut size={17} />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Order Now */}
 
-              {!user && <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                className="mr-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--bg-surface)] px-5 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-              >
-                <User size={18} />
-                Sign in
-              </button>}
+              {!user && (
+                <button
+                  type="button"
+                  onClick={() => setAuthOpen(true)}
+                  className="mr-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--bg-surface)] px-5 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                >
+                  <User size={18} />
+                  Sign in
+                </button>
+              )}
 
               <Link
                 href="/menu"
@@ -494,7 +476,6 @@ const Navbar = () => {
       ========================================================= */}
 
       <header className="md:hidden fixed top-0 inset-x-0 z-50">
-
         <div
           className="
             border-b
@@ -505,13 +486,9 @@ const Navbar = () => {
           "
         >
           <div className="flex h-[68px] items-center justify-between px-4">
-
             {/* Logo */}
 
-            <Link
-              href="/"
-              className="flex items-center gap-2.5"
-            >
+            <Link href="/" className="flex items-center gap-2.5">
               <div
                 className="
                   flex h-10 w-10
@@ -539,7 +516,7 @@ const Navbar = () => {
             {/* Mobile Cart */}
 
             <div className="flex items-center gap-2">
-              {!user &&
+              {!user && (
                 <button
                   type="button"
                   onClick={() => setAuthOpen(true)}
@@ -547,7 +524,7 @@ const Navbar = () => {
                 >
                   Sign in
                 </button>
-              }
+              )}
 
               <Link
                 href="/cart"
@@ -606,7 +583,6 @@ const Navbar = () => {
         aria-label="Mobile navigation"
       >
         <div className="mx-auto flex max-w-md items-center justify-around">
-
           {mobileTabs.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -630,9 +606,10 @@ const Navbar = () => {
                   font-semibold
                   transition-all
                   duration-200
-                  ${active
-                    ? "text-[var(--color-primary)]"
-                    : "text-[var(--color-text-muted)]"
+                  ${
+                    active
+                      ? "text-[var(--color-primary)]"
+                      : "text-[var(--color-text-muted)]"
                   }
                 `}
               >
@@ -659,20 +636,14 @@ const Navbar = () => {
                     justify-center
                     rounded-xl
                     transition
-                    ${active
-                      ? "bg-[var(--color-primary-50)]"
-                      : ""
-                    }
+                    ${active ? "bg-[var(--color-primary-50)]" : ""}
                   `}
                 >
-                  <Icon
-                    size={20}
-                    strokeWidth={active ? 2.5 : 2}
-                  />
+                  <Icon size={20} strokeWidth={active ? 2.5 : 2} />
 
                   {/* Cart Badge */}
 
-                  {item.label === "Cart" &&
+                  {item.label === "Cart" && (
                     <span
                       className="
                           absolute
@@ -690,7 +661,7 @@ const Navbar = () => {
                     >
                       0
                     </span>
-                  }
+                  )}
                 </span>
 
                 <span>{item.label}</span>
@@ -700,16 +671,12 @@ const Navbar = () => {
 
           {/* Profile */}
 
-          {user ? <div className="relative min-w-[62px]">
-
-            <button
-              type="button"
-              onClick={() =>
-                setMobileProfileOpen(
-                  (open) => !open
-                )
-              }
-              className={`
+          {user ? (
+            <div className="relative min-w-[62px]">
+              <button
+                type="button"
+                onClick={() => setMobileProfileOpen((open) => !open)}
+                className={`
                 flex
                 w-full
                 flex-col
@@ -722,40 +689,33 @@ const Navbar = () => {
                 text-[10px]
                 font-semibold
                 transition
-                ${mobileProfileOpen
-                  ? "text-[var(--color-primary)]"
-                  : "text-[var(--color-text-muted)]"
+                ${
+                  mobileProfileOpen
+                    ? "text-[var(--color-primary)]"
+                    : "text-[var(--color-text-muted)]"
                 }
               `}
-            >
-              <span
-                className={`
+              >
+                <span
+                  className={`
                   flex h-8 w-10
                   items-center
                   justify-center
                   rounded-xl
-                  ${mobileProfileOpen
-                    ? "bg-[var(--color-primary-50)]"
-                    : ""
-                  }
+                  ${mobileProfileOpen ? "bg-[var(--color-primary-50)]" : ""}
                 `}
-              >
-                <User
-                  size={20}
-                  strokeWidth={
-                    mobileProfileOpen ? 2.5 : 2
-                  }
-                />
-              </span>
+                >
+                  <User size={20} strokeWidth={mobileProfileOpen ? 2.5 : 2} />
+                </span>
 
-              <span>Profile</span>
-            </button>
+                <span>Profile</span>
+              </button>
 
-            {/* Mobile Profile Menu */}
+              {/* Mobile Profile Menu */}
 
-            {mobileProfileOpen && (
-              <div
-                className="
+              {mobileProfileOpen && (
+                <div
+                  className="
                   absolute
                   bottom-[68px]
                   right-0
@@ -768,8 +728,8 @@ const Navbar = () => {
                   p-2
                   shadow-[0_15px_45px_rgba(45,27,15,0.18)]
                 "
-              >
-                {/* <Link
+                >
+                  {/* <Link
                   href="/dashboard"
                   onClick={() =>
                     setMobileProfileOpen(false)
@@ -788,12 +748,10 @@ const Navbar = () => {
                   Dashboard
                 </Link> */}
 
-                <Link
-                  href="/profile"
-                  onClick={() =>
-                    setMobileProfileOpen(false)
-                  }
-                  className="
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileProfileOpen(false)}
+                    className="
                     flex items-center gap-3
                     rounded-xl
                     px-3 py-3
@@ -802,17 +760,17 @@ const Navbar = () => {
                     hover:bg-[var(--color-primary-50)]
                     hover:text-[var(--color-primary)]
                   "
-                >
-                  <User size={17} />
-                  Profile
-                </Link>
+                  >
+                    <User size={17} />
+                    Profile
+                  </Link>
 
-                <div className="my-1 h-px bg-[var(--color-border)]" />
+                  <div className="my-1 h-px bg-[var(--color-border)]" />
 
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="
                     flex items-center gap-3
                     rounded-xl
                     px-3 py-3
@@ -820,13 +778,14 @@ const Navbar = () => {
                     text-[var(--color-error)]
                     hover:bg-red-50
                   "
-                >
-                  <LogOut size={17} />
-                  Logout
-                </button>
-              </div>
-            )}
-          </div> : (
+                  >
+                    <LogOut size={17} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
             <button
               type="button"
               onClick={() => setAuthOpen(true)}
@@ -847,7 +806,10 @@ const Navbar = () => {
           setRegisterOpen(true);
         }}
       />
-      <RegisterModal open={registerOpen} onClose={() => setRegisterOpen(false)} />
+      <RegisterModal
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+      />
 
       {/* =========================================================
           MOBILE CONTENT SPACING

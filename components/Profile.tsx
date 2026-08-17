@@ -16,13 +16,11 @@ import {
   Camera,
   ShieldCheck,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 export default function Profile() {
   const [editing, setEditing] = useState(false);
-
-  const [name, setName] = useState("Pawan Kumar");
-  const [email, setEmail] = useState("pawan@example.com");
-  const [phone, setPhone] = useState("+91 99999 99999");
+  const user = useSelector((state: { auth: { user: any | null } }) => state.auth.user);
 
   function handleSave() {
     setEditing(false);
@@ -92,7 +90,7 @@ export default function Profile() {
                 </p>
 
                 <h1 className="mt-1 text-2xl font-black  sm:text-3xl">
-                  {name}
+                  {user?.name}
                 </h1>
 
                 <p className="mt-1 text-xs">
@@ -228,9 +226,8 @@ export default function Profile() {
 
                     <input
                       id="name"
-                      value={name}
+                      value={user?.name}
                       disabled={!editing}
-                      onChange={(e) => setName(e.target.value)}
                       className="
                         w-full
                         rounded-xl
@@ -283,9 +280,8 @@ export default function Profile() {
 
                     <input
                       id="email"
-                      value={email}
+                      value={user?.email ?? ""}
                       disabled={!editing}
-                      onChange={(e) => setEmail(e.target.value)}
                       className="
                         w-full
                         rounded-xl
@@ -337,9 +333,8 @@ export default function Profile() {
 
                     <input
                       id="phone"
-                      value={phone}
+                      value={user?.phone}
                       disabled={!editing}
-                      onChange={(e) => setPhone(e.target.value)}
                       className="
                         w-full
                         rounded-xl
@@ -395,9 +390,6 @@ export default function Profile() {
 
           </div>
 
-          {/* =====================================================
-              RIGHT - QUICK ACTIONS
-          ===================================================== */}
 
           <div className="space-y-4">
 
