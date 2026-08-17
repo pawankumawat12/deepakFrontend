@@ -24,7 +24,7 @@ import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import { logout } from "../redux/features/authSlice";
 import { useLogoutMutation } from "../redux/services/authApi";
-
+import LogoutModal from "@/models/LogoutModel";
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -32,22 +32,30 @@ const Navbar = () => {
   const user = useSelector(
     (state: { auth: { user: { name?: string } | null } }) => state.auth.user
   );
+
   const [logoutRequest] = useLogoutMutation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-
+  const [logoutModal, setLogoutModal] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  
+
+
+
+
+
   const handleLogout = async () => {
     try {
       await logoutRequest().unwrap();
-    } catch {}
+    } catch { }
     dispatch(logout());
     setDropdownOpen(false);
     setMobileProfileOpen(false);
     router.replace("/");
+    setLogoutModal(false);
   };
 
   useEffect(() => {
@@ -94,9 +102,6 @@ const Navbar = () => {
     };
   }, []);
 
-  /* ---------------- CART SAFE COUNT ---------------- */
-
-  /* ---------------- ACTIVE ROUTE ---------------- */
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -164,28 +169,14 @@ const Navbar = () => {
             <Link href="/" className="group flex shrink-0 items-center gap-3">
               <div
                 className="
-                  flex h-12 w-12 items-center justify-center
+                  flex h-15 w-15 items-center justify-center
                   rounded-2xl
-                  bg-[var(--color-primary)]
-                  text-white
-                  shadow-lg
-                  transition
-                  duration-300
                   group-hover:scale-105
                 "
               >
-                <Leaf size={25} strokeWidth={2.2} />
+                <img src="/images/sfcLogo.png" />
               </div>
 
-              <div className="leading-none">
-                <p className="text-[17px] font-extrabold tracking-tight text-[var(--color-text-primary)]">
-                  SFC<span className="text-[var(--color-primary)]"> Cafe</span>
-                </p>
-
-                <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-[var(--color-text-muted)]">
-                  Fast Food Cafe
-                </p>
-              </div>
             </Link>
 
             {/* ---------------- DESKTOP LINKS ---------------- */}
@@ -208,10 +199,9 @@ const Navbar = () => {
                       font-semibold
                       transition-all
                       duration-200
-                      ${
-                        active
-                          ? "text-[var(--color-primary)]"
-                          : "text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
+                      ${active
+                        ? "text-[var(--color-primary)]"
+                        : "text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
                       }
                     `}
                   >
@@ -370,23 +360,7 @@ const Navbar = () => {
                       shadow-[0_20px_50px_rgba(45,27,15,0.15)]
                     "
                     >
-                      {/* <Link
-                      href="/dashboard"
-                      onClick={() => setDropdownOpen(false)}
-                      className="
-                        flex items-center gap-3
-                        rounded-xl
-                        px-4 py-3
-                        text-sm font-semibold
-                        text-[var(--color-text-primary)]
-                        transition
-                        hover:bg-[var(--color-primary-50)]
-                        hover:text-[var(--color-primary)]
-                      "
-                    >
-                      <LayoutDashboard size={17} />
-                      Dashboard
-                    </Link> */}
+                   
 
                       <Link
                         href="/profile"
@@ -410,7 +384,7 @@ const Navbar = () => {
 
                       <button
                         type="button"
-                        onClick={handleLogout}
+                        onClick={() => setLogoutModal(true)}
                         className="
                         flex items-center gap-3
                         rounded-xl
@@ -471,9 +445,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* =========================================================
-          MOBILE / PWA TOP BAR
-      ========================================================= */}
+          {/* MOBILE / PWA TOP BAR */}
 
       <header className="md:hidden fixed top-0 inset-x-0 z-50">
         <div
@@ -491,29 +463,15 @@ const Navbar = () => {
             <Link href="/" className="flex items-center gap-2.5">
               <div
                 className="
-                  flex h-10 w-10
+                  flex h-12 w-12
                   items-center justify-center
                   rounded-xl
-                  bg-[var(--color-primary)]
-                  text-white
-                  shadow-md
                 "
               >
-                <Leaf size={21} />
-              </div>
-
-              <div className="leading-none">
-                <p className="text-[15px] font-extrabold text-[var(--color-text-primary)]">
-                  SFC<span className="text-[var(--color-primary)]"> Cafe</span>
-                </p>
-
-                <p className="mt-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                  Fast Food
-                </p>
+                <img src="/images/sfcLogo.png" />
               </div>
             </Link>
 
-            {/* Mobile Cart */}
 
             <div className="flex items-center gap-2">
               {!user && (
@@ -606,10 +564,9 @@ const Navbar = () => {
                   font-semibold
                   transition-all
                   duration-200
-                  ${
-                    active
-                      ? "text-[var(--color-primary)]"
-                      : "text-[var(--color-text-muted)]"
+                  ${active
+                    ? "text-[var(--color-primary)]"
+                    : "text-[var(--color-text-muted)]"
                   }
                 `}
               >
@@ -689,11 +646,10 @@ const Navbar = () => {
                 text-[10px]
                 font-semibold
                 transition
-                ${
-                  mobileProfileOpen
+                ${mobileProfileOpen
                     ? "text-[var(--color-primary)]"
                     : "text-[var(--color-text-muted)]"
-                }
+                  }
               `}
               >
                 <span
@@ -769,7 +725,7 @@ const Navbar = () => {
 
                   <button
                     type="button"
-                    onClick={handleLogout}
+                    onClick={() => setLogoutModal(true)}
                     className="
                     flex items-center gap-3
                     rounded-xl
@@ -811,14 +767,10 @@ const Navbar = () => {
         onClose={() => setRegisterOpen(false)}
       />
 
-      {/* =========================================================
-          MOBILE CONTENT SPACING
-      ========================================================= */}
-
       <div className="md:hidden h-[68px]" />
-
-      {/* Bottom navigation ke liye page content ko space */}
       <div className="md:hidden h-[78px]" />
+
+      <LogoutModal open={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={handleLogout} />
     </>
   );
 };
