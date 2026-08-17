@@ -21,6 +21,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { useLoginMutation } from '../redux/services/authApi';
 import { emailLoginSchema } from "@/schemas/authSchema";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../redux/features/authSlice";
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
@@ -40,6 +42,7 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [login, { isLoading }] = useLoginMutation();
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -54,7 +57,27 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
     },
   });
 
-  const onSubmit = (data: any) => {};
+  const onSubmit = async (data: { email: string; password: string }) => {
+    if (!acceptedTerms) {
+      setError("Please accept the Terms & Conditions to continue.");
+      return;
+    }
+
+    try {
+      setError("");
+      const response = await login({
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+      }).unwrap();
+      dispatch(setCredentials(response));
+      reset();
+      toast.success("Logged in successfully.");
+      onClose();
+    } catch (loginError: unknown) {
+      const apiError = loginError as { data?: { message?: string } };
+      setError(apiError.data?.message || "Unable to log in. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -333,7 +356,7 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
           )}
 
           {(step === "phone" || step === "email") && (
-            <form className="space-y-5">
+            <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
               {/* {step === "phone" && (
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]">
@@ -413,8 +436,12 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
                         focus:ring-2
                         focus:ring-[var(--color-primary)]/10
                       "
+                        {...register("email")}
                       />
                     </div>
+                    {errors.email?.message && (
+                      <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                    )}
                   </div>
 
                   <div>
@@ -447,8 +474,12 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
                         focus:ring-2
                         focus:ring-[var(--color-primary)]/10
                       "
+                        {...register("password")}
                       />
                     </div>
+                    {errors.password?.message && (
+                      <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+                    )}
                   </div>
                 </>
               )}
@@ -546,8 +577,9 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
                   disabled:cursor-not-allowed
                   disabled:opacity-60
                 "
+                disabled={isLoading}
               >
-                Login
+                {isLoading ? "Logging in..." : "Login"}
                 <LogInIcon size={17} />
               </button>
             </form>

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ShoppingCart,
   Home,
@@ -21,9 +22,15 @@ import {
 import cartStore from "./cart/store";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
+import { logout } from "../redux/features/authSlice";
+import { useLogoutMutation } from "../redux/services/authApi";
 
 const Navbar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const user = useSelector((state: { auth: { user: { name?: string } | null } }) => state.auth.user);
+  const [logoutRequest] = useLogoutMutation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -31,8 +38,17 @@ const Navbar = () => {
   const [cartCount, setCartCount] = useState(0);
 
   const profileRef = useRef<HTMLDivElement>(null);
+  const handleLogout = async () => {
+    try {
+      await logoutRequest().unwrap();
+    } catch {
+    }
+    dispatch(logout());
+    setDropdownOpen(false);
+    setMobileProfileOpen(false);
+    router.replace("/");
+  };
 
-  /* ---------------- CART COUNT ---------------- */
 
   useEffect(() => {
     const updateCart = () => {
@@ -306,10 +322,10 @@ const Navbar = () => {
 
               {/* Profile */}
 
+              {user && 
               <div
                 ref={profileRef}
-                className="relative ml-1"
-              >
+                className="relative ml-1">
                 <button
                   type="button"
                   onClick={() =>
@@ -345,7 +361,7 @@ const Navbar = () => {
                     <User size={17} />
                   </span>
 
-                  <span>Profile</span>
+                  <span>{user?.name?.split(" ")[0] ?? "Profile"}</span>
 
                   <ChevronDown
                     size={15}
@@ -374,7 +390,7 @@ const Navbar = () => {
                       shadow-[0_20px_50px_rgba(45,27,15,0.15)]
                     "
                   >
-                    <Link
+                    {/* <Link
                       href="/dashboard"
                       onClick={() => setDropdownOpen(false)}
                       className="
@@ -390,7 +406,7 @@ const Navbar = () => {
                     >
                       <LayoutDashboard size={17} />
                       Dashboard
-                    </Link>
+                    </Link> */}
 
                     <Link
                       href="/profile"
@@ -412,9 +428,9 @@ const Navbar = () => {
 
                     <div className="my-1 h-px bg-[var(--color-border)]" />
 
-                    <Link
-                      href="/logout"
-                      onClick={() => setDropdownOpen(false)}
+                    <button
+                      type="button"
+                      onClick={handleLogout}
                       className="
                         flex items-center gap-3
                         rounded-xl
@@ -427,21 +443,22 @@ const Navbar = () => {
                     >
                       <LogOut size={17} />
                       Logout
-                    </Link>
+                    </button>
                   </div>
                 )}
               </div>
+              }
 
               {/* Order Now */}
 
-              <button
+              {!user && <button
                 type="button"
                 onClick={() => setAuthOpen(true)}
                 className="mr-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--bg-surface)] px-5 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
               >
                 <User size={18} />
                 Sign in
-              </button>
+              </button>}
 
               <Link
                 href="/menu"
@@ -522,13 +539,15 @@ const Navbar = () => {
             {/* Mobile Cart */}
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                className="rounded-full border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-              >
-                Sign in
-              </button>
+              {!user &&
+                <button
+                  type="button"
+                  onClick={() => setAuthOpen(true)}
+                  className="rounded-full border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                >
+                  Sign in
+                </button>
+              }
 
               <Link
                 href="/cart"
@@ -681,7 +700,7 @@ const Navbar = () => {
 
           {/* Profile */}
 
-          <div className="relative min-w-[62px]">
+          {user ? <div className="relative min-w-[62px]">
 
             <button
               type="button"
@@ -750,7 +769,7 @@ const Navbar = () => {
                   shadow-[0_15px_45px_rgba(45,27,15,0.18)]
                 "
               >
-                <Link
+                {/* <Link
                   href="/dashboard"
                   onClick={() =>
                     setMobileProfileOpen(false)
@@ -767,7 +786,7 @@ const Navbar = () => {
                 >
                   <LayoutDashboard size={17} />
                   Dashboard
-                </Link>
+                </Link> */}
 
                 <Link
                   href="/profile"
@@ -790,11 +809,9 @@ const Navbar = () => {
 
                 <div className="my-1 h-px bg-[var(--color-border)]" />
 
-                <Link
-                  href="/logout"
-                  onClick={() =>
-                    setMobileProfileOpen(false)
-                  }
+                <button
+                  type="button"
+                  onClick={handleLogout}
                   className="
                     flex items-center gap-3
                     rounded-xl
@@ -806,10 +823,19 @@ const Navbar = () => {
                 >
                   <LogOut size={17} />
                   Logout
-                </Link>
+                </button>
               </div>
             )}
-          </div>
+          </div> : (
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="flex min-w-[62px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold text-[var(--color-text-muted)]"
+            >
+              <User size={20} />
+              <span>Sign in</span>
+            </button>
+          )}
         </div>
       </nav>
 

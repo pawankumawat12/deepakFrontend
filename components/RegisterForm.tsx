@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
@@ -44,6 +44,8 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"register" | "verify">("register");
+  const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
+  const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [registerAccount, { isLoading: isRegistering }] = useRegisterMutation();
   const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
@@ -71,10 +73,10 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
       password: values.password,
     };
     try {
-     const res= await registerAccount(account).unwrap();
-      const a = await sendOtp({ email: account.email }).unwrap();
-      console.log(a, "Chec ka aaa")
+      await registerAccount(account).unwrap();
       setEmail(account.email);
+      setOtpDigits(["", "", "", ""]);
+      verification.reset({ otp: "" });
       setStep("verify");
       toast.success("A verification code has been sent to your email.");
     } catch (error) {
@@ -100,10 +102,38 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const resend = async () => {
     try {
       await sendOtp({ email }).unwrap();
+      setOtpDigits(["", "", "", ""]);
+      verification.reset({ otp: "" });
+      otpRefs.current[0]?.focus();
       toast.success("A new verification code has been sent.");
     } catch (error) {
       toast.error(messageFor(error));
     }
+  };
+
+  const setOtp = (digits: string[]) => {
+    setOtpDigits(digits);
+    verification.setValue("otp", digits.join(""), { shouldValidate: true });
+  };
+
+  const changeOtpDigit = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const next = [...otpDigits];
+    next[index] = digit;
+    setOtp(next);
+    if (digit && index < next.length - 1) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const pasteOtp = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const digits = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
+    if (!digits) return;
+
+    const next = Array.from({ length: 4 }, (_, index) => digits[index] || "");
+    setOtp(next);
+    otpRefs.current[Math.min(digits.length, 4) - 1]?.focus();
   };
 
   const input =
@@ -195,22 +225,37 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
           onSubmit={verification.handleSubmit(completeRegistration)}
           noValidate
         >
-          <Input
-            label="4-digit verification code"
-            error={verification.formState.errors.otp?.message}
-          >
-            <input
-              className={`${input} text-center text-xl tracking-[0.5em]`}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={4}
-              {...verification.register("otp", {
-                onChange: (event) => {
-                  event.target.value = event.target.value.replace(/\D/g, "");
-                },
-              })}
-            />
-          </Input>
+          <div>
+            <p className="text-sm font-medium">4-digit verification code</p>
+            <div className="mt-2 flex justify-center gap-3">
+              {otpDigits.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(element) => {
+                    otpRefs.current[index] = element;
+                  }}
+                  aria-label={`Verification code digit ${index + 1}`}
+                  className="h-12 w-12 rounded-xl border border-[var(--color-border)] bg-white text-center text-xl font-semibold outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  inputMode="numeric"
+                  autoComplete={index === 0 ? "one-time-code" : "off"}
+                  maxLength={1}
+                  value={digit}
+                  onChange={(event) => changeOtpDigit(index, event.target.value)}
+                  onPaste={pasteOtp}
+                  onKeyDown={(event) => {
+                    if (event.key === "Backspace" && !otpDigits[index] && index > 0) {
+                      otpRefs.current[index - 1]?.focus();
+                    }
+                  }}
+                />
+              ))}
+            </div>
+            {verification.formState.errors.otp?.message && (
+              <span className="mt-1 block text-xs font-normal text-red-600">
+                {verification.formState.errors.otp.message}
+              </span>
+            )}
+          </div>
           <Submit busy={isVerifying} text="Verify and continue" verified />
           <button
             className="flex w-full items-center justify-center gap-2 text-sm font-semibold text-[var(--color-primary)] disabled:opacity-50"
@@ -223,7 +268,11 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
           <button
             className="w-full text-sm text-[var(--color-text-secondary)]"
             type="button"
-            onClick={() => setStep("register")}
+            onClick={() => {
+              verification.reset({ otp: "" });
+              setOtpDigits(["", "", "", ""]);
+              setStep("register");
+            }}
           >
             Use a different email
           </button>
