@@ -163,7 +163,7 @@ const Navbar = () => {
 
       <header className="hidden md:block fixed top-0 inset-x-0 z-50">
         <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
-          <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6">
+          <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6 lg:px-8">
             {/* ---------------- LOGO ---------------- */}
 
             <Link href="/" className="group flex shrink-0 items-center gap-3">
@@ -447,7 +447,10 @@ const Navbar = () => {
 
           {/* MOBILE / PWA TOP BAR */}
 
-      <header className="md:hidden fixed top-0 inset-x-0 z-50">
+      <header
+        className="md:hidden fixed top-0 inset-x-0 z-50"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
         <div
           className="
             border-b
@@ -457,7 +460,7 @@ const Navbar = () => {
             shadow-[0_4px_20px_rgba(45,27,15,0.08)]
           "
         >
-          <div className="flex h-[68px] items-center justify-between px-4">
+          <div className="flex h-[68px] items-center justify-between px-4 sm:px-5">
             {/* Logo */}
 
             <Link href="/" className="flex items-center gap-2.5">
@@ -766,9 +769,6 @@ const Navbar = () => {
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
       />
-
-      <div className="md:hidden h-[68px]" />
-      <div className="md:hidden h-[78px]" />
 
       <LogoutModal open={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={handleLogout} />
     </>

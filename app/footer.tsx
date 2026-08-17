@@ -9,7 +9,11 @@ import {
   Clock3,
   ArrowRight,
   Heart,
+  Zap,
+  Bell,
+  Wifi,
 } from "lucide-react";
+import PWAInstallButton from "@/components/PWAInstallButton";
 
 const quickLinks = [
   {
@@ -61,7 +65,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[var(--bg-footer)] text-white">
+    <footer className="app-footer bg-[var(--bg-footer)] text-white">
 
       {/* =====================================================
           MAIN FOOTER
@@ -387,27 +391,64 @@ export default function Footer() {
         </div>
 
         {/* =====================================================
+            INSTALL PWA APP
+        ===================================================== */}
+
+        <div className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[var(--color-primary)]/25 via-white/5 to-transparent p-5 sm:p-6 md:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.25)] ring-1 ring-white/20">
+                <img
+                  src="/images/sfcLogo.png"
+                  alt="SFC Cafe app icon"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--color-primary-light)]">
+                  Mobile App Experience
+                </p>
+                <h3 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
+                  Install SFC Cafe App
+                </h3>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
+                  Add SFC Cafe to your home screen for faster ordering, quick
+                  reorders, and an app-like experience — no app store needed.
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    { icon: Zap, label: "Fast ordering" },
+                    { icon: Bell, label: "Order updates" },
+                    { icon: Wifi, label: "Offline support" },
+                  ].map(({ icon: Icon, label }) => (
+                    <span
+                      key={label}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/75"
+                    >
+                      <Icon size={13} className="text-[var(--color-primary-light)]" />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="shrink-0 lg:pl-4">
+              <PWAInstallButton variant="footer" />
+            </div>
+          </div>
+        </div>
+
+        {/* =====================================================
             MOBILE ORDER CTA
         ===================================================== */}
 
-        <div
-          className="
-            mt-10
-            rounded-2xl
-            border
-            border-white/10
-            bg-white/5
-            p-4
-            sm:hidden
-          "
-        >
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 sm:hidden">
           <div className="flex items-center justify-between gap-4">
-
             <div>
-              <p className="text-sm font-black">
-                Hungry already?
-              </p>
-
+              <p className="text-sm font-black">Hungry already?</p>
               <p className="mt-1 text-[11px] text-white/50">
                 Order your favorite food now.
               </p>
@@ -415,20 +456,10 @@ export default function Footer() {
 
             <Link
               href="/menu"
-              className="
-                shrink-0
-                rounded-xl
-                bg-[var(--color-primary)]
-                px-4
-                py-2.5
-                text-xs
-                font-bold
-                text-white
-              "
+              className="shrink-0 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold text-white"
             >
               Order Now
             </Link>
-
           </div>
         </div>
 
