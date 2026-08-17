@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import CafeLoader from '../app/CafeLoader';
 import {
   ArrowRight,
   ChevronLeft,

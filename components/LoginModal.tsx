@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  KeyboardEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -23,22 +18,19 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-
 import toast from "react-hot-toast";
-import { useLoginMutation } from '../redux/services/authApi'
-import { emailLoginSchema } from '../schemas/authSchema';
+import { useLoginMutation } from '../redux/services/authApi';
+import { emailLoginSchema } from "@/schemas/authSchema";
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
+  onOpenRegister: () => void;
 }
 
 type LoginMethod = "phone" | "email";
 type Step = "welcome" | "phone" | "email";
 
-export default function LoginModal({
-  open,
-  onClose,
-}: LoginModalProps) {
+export default function LoginModal({ open, onClose, onOpenRegister }: LoginModalProps) {
   const [step, setStep] = useState<Step>("welcome");
 
   const [rememberMe, setRememberMe] = useState(true);
@@ -47,31 +39,29 @@ export default function LoginModal({
   const [error, setError] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const [login, { isLoading }] = useLoginMutation();
 
-
-  const [login, { isLoading }] = useLoginMutation()
-
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(emailLoginSchema),
     defaultValues: {
       email: "",
       password: "",
-    }
-  })
+    },
+  });
 
-  const onSubmit = (data: any) => {
-    
-  }
-
+  const onSubmit = (data: any) => {};
 
   useEffect(() => {
     if (!open) {
       setStep("welcome");
       setError("");
-
     }
   }, [open]);
-
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent | any) => {
@@ -89,16 +79,11 @@ export default function LoginModal({
     };
   }, [open, onClose]);
 
-
-  const handleOutsideClick = (
-    event: React.MouseEvent<HTMLDivElement>
-  ) => {
+  const handleOutsideClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
       onClose();
     }
   };
-
-
 
   const handleSelectMethod = (selected: LoginMethod) => {
     setStep(selected);
@@ -138,7 +123,6 @@ export default function LoginModal({
           duration-200
         "
       >
-
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
           <div className="flex items-center gap-3">
             {step !== "welcome" && (
@@ -169,20 +153,14 @@ export default function LoginModal({
                 {step === "phone" && "Continue with Phone"}
 
                 {step === "email" && "Continue with Email"}
-
               </h2>
 
               <p className="text-xs text-[var(--color-text-muted)]">
-                {step === "welcome" &&
-                  "Sign in to continue ordering"}
+                {step === "welcome" && "Sign in to continue ordering"}
 
-                {step === "phone" &&
-                  "We'll send a verification code"}
+                {step === "phone" && "We'll send a verification code"}
 
-                {step === "email" &&
-                  ""}
-
-
+                {step === "email" && ""}
               </p>
             </div>
           </div>
@@ -204,9 +182,7 @@ export default function LoginModal({
           </button>
         </div>
 
-
         <div className="p-5 sm:p-6">
-
           {step === "welcome" && (
             <div className="space-y-4">
               <div className="mb-6 text-center">
@@ -237,10 +213,12 @@ export default function LoginModal({
               <button
                 type="button"
                 // onClick={() => handleSelectMethod("phone")}
-                onClick={() => toast("Comming soon", {
-                  icon: <Info />,
-                  duration: 1000,
-                })}
+                onClick={() =>
+                  toast("Comming soon", {
+                    icon: <Info />,
+                    duration: 1000,
+                  })
+                }
                 className="
                   group flex w-full
                   items-center gap-4
@@ -341,13 +319,21 @@ export default function LoginModal({
               <p className="pt-2 text-center text-xs text-[var(--color-text-muted)]">
                 By continuing, you agree to our Terms & Privacy Policy.
               </p>
+              <p className="text-center text-sm text-[var(--color-text-secondary)]">
+                New here?{" "}
+                <button
+                  type="button"
+                  onClick={onOpenRegister}
+                  className="font-semibold text-[var(--color-primary)]"
+                >
+                  Create an account
+                </button>
+              </p>
             </div>
           )}
 
           {(step === "phone" || step === "email") && (
-            <form
-              className="space-y-5"
-            >
+            <form className="space-y-5">
               {/* {step === "phone" && (
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]">
@@ -463,12 +449,8 @@ export default function LoginModal({
                       "
                       />
                     </div>
-
-
                   </div>
                 </>
-
-
               )}
 
               {/* REMEMBER ME */}
@@ -477,9 +459,7 @@ export default function LoginModal({
                 <input
                   type="checkbox"
                   checked={rememberMe}
-                  onChange={(e) =>
-                    setRememberMe(e.target.checked)
-                  }
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="
                     h-4 w-4
                     accent-[var(--color-primary)]
@@ -497,9 +477,7 @@ export default function LoginModal({
                 <input
                   type="checkbox"
                   checked={acceptedTerms}
-                  onChange={(e) =>
-                    setAcceptedTerms(e.target.checked)
-                  }
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
                   className="
                     mt-1 h-4 w-4 shrink-0
                     accent-[var(--color-primary)]
@@ -574,7 +552,6 @@ export default function LoginModal({
               </button>
             </form>
           )}
-
 
           {/* {step === "otp" && (
             <form
@@ -761,7 +738,6 @@ export default function LoginModal({
             </form>
           )} */}
         </div>
-
 
         <div
           className="

@@ -20,12 +20,14 @@ import {
 
 import cartStore from "./cart/store";
 import LoginModal from "./LoginModal";
+import RegisterModal from "./RegisterModal";
 
 const Navbar = () => {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
   const profileRef = useRef<HTMLDivElement>(null);
@@ -54,6 +56,13 @@ const Navbar = () => {
         updateCart
       );
     };
+  }, []);
+
+  useEffect(() => {
+    const openLoginModal = () => setAuthOpen(true);
+
+    window.addEventListener("sfc_open_login", openLoginModal);
+    return () => window.removeEventListener("sfc_open_login", openLoginModal);
   }, []);
 
   /* ---------------- CLOSE PROFILE OUTSIDE ---------------- */
@@ -198,10 +207,9 @@ const Navbar = () => {
                       font-semibold
                       transition-all
                       duration-200
-                      ${
-                        active
-                          ? "text-[var(--color-primary)]"
-                          : "text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
+                      ${active
+                        ? "text-[var(--color-primary)]"
+                        : "text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
                       }
                     `}
                   >
@@ -218,7 +226,7 @@ const Navbar = () => {
             {/* ---------------- RIGHT ACTIONS ---------------- */}
 
             <div className="flex items-center gap-2">
-      <Link
+              <Link
                 href="/notifications"
                 aria-label="Cart"
                 className="
@@ -233,8 +241,8 @@ const Navbar = () => {
               >
                 <Bell size={20} />
 
-                  <span
-                    className="
+                <span
+                  className="
                       absolute
                       -right-0.5
                       -top-0.5
@@ -250,12 +258,12 @@ const Navbar = () => {
                       font-bold
                       text-white
                     "
-                  >
-                    0
-                  </span>
+                >
+                  0
+                </span>
               </Link>
 
-          
+
 
               {/* Cart */}
 
@@ -274,8 +282,8 @@ const Navbar = () => {
               >
                 <ShoppingCart size={20} />
 
-                  <span
-                    className="
+                <span
+                  className="
                       absolute
                       -right-0.5
                       -top-0.5
@@ -291,9 +299,9 @@ const Navbar = () => {
                       font-bold
                       text-white
                     "
-                  >
-                    0
-                  </span>
+                >
+                  0
+                </span>
               </Link>
 
               {/* Profile */}
@@ -554,7 +562,7 @@ const Navbar = () => {
                 </span>
               </Link>
             </div>
-        </div>
+          </div>
         </div>
       </header>
 
@@ -603,10 +611,9 @@ const Navbar = () => {
                   font-semibold
                   transition-all
                   duration-200
-                  ${
-                    active
-                      ? "text-[var(--color-primary)]"
-                      : "text-[var(--color-text-muted)]"
+                  ${active
+                    ? "text-[var(--color-primary)]"
+                    : "text-[var(--color-text-muted)]"
                   }
                 `}
               >
@@ -633,10 +640,9 @@ const Navbar = () => {
                     justify-center
                     rounded-xl
                     transition
-                    ${
-                      active
-                        ? "bg-[var(--color-primary-50)]"
-                        : ""
+                    ${active
+                      ? "bg-[var(--color-primary-50)]"
+                      : ""
                     }
                   `}
                 >
@@ -648,8 +654,8 @@ const Navbar = () => {
                   {/* Cart Badge */}
 
                   {item.label === "Cart" &&
-                      <span
-                        className="
+                    <span
+                      className="
                           absolute
                           -right-1
                           -top-1
@@ -662,10 +668,10 @@ const Navbar = () => {
                           font-bold
                           text-white
                         "
-                      >
-                        0
-                      </span>
-                    }
+                    >
+                      0
+                    </span>
+                  }
                 </span>
 
                 <span>{item.label}</span>
@@ -697,10 +703,9 @@ const Navbar = () => {
                 text-[10px]
                 font-semibold
                 transition
-                ${
-                  mobileProfileOpen
-                    ? "text-[var(--color-primary)]"
-                    : "text-[var(--color-text-muted)]"
+                ${mobileProfileOpen
+                  ? "text-[var(--color-primary)]"
+                  : "text-[var(--color-text-muted)]"
                 }
               `}
             >
@@ -710,10 +715,9 @@ const Navbar = () => {
                   items-center
                   justify-center
                   rounded-xl
-                  ${
-                    mobileProfileOpen
-                      ? "bg-[var(--color-primary-50)]"
-                      : ""
+                  ${mobileProfileOpen
+                    ? "bg-[var(--color-primary-50)]"
+                    : ""
                   }
                 `}
               >
@@ -809,7 +813,15 @@ const Navbar = () => {
         </div>
       </nav>
 
-      <LoginModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <LoginModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onOpenRegister={() => {
+          setAuthOpen(false);
+          setRegisterOpen(true);
+        }}
+      />
+      <RegisterModal open={registerOpen} onClose={() => setRegisterOpen(false)} />
 
       {/* =========================================================
           MOBILE CONTENT SPACING
