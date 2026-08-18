@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
@@ -30,6 +30,8 @@ type ApiError = {
 };
 type RegistrationValues = z.infer<typeof registerSchema>;
 type VerificationValues = z.infer<typeof verifyOtpSchema>;
+const RESEND_COOLDOWN_SECONDS = 30;
+const RESEND_LIMIT = 4;
 const messageFor = (error: unknown) => {
   const apiError = error as ApiError;
   return (
@@ -45,6 +47,8 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"register" | "verify">("register");
   const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [registerAccount, { isLoading: isRegistering }] = useRegisterMutation();
   const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
@@ -58,12 +62,21 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
       phone: "",
       password: "",
       confirmPassword: "",
+      termsAccepted: false,
     },
   });
   const verification = useForm({
     resolver: zodResolver(verifyOtpSchema),
     defaultValues: { otp: "" },
   });
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const timer = window.setInterval(() => {
+      setResendTimer((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendTimer]);
 
   const startVerification = async (values: RegistrationValues) => {
     const account = {
@@ -78,6 +91,8 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
       setOtpDigits(["", "", "", ""]);
       verification.reset({ otp: "" });
       setStep("verify");
+      setResendCount(0);
+      setResendTimer(RESEND_COOLDOWN_SECONDS);
       toast.success("A verification code has been sent to your email.");
     } catch (error) {
       toast.error(messageFor(error));
@@ -100,13 +115,18 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   };
 
   const resend = async () => {
+    if (resendTimer > 0 || resendCount >= RESEND_LIMIT) return;
     try {
-      await sendOtp({ email }).unwrap();
+      const response = await sendOtp({ email }).unwrap();
       setOtpDigits(["", "", "", ""]);
       verification.reset({ otp: "" });
       otpRefs.current[0]?.focus();
+      setResendCount(response.data?.resendCount ?? resendCount + 1);
+      setResendTimer(response.data?.retryAfter ?? RESEND_COOLDOWN_SECONDS);
       toast.success("A new verification code has been sent.");
     } catch (error) {
+      const apiError = error as ApiError & { data?: { retryAfter?: number } };
+      if (apiError.data?.retryAfter) setResendTimer(apiError.data.retryAfter);
       toast.error(messageFor(error));
     }
   };
@@ -217,6 +237,19 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
               {...registration.register("confirmPassword")}
             />
           </Input>
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-[var(--color-text-secondary)]">
+            <input
+              className="mt-1 h-4 w-4 accent-[var(--color-primary)]"
+              type="checkbox"
+              {...registration.register("termsAccepted")}
+            />
+            <span>I accept the Terms & Conditions.</span>
+          </label>
+          {registration.formState.errors.termsAccepted?.message && (
+            <span className="-mt-2 block text-xs font-normal text-red-600">
+              {registration.formState.errors.termsAccepted.message}
+            </span>
+          )}
           <Submit busy={isRegistering || isSending} text="Create account" />
         </form>
       ) : (
@@ -257,13 +290,18 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
             )}
           </div>
           <Submit busy={isVerifying} text="Verify and continue" verified />
+          <p className="text-center text-xs text-[var(--color-text-secondary)]">
+            {resendCount >= RESEND_LIMIT
+              ? "All 4 resend attempts used. Please try again in 10 minutes."
+              : `${RESEND_LIMIT - resendCount} resend attempt${RESEND_LIMIT - resendCount === 1 ? "" : "s"} remaining`}
+          </p>
           <button
             className="flex w-full items-center justify-center gap-2 text-sm font-semibold text-[var(--color-primary)] disabled:opacity-50"
             type="button"
-            disabled={isSending}
+            disabled={isSending || resendTimer > 0 || resendCount >= RESEND_LIMIT}
             onClick={resend}
           >
-            <Mail size={16} /> Resend code
+            <Mail size={16} /> {resendTimer > 0 ? `Resend code in ${resendTimer}s` : "Resend code"}
           </button>
           <button
             className="w-full text-sm text-[var(--color-text-secondary)]"
@@ -271,6 +309,8 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
             onClick={() => {
               verification.reset({ otp: "" });
               setOtpDigits(["", "", "", ""]);
+              setResendTimer(0);
+              setResendCount(0);
               setStep("register");
             }}
           >

@@ -20,6 +20,9 @@ export const registerSchema = z
       .or(z.literal("")),
     password,
     confirmPassword: z.string().min(1, "Confirm your password"),
+    termsAccepted: z.boolean().refine((accepted) => accepted, {
+      message: "You must accept the Terms & Conditions",
+    }),
   })
   .refine(({ password, confirmPassword }) => password === confirmPassword, {
     path: ["confirmPassword"],
@@ -37,20 +40,24 @@ export const emailLoginSchema = z.object({
     .min(1, "Email is required")
     .email("Enter a valid email address"),
 
-  password: z
-    .string()
-    .min(1, "Password is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const forgotPasswordSchema = z.object({
   email: z.string().trim().email("Enter a valid email address"),
 });
 
-export const resetPasswordSchema = z.object({
-  otp: z.string().regex(/^\d{4}$/, "Enter the 4-digit code"),
-  password,
-  confirmPassword: z.string().min(1, "Confirm your password"),
-}).refine(({ password: nextPassword, confirmPassword }) => nextPassword === confirmPassword, {
-  path: ["confirmPassword"],
-  message: "Passwords do not match",
-});
+export const resetPasswordSchema = z
+  .object({
+    otp: z.string().regex(/^\d{4}$/, "Enter the 4-digit code"),
+    password,
+    confirmPassword: z.string().min(1, "Confirm your password"),
+  })
+  .refine(
+    ({ password: nextPassword, confirmPassword }) =>
+      nextPassword === confirmPassword,
+    {
+      path: ["confirmPassword"],
+      message: "Passwords do not match",
+    },
+  );
