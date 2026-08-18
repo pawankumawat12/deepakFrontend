@@ -41,3 +41,16 @@ export const emailLoginSchema = z.object({
     .string()
     .min(1, "Password is required"),
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email("Enter a valid email address"),
+});
+
+export const resetPasswordSchema = z.object({
+  otp: z.string().regex(/^\d{4}$/, "Enter the 4-digit code"),
+  password,
+  confirmPassword: z.string().min(1, "Confirm your password"),
+}).refine(({ password: nextPassword, confirmPassword }) => nextPassword === confirmPassword, {
+  path: ["confirmPassword"],
+  message: "Passwords do not match",
+});
