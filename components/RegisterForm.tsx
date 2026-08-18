@@ -16,6 +16,7 @@ import {
 import toast from "react-hot-toast";
 import {
   useRegisterMutation,
+  useLazyGetMeQuery,
   useSendOtpMutation,
   useVerifyOtpMutation,
 } from "../redux/services/authApi";
@@ -51,6 +52,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const [resendCount, setResendCount] = useState(0);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [registerAccount, { isLoading: isRegistering }] = useRegisterMutation();
+  const [getMe] = useLazyGetMeQuery();
   const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
 
@@ -101,8 +103,8 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
 
   const completeRegistration = async ({ otp }: VerificationValues) => {
     try {
-      const response = await verifyOtp({ email, otp }).unwrap();
-      dispatch(setCredentials(response));
+      await verifyOtp({ email, otp }).unwrap();
+      dispatch(setCredentials(await getMe().unwrap()));
       toast.success("Your account is verified. Welcome!");
       if (onComplete) {
         onComplete();

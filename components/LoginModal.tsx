@@ -19,7 +19,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import toast from "react-hot-toast";
-import { useLoginMutation } from '../redux/services/authApi';
+import { useLazyGetMeQuery, useLoginMutation } from '../redux/services/authApi';
 import { emailLoginSchema } from "@/schemas/authSchema";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../redux/features/authSlice";
@@ -42,6 +42,7 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [login, { isLoading }] = useLoginMutation();
+  const [getMe] = useLazyGetMeQuery();
   const dispatch = useDispatch();
 
   const {
@@ -65,11 +66,11 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
 
     try {
       setError("");
-      const response = await login({
+      await login({
         email: data.email.trim().toLowerCase(),
         password: data.password,
       }).unwrap();
-      dispatch(setCredentials(response));
+      dispatch(setCredentials(await getMe().unwrap()));
       reset();
       toast.success("Logged in successfully.");
       onClose();

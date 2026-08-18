@@ -1,5 +1,17 @@
 import { baseApi } from "./baseApi";
 
+export type AuthUser = {
+  id: string | number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: string;
+};
+
+export type AuthResponse = {
+  user: AuthUser;
+};
+
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation({
@@ -14,10 +26,13 @@ export const authApi = baseApi.injectEndpoints({
     refreshToken: builder.mutation({
       query: () => ({ url: "/auth/refresh-token", method: "POST" }),
     }),
+    getMe: builder.query<AuthResponse, void>({
+      query: () => ({ url: "/auth/me" }),
+    }),
     login: builder.mutation({
       query: (body) => ({ url: "/auth/login", method: "POST", body }),
     }),
-    logout: builder.mutation<any,  void>({
+    logout: builder.mutation<unknown, void>({
       query: () => ({ url: "/auth/logout", method: "POST" }),
     }),
   }),
@@ -28,6 +43,8 @@ export const {
   useSendOtpMutation,
   useVerifyOtpMutation,
   useRefreshTokenMutation,
+  useGetMeQuery,
+  useLazyGetMeQuery,
   useLoginMutation,
   useLogoutMutation,
 } = authApi;

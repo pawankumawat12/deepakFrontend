@@ -1,16 +1,27 @@
 "use client";
 
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
+import { type ReactNode, useEffect } from "react";
+import { Provider, useDispatch } from "react-redux";
 
-import { store, persistor } from "../redux/store";
+import { store } from "../redux/store";
+import { setCredentials } from "../redux/features/authSlice";
+import { useGetMeQuery } from "../redux/services/authApi";
 
-export default function Providers({ children }:any) {
+function AuthLoader({ children }: { children: React.ReactNode }) {
+  const dispatch = useDispatch();
+  const { data } = useGetMeQuery();
+
+  useEffect(() => {
+    if (data?.user) dispatch(setCredentials(data));
+  }, [data, dispatch]);
+
+  return <>{children}</>;
+}
+
+export default function Providers({ children }: { children: ReactNode }) {
   return (
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        {children}
-      </PersistGate>
+      <AuthLoader>{children}</AuthLoader>
     </Provider>
   );
 }
