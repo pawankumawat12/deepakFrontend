@@ -49,7 +49,6 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
-    otp: z.string().regex(/^\d{4}$/, "Enter the 4-digit code"),
     password,
     confirmPassword: z.string().min(1, "Confirm your password"),
   })

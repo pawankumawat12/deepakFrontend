@@ -35,6 +35,22 @@ export const authApi = baseApi.injectEndpoints({
     logout: builder.mutation<unknown, void>({
       query: () => ({ url: "/auth/logout", method: "POST" }),
     }),
+    forgotPassword: builder.mutation({
+      query: (email: string) => ({ url: "/auth/forgot-password", method: "POST", body: { email } }),
+    }),
+    verifyResetPasswordToken: builder.mutation({
+      query: (accessToken: string) => ({
+        url: `/auth/reset-password/${encodeURIComponent(accessToken)}`,
+        method: "GET",
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: ({ accessToken, password }: { accessToken: string; password: string }) => ({
+        url: `/auth/reset-password/${encodeURIComponent(accessToken)}`,
+        method: "POST",
+        body: { password },
+      }),
+    }),
   }),
 });
 
@@ -47,4 +63,7 @@ export const {
   useLazyGetMeQuery,
   useLoginMutation,
   useLogoutMutation,
+  useForgotPasswordMutation,
+  useVerifyResetPasswordTokenMutation,
+  useResetPasswordMutation,
 } = authApi;
