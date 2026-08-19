@@ -14,14 +14,15 @@ import {
   Utensils,
 } from "lucide-react";
 
-import data from "./data/products";
-
-const { categories, products } = data;
+import {
+  useGetStoreCategoriesQuery,
+  useGetStoreProductsQuery,
+} from "../redux/services/catalogApi";
 
 import cartStore from "./cart/store";
 
 function formatRupee(v: number) {
-  return v % 100 === 0 ? (v / 100).toFixed(0) : (v / 100).toFixed(2);
+  return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
 
 type CartItem = {
@@ -29,8 +30,15 @@ type CartItem = {
   qty: number;
 };
 
+const EMPTY_CATEGORIES: never[] = [];
+const EMPTY_PRODUCTS: never[] = [];
+
 export default function Menu() {
-  const [selected, setSelected] = useState<string>(categories[0].id);
+  const { data: categoryResponse } = useGetStoreCategoriesQuery({});
+  const { data: productResponse } = useGetStoreProductsQuery({});
+  const categories = categoryResponse?.data || EMPTY_CATEGORIES;
+  const products = productResponse?.data || EMPTY_PRODUCTS;
+  const [selected, setSelected] = useState<string>("all");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [page, setPage] = useState<number>(1);
 
@@ -42,7 +50,7 @@ export default function Menu() {
     if (selected === "all") return products;
 
     return products.filter((p) => p.category === selected);
-  }, [selected]);
+  }, [selected, products]);
 
   // pagination via infinite scroll
   const totalPages = Math.max(
@@ -62,7 +70,7 @@ export default function Menu() {
       setSelected(cat);
       setPage(1);
     }
-  }, [searchParams]);
+  }, [searchParams, categories]);
 
   // fallback: sometimes searchParams may be empty immediately after client nav,
   // read window.location.search on mount as a robust fallback.
@@ -78,7 +86,7 @@ export default function Menu() {
     } catch (e) {
       /* ignore */
     }
-  }, []);
+  }, [categories]);
 
   const pagedProducts = useMemo(() => {
     const start = 0;
@@ -111,7 +119,7 @@ export default function Menu() {
       items,
       total,
     };
-  }, [cart]);
+  }, [cart, products]);
 
   // sync cart from storage on mount
   useEffect(() => {
@@ -720,7 +728,7 @@ export default function Menu() {
                         backdrop-blur-md
                       "
                     >
-                      {p.category}
+                      {p.categoryName}
                     </div>
 
                   </div>
@@ -760,7 +768,7 @@ export default function Menu() {
                           sm:text-xs
                         "
                       >
-                        Handcrafted — {p.category}
+                        Handcrafted — {p.categoryName}
                       </p>
                     </Link>
 

@@ -48,9 +48,7 @@ export default function ProductDetailsClient({
   }, [product.id]);
 
   function formatRupee(v: number) {
-    return v % 100 === 0
-      ? (v / 100).toFixed(0)
-      : (v / 100).toFixed(2);
+    return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   }
 
   function handleAdd() {
@@ -113,7 +111,7 @@ export default function ProductDetailsClient({
           />
 
           <span className="truncate font-bold capitalize text-[var(--color-text-secondary)]">
-            {product.category}
+            {product.categoryName || product.category}
           </span>
 
           <ChevronRight
@@ -242,7 +240,7 @@ export default function ProductDetailsClient({
                   backdrop-blur
                 "
               >
-                {product.category}
+                {product.categoryName || product.category}
               </div>
 
             </div>

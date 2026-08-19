@@ -17,10 +17,14 @@ import {
 } from "lucide-react";
 
 import cartStore from "./cart/store";
-import data from "./data/products";
+import { useGetStoreProductsQuery } from "../redux/services/catalogApi";
+
+const EMPTY_PRODUCTS: never[] = [];
 
 export default function CartClient() {
   const [items, setItems] = useState(() => cartStore.getCart());
+  const { data: productResponse } = useGetStoreProductsQuery({});
+  const products = productResponse?.data || EMPTY_PRODUCTS;
 
   useEffect(() => {
     setItems(cartStore.getCart());
@@ -41,9 +45,9 @@ export default function CartClient() {
     () =>
       items.map((it) => ({
         ...it,
-        product: data.products.find((p) => p.id === it.id),
+        product: products.find((p) => p.id === it.id),
       })),
-    [items]
+    [items, products]
   );
 
   function changeQty(id: number, qty: number) {
@@ -70,9 +74,7 @@ export default function CartClient() {
   );
 
   function formatRupee(v: number) {
-    return v % 100 === 0
-      ? (v / 100).toFixed(0)
-      : (v / 100).toFixed(2);
+    return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   }
 
   /* ============================================================
@@ -493,7 +495,7 @@ export default function CartClient() {
                             </Link>
 
                             <p className="mt-1 text-[10px] capitalize text-[var(--color-text-muted)]">
-                              {it.product.category}
+                              {it.product.categoryName}
                             </p>
 
                           </div>

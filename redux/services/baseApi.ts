@@ -31,5 +31,6 @@ const baseQueryWithRefresh = async (args, api, extraOptions) => {
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithRefresh,
+  tagTypes: ["Catalog"],
   endpoints: () => ({}),
 });

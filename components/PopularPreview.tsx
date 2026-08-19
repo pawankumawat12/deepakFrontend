@@ -9,11 +9,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import data from "./data/products";
-
-const { categories } = data;
+import { useGetStoreCategoriesQuery } from "../redux/services/catalogApi";
 
 export default function PopularPreview() {
+  const { data: categoryResponse } = useGetStoreCategoriesQuery({});
+  const categories = categoryResponse?.data || [];
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [autoplay, setAutoplay] = useState(true);
 

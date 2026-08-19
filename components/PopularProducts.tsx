@@ -11,12 +11,12 @@ import {
   Check,
 } from "lucide-react";
 
-import data from "./data/products";
 import cartStore from "./cart/store";
-
-const { products } = data;
+import { useGetStoreProductsQuery } from "../redux/services/catalogApi";
 
 export default function PopularProducts() {
+  const { data: productResponse } = useGetStoreProductsQuery({ limit: 6 });
+  const products = productResponse?.data || [];
   const [addedProduct, setAddedProduct] = React.useState<string | null>(
     null
   );
@@ -47,7 +47,7 @@ export default function PopularProducts() {
        * uses a different method name/signature.
        */
 
-      cartStore.addToCart(product);
+      cartStore.addToCart(product.id);
 
       setAddedProduct(product.id);
 
