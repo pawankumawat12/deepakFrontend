@@ -1,6 +1,7 @@
 import { baseApi } from "./baseApi";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 const assetOrigin = new URL(apiUrl).origin;
 
 type ApiProduct = {
@@ -24,8 +25,14 @@ type ApiCategory = {
   [key: string]: unknown;
 };
 
-type ApiResponse<T> = { data?: T[]; [key: string]: unknown };
-type ApiItemResponse<T> = { data: T; [key: string]: unknown };
+type ApiResponse<T> = { data?: T[];[key: string]: unknown };
+type ApiItemResponse<T> = { data: T;[key: string]: unknown };
+type StoreProductQuery = {
+  categoryId?: string | number;
+  isActive?: boolean;
+  limit?: number;
+  page?: number;
+};
 
 const toAssetUrl = (path?: string) => {
   if (!path || /^https?:\/\//i.test(path)) return path || "";
@@ -52,7 +59,10 @@ const normalizeCategory = (category: ApiCategory) => ({
 
 export const catalogApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getStoreProducts: build.query({
+    getStoreProducts: build.query<
+      ApiResponse<ReturnType<typeof normalizeProduct>>,
+      StoreProductQuery | void
+    >({
       query: (params = {}) => ({
         url: "/products",
         params: { limit: 100, isActive: true, ...params },

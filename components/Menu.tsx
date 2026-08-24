@@ -35,10 +35,14 @@ const EMPTY_PRODUCTS: never[] = [];
 
 export default function Menu() {
   const { data: categoryResponse } = useGetStoreCategoriesQuery({});
-  const { data: productResponse } = useGetStoreProductsQuery({});
+  const [selected, setSelected] = useState<string>("all");
+  const productQuery = useMemo(
+    () => (selected === "all" ? {} : { categoryId: selected }),
+    [selected]
+  );
+  const { data: productResponse } = useGetStoreProductsQuery(productQuery);
   const categories = categoryResponse?.data || EMPTY_CATEGORIES;
   const products = productResponse?.data || EMPTY_PRODUCTS;
-  const [selected, setSelected] = useState<string>("all");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [page, setPage] = useState<number>(1);
 
@@ -46,11 +50,8 @@ export default function Menu() {
 
   const gridRef = useRef<HTMLDivElement | null>(null);
 
-  const visibleProducts = useMemo(() => {
-    if (selected === "all") return products;
-
-    return products.filter((p) => p.category === selected);
-  }, [selected, products]);
+  // Products are already filtered by category in the API request above.
+  const visibleProducts = products;
 
   // pagination via infinite scroll
   const totalPages = Math.max(
@@ -60,7 +61,6 @@ export default function Menu() {
 
   useEffect(() => setPage(1), [selected]);
 
-  // if URL contains ?category=..., set selected accordingly
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -68,25 +68,11 @@ export default function Menu() {
 
     if (cat && categories.find((c) => c.id === cat)) {
       setSelected(cat);
-      setPage(1);
+    } else {
+      setSelected("all");
     }
+    setPage(1);
   }, [searchParams, categories]);
-
-  // fallback: sometimes searchParams may be empty immediately after client nav,
-  // read window.location.search on mount as a robust fallback.
-  useEffect(() => {
-    try {
-      const qp = new URLSearchParams(window.location.search);
-      const cat = qp.get("category");
-
-      if (cat && categories.find((c) => c.id === cat)) {
-        setSelected(cat);
-        setPage(1);
-      }
-    } catch (e) {
-      /* ignore */
-    }
-  }, [categories]);
 
   const pagedProducts = useMemo(() => {
     const start = 0;
@@ -176,7 +162,10 @@ export default function Menu() {
     items.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [page, selected]);
+  // Re-run after the API response adds product cards to the DOM. Previously this
+  // ran before the first response arrived, so the cards kept their hidden
+  // pre-animation state until a category/page change.
+  }, [pagedProducts]);
 
   // sentinel for infinite loading
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -619,11 +608,12 @@ export default function Menu() {
               const inCart = cart.find(
                 (c) => c.id === p.id
               );
+              const outOfStock = Number(p.stock) <= 0;
 
               return (
                 <article
                   key={p.id}
-                  className="
+                  className={`
                     product-card
                     group
                     overflow-hidden
@@ -636,7 +626,8 @@ export default function Menu() {
                     duration-300
                     hover:-translate-y-1
                     hover:shadow-xl
-                  "
+                    ${outOfStock ? "cursor-not-allowed opacity-55 grayscale" : ""}
+                  `}
                 >
 
                   {/* =================================================
@@ -663,6 +654,14 @@ export default function Menu() {
                         "
                       />
                     </Link>
+
+                    {outOfStock && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
+                        <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[var(--color-text-primary)]">
+                          Out of stock
+                        </span>
+                      </div>
+                    )}
 
                     {/* Image gradient */}
 
@@ -903,6 +902,10 @@ export default function Menu() {
 
                         </div>
 
+                      ) : outOfStock ? (
+                        <span className="rounded-full bg-[var(--color-text-muted)] px-3.5 py-2 text-[10px] font-black text-white">
+                          Out of stock
+                        </span>
                       ) : (
 
                         <button

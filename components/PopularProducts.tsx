@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Flame,
@@ -15,44 +16,20 @@ import cartStore from "./cart/store";
 import { useGetStoreProductsQuery } from "../redux/services/catalogApi";
 
 export default function PopularProducts() {
+  const router = useRouter();
   const { data: productResponse } = useGetStoreProductsQuery({ limit: 6 });
   const products = productResponse?.data || [];
   const [addedProduct, setAddedProduct] = React.useState<string | null>(
     null
   );
 
-  /*
-   * --------------------------------------------------
-   * SHOW ONLY POPULAR PRODUCTS
-   * --------------------------------------------------
-   *
-   * If your product data has `isPopular`,
-   * `isBestSeller`, or `featured`, you can use that.
-   *
-   * For now we take the first 6 products.
-   */
-
   const popularProducts = products.slice(0, 6);
-
-  /*
-   * --------------------------------------------------
-   * ADD TO CART
-   * --------------------------------------------------
-   */
 
   const handleAddToCart = (product: any) => {
     try {
-      /*
-       * Adjust this call only if your cartStore
-       * uses a different method name/signature.
-       */
-
       cartStore.addToCart(product.id);
-
       setAddedProduct(product.id);
-
       window.dispatchEvent(new Event("sfc_cart_updated"));
-
       setTimeout(() => {
         setAddedProduct(null);
       }, 1200);
@@ -61,21 +38,10 @@ export default function PopularProducts() {
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * PRICE FORMAT
-   * --------------------------------------------------
-   */
 
   const formatPrice = (price: number) => {
     return `₹${price.toLocaleString("en-IN")}`;
   };
-
-  /*
-   * --------------------------------------------------
-   * DISCOUNT
-   * --------------------------------------------------
-   */
 
   const getDiscount = (product: any) => {
     if (!product.originalPrice || !product.price) {
@@ -93,11 +59,6 @@ export default function PopularProducts() {
     );
   };
 
-  /*
-   * --------------------------------------------------
-   * RATING
-   * --------------------------------------------------
-   */
 
   const getRating = (product: any) => {
     return product.rating ?? 4.8;
@@ -107,15 +68,9 @@ export default function PopularProducts() {
     <section className="bg-[var(--bg-body)] px-4 py-12 md:px-8 md:py-16">
       <div className="mx-auto max-w-7xl">
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
         <div className="mb-8 flex items-end justify-between">
 
           <div>
-            {/* Small heading */}
-
             <div className="mb-2 flex items-center gap-2">
               <span
                 className="
@@ -145,8 +100,6 @@ export default function PopularProducts() {
               </span>
             </div>
 
-            {/* Main heading */}
-
             <h2
               className="
                 text-3xl
@@ -158,9 +111,6 @@ export default function PopularProducts() {
             >
               Popular Picks
             </h2>
-
-            {/* Description */}
-
             <p
               className="
                 mt-2
@@ -175,8 +125,6 @@ export default function PopularProducts() {
               ready to make your day delicious.
             </p>
           </div>
-
-          {/* View All */}
 
           <Link
             href="/menu"
@@ -203,10 +151,6 @@ export default function PopularProducts() {
           </Link>
         </div>
 
-        {/* =================================================
-            PRODUCTS
-        ================================================= */}
-
         <div
           className="
             grid
@@ -220,38 +164,38 @@ export default function PopularProducts() {
             const discount = getDiscount(product);
             const rating = getRating(product);
 
-            /*
-             * Product image fallback
-             */
-
             const image =
               product.img ||
               product.image ||
               product.imageUrl ||
               "";
 
-            /*
-             * Product name fallback
-             */
-
             const name =
               product.name ||
               product.title ||
               "Delicious Food";
 
-            /*
-             * Price fallback
-             */
-
             const price = Number(product.price ?? 0);
+            const outOfStock = Number(product.stock) <= 0;
 
             const isAdded = addedProduct === product.id;
 
             return (
               <article
                 key={product.id ?? index}
-                className="
+                role="link"
+                tabIndex={0}
+                onClick={() => router.push(`/product/${product.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    router.push(`/product/${product.id}`);
+                  }
+                }}
+                className={`
                   group
+                  cursor-pointer
+                  ${outOfStock ? "opacity-55 grayscale" : ""}
                   overflow-hidden
                   rounded-2xl
                   border
@@ -263,13 +207,8 @@ export default function PopularProducts() {
                   hover:-translate-y-1
                   hover:border-[var(--color-primary)]
                   hover:shadow-[0_18px_40px_rgba(79,125,22,0.13)]
-                "
+                `}
               >
-
-                {/* =================================================
-                    IMAGE
-                ================================================= */}
-
                 <div className="relative h-56 overflow-hidden">
 
                   <img
@@ -285,8 +224,6 @@ export default function PopularProducts() {
                     "
                   />
 
-                  {/* Dark image gradient */}
-
                   <div
                     className="
                       pointer-events-none
@@ -300,10 +237,7 @@ export default function PopularProducts() {
                     "
                   />
 
-                  {/* =================================================
-                      BEST SELLER BADGE
-                  ================================================= */}
-
+              
                   <div
                     className="
                       absolute
@@ -332,9 +266,13 @@ export default function PopularProducts() {
                     Best Seller
                   </div>
 
-                  {/* =================================================
-                      DISCOUNT
-                  ================================================= */}
+                  {outOfStock && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
+                      <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[var(--color-text-primary)]">
+                        Out of stock
+                      </span>
+                    </div>
+                  )}
 
                   {discount && (
                     <span
@@ -355,10 +293,6 @@ export default function PopularProducts() {
                       {discount}% OFF
                     </span>
                   )}
-
-                  {/* =================================================
-                      RATING
-                  ================================================= */}
 
                   <div
                     className="
@@ -389,13 +323,7 @@ export default function PopularProducts() {
                   </div>
                 </div>
 
-                {/* =================================================
-                    CONTENT
-                ================================================= */}
-
                 <div className="p-4">
-
-                  {/* Product name */}
 
                   <h3
                     className="
@@ -407,8 +335,6 @@ export default function PopularProducts() {
                   >
                     {name}
                   </h3>
-
-                  {/* Description */}
 
                   <p
                     className="
@@ -424,10 +350,6 @@ export default function PopularProducts() {
                       "Freshly prepared with quality ingredients and delicious flavors."}
                   </p>
 
-                  {/* =================================================
-                      BOTTOM
-                  ================================================= */}
-
                   <div
                     className="
                       mt-4
@@ -437,8 +359,6 @@ export default function PopularProducts() {
                       gap-3
                     "
                   >
-
-                    {/* Price */}
 
                     <div className="flex items-center gap-2">
 
@@ -469,13 +389,15 @@ export default function PopularProducts() {
                         )}
                     </div>
 
-                    {/* Add button */}
 
                     <button
                       type="button"
-                      onClick={() =>
-                        handleAddToCart(product)
-                      }
+                      disabled={outOfStock}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (outOfStock) return;
+                        handleAddToCart(product);
+                      }}
                       className={`
                         flex
                         h-10
@@ -493,11 +415,15 @@ export default function PopularProducts() {
                         ${
                           isAdded
                             ? "bg-[var(--color-success)]"
-                            : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] hover:-translate-y-0.5"
+                            : outOfStock
+                              ? "cursor-not-allowed bg-[var(--color-text-muted)]"
+                              : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] hover:-translate-y-0.5"
                         }
                       `}
                     >
-                      {isAdded ? (
+                      {outOfStock ? (
+                        "Out of stock"
+                      ) : isAdded ? (
                         <>
                           <Check size={15} />
                           Added
@@ -515,10 +441,6 @@ export default function PopularProducts() {
             );
           })}
         </div>
-
-        {/* =================================================
-            MOBILE VIEW ALL
-        ================================================= */}
 
         <div className="mt-7 flex justify-center sm:hidden">
           <Link
@@ -540,7 +462,6 @@ export default function PopularProducts() {
             "
           >
             View Full Menu
-
             <ArrowRight size={16} />
           </Link>
         </div>

@@ -155,9 +155,6 @@ export default function PopularPreview() {
           </Link>
         </div>
 
-        {/* =================================================
-            CATEGORY SCROLLER
-        ================================================= */}
 
         <div className="relative">
 
@@ -194,9 +191,6 @@ export default function PopularPreview() {
             <ChevronLeft size={20} />
           </button>
 
-          {/* =================================================
-              SCROLLER
-          ================================================= */}
 
           <div
             ref={scrollerRef}

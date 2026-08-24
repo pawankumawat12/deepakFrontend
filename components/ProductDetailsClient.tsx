@@ -442,11 +442,8 @@ export default function ProductDetailsClient({
                   text-[var(--color-text-secondary)]
                 "
               >
-                Delicious and freshly prepared at SFC Cafe.
-                Made with quality ingredients and carefully
-                prepared to give you a great taste in every bite.
-                Perfect for celebrations, quick meals and daily
-                cravings.
+                {product.description ||
+                  "Delicious and freshly prepared at SFC Cafe with quality ingredients for a great taste in every bite."}
               </p>
 
             </div>
@@ -755,10 +752,9 @@ export default function ProductDetailsClient({
                     transition-all
                     duration-200
                     active:scale-[0.98]
-                    ${
-                      added
-                        ? "bg-[var(--color-success)]"
-                        : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
+                    ${added
+                      ? "bg-[var(--color-success)]"
+                      : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
                     }
                   `}
                 >
