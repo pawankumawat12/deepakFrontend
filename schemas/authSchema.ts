@@ -60,3 +60,19 @@ export const resetPasswordSchema = z
       message: "Passwords do not match",
     },
   );
+
+export const updateProfileSchema = z.object({
+  name: z.string().trim().min(3, "Name must be at least 3 characters"),
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email address")
+    .optional()
+    .or(z.literal("")),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit phone number")
+    .optional()
+    .or(z.literal("")),
+});

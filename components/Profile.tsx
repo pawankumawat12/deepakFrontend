@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   User,
@@ -15,16 +15,120 @@ import {
   ChevronRight,
   Camera,
   ShieldCheck,
+  LoaderCircle,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import toast from "react-hot-toast";
+
+import { useUpdateProfileMutation } from "@/redux/services/authApi";
+import { setCredentials } from "@/redux/features/authSlice";
+import { updateProfileSchema } from "@/schemas/authSchema";
+
+type ProfileFormValues = z.infer<typeof updateProfileSchema>;
+
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const assetOrigin = new URL(apiUrl).origin;
+
+const toAssetUrl = (path?: string | null) => {
+  if (!path || /^https?:\/\//i.test(path)) return path || "";
+  return `${assetOrigin}${path.startsWith("/") ? path : `/${path}`}`;
+};
 
 export default function Profile() {
+  const dispatch = useDispatch();
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [editing, setEditing] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const user = useSelector((state: { auth: { user: any | null } }) => state.auth.user);
+  const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation();
 
-  function handleSave() {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user, reset]);
+
+  const handleCancel = () => {
+    reset({
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    });
     setEditing(false);
-  }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("name", user?.name || "");
+    if (user?.email) formData.append("email", user.email);
+    if (user?.phone) formData.append("phone", user.phone);
+
+    try {
+      setIsUploadingImage(true);
+      const response = await updateProfile(formData).unwrap();
+      if (response?.user) {
+        dispatch(setCredentials(response));
+      }
+      toast.success("Profile photo updated successfully!");
+    } catch (err: any) {
+      const msg =
+        err?.data?.message ||
+        (err?.data?.errors && Object.values(err.data.errors)[0]) ||
+        "Failed to upload profile photo.";
+      toast.error(typeof msg === "string" ? msg : "Failed to upload photo");
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const onSubmit = async (data: ProfileFormValues) => {
+    try {
+      const response = await updateProfile({
+        name: data.name.trim(),
+        email: data.email?.trim() || null,
+        phone: data.phone?.trim() || null,
+      }).unwrap();
+
+      if (response?.user) {
+        dispatch(setCredentials(response));
+      }
+      toast.success(response?.message || "Profile updated successfully!");
+      setEditing(false);
+    } catch (err: any) {
+      const msg =
+        err?.data?.message ||
+        (err?.data?.errors && Object.values(err.data.errors)[0]) ||
+        "Failed to update profile. Please try again.";
+      toast.error(typeof msg === "string" ? msg : "Failed to update profile");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[var(--bg-body)] mt-[60px]">
@@ -46,6 +150,7 @@ export default function Profile() {
                     flex
                     h-20
                     w-20
+                    overflow-hidden
                     items-center
                     justify-center
                     rounded-[1.5rem]
@@ -57,10 +162,35 @@ export default function Profile() {
                   "
                 >
                   <User size={38} strokeWidth={1.8} />
+                  {user?.image ? (
+                    <img
+                      src={toAssetUrl(user.image)}
+                      alt={user?.name || "Profile photo"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User size={38} strokeWidth={1.8} />
+                  )}
+                  {isUploadingImage && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[1.5rem]">
+                      <LoaderCircle size={24} className="animate-spin text-white" />
+                    </div>
+                  )}
                 </div>
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
 
                 <button
                   type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingImage}
+                  aria-label="Upload profile image"
                   className="
                     absolute
                     -bottom-2
@@ -76,6 +206,9 @@ export default function Profile() {
                     bg-white
                     text-[var(--color-primary)]
                     shadow-md
+                    transition
+                    hover:scale-105
+                    active:scale-95
                   "
                 >
                   <Camera size={14} />
@@ -172,7 +305,13 @@ export default function Profile() {
 
                 <button
                   type="button"
-                  onClick={() => setEditing((value) => !value)}
+                  onClick={() => {
+                    if (editing) {
+                      handleCancel();
+                    } else {
+                      setEditing(true);
+                    }
+                  }}
                   className="
                     inline-flex
                     items-center
@@ -198,7 +337,7 @@ export default function Profile() {
 
               {/* Form */}
 
-              <div className="space-y-5 p-6 sm:p-8">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6 sm:p-8">
 
                 {/* Name */}
 
@@ -226,8 +365,9 @@ export default function Profile() {
 
                     <input
                       id="name"
-                      value={user?.name}
-                      disabled={!editing}
+                      {...register("name")}
+                      disabled={!editing || isSaving}
+                      placeholder="Your full name"
                       className="
                         w-full
                         rounded-xl
@@ -251,6 +391,11 @@ export default function Profile() {
                     />
 
                   </div>
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500 font-medium">
+                      {errors.name.message}
+                    </p>
+                  )}
 
                 </div>
 
@@ -280,8 +425,10 @@ export default function Profile() {
 
                     <input
                       id="email"
-                      value={user?.email ?? ""}
-                      disabled={!editing}
+                      type="email"
+                      {...register("email")}
+                      disabled={!editing || isSaving}
+                      placeholder="name@example.com"
                       className="
                         w-full
                         rounded-xl
@@ -304,6 +451,11 @@ export default function Profile() {
                     />
 
                   </div>
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500 font-medium">
+                      {errors.email.message}
+                    </p>
+                  )}
 
                 </div>
 
@@ -333,8 +485,10 @@ export default function Profile() {
 
                     <input
                       id="phone"
-                      value={user?.phone}
-                      disabled={!editing}
+                      type="tel"
+                      {...register("phone")}
+                      disabled={!editing || isSaving}
+                      placeholder="10-digit mobile number"
                       className="
                         w-full
                         rounded-xl
@@ -357,34 +511,77 @@ export default function Profile() {
                     />
 
                   </div>
+                  {errors.phone && (
+                    <p className="mt-1 text-xs text-red-500 font-medium">
+                      {errors.phone.message}
+                    </p>
+                  )}
 
                 </div>
 
-                {/* Save */}
+                {/* Save & Cancel */}
 
                 {editing && (
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    className="
-                      rounded-xl
-                      bg-[var(--color-primary)]
-                      px-6
-                      py-3
-                      text-xs
-                      font-bold
-                      text-white
-                      shadow-md
-                      transition
-                      hover:bg-[var(--color-primary-dark)]
-                      active:scale-95
-                    "
-                  >
-                    Save Changes
-                  </button>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="
+                        inline-flex
+                        items-center
+                        gap-2
+                        rounded-xl
+                        bg-[var(--color-primary)]
+                        px-6
+                        py-3
+                        text-xs
+                        font-bold
+                        text-white
+                        shadow-md
+                        transition
+                        hover:bg-[var(--color-primary-dark)]
+                        active:scale-95
+                        disabled:cursor-not-allowed
+                        disabled:opacity-70
+                      "
+                    >
+                      {isSaving ? (
+                        <>
+                          <LoaderCircle size={15} className="animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={handleCancel}
+                      className="
+                        rounded-xl
+                        border
+                        border-[var(--color-border)]
+                        bg-white
+                        px-5
+                        py-3
+                        text-xs
+                        font-bold
+                        text-[var(--color-text-secondary)]
+                        shadow-sm
+                        transition
+                        hover:bg-[var(--bg-body)]
+                        active:scale-95
+                        disabled:opacity-70
+                      "
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 )}
 
-              </div>
+              </form>
 
             </div>
 

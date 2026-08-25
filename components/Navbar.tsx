@@ -25,12 +25,21 @@ import RegisterModal from "./RegisterModal";
 import { logout } from "../redux/features/authSlice";
 import { useLogoutMutation } from "../redux/services/authApi";
 import LogoutModal from "@/models/LogoutModel";
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const assetOrigin = new URL(apiUrl).origin;
+
+const toAssetUrl = (path?: string | null) => {
+  if (!path || /^https?:\/\//i.test(path)) return path || "";
+  return `${assetOrigin}${path.startsWith("/") ? path : `/${path}`}`;
+};
+
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector(
-    (state: { auth: { user: { name?: string } | null } }) => state.auth.user
+    (state: { auth: { user: { name?: string; image?: string | null } | null } }) => state.auth.user
   );
 
   const [logoutRequest] = useLogoutMutation();
@@ -322,13 +331,21 @@ const Navbar = () => {
                   >
                     <span
                       className="
-                      flex h-8 w-8 items-center justify-center
+                      flex h-8 w-8 overflow-hidden items-center justify-center
                       rounded-full
                       bg-[var(--color-primary)]
                       text-white
                     "
                     >
-                      <User size={17} />
+                      {user?.image ? (
+                        <img
+                          src={toAssetUrl(user.image)}
+                          alt={user?.name || "User profile"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User size={17} />
+                      )}
                     </span>
 
                     <span>{user?.name?.split(" ")[0] ?? "Profile"}</span>

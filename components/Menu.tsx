@@ -7,17 +7,24 @@ import {
   ArrowRight,
   ChevronRight,
   Flame,
+  Heart,
   Minus,
   Plus,
   ShoppingBag,
   Star,
   Utensils,
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 import {
   useGetStoreCategoriesQuery,
   useGetStoreProductsQuery,
 } from "../redux/services/catalogApi";
+import {
+  useGetWishlistQuery,
+  useToggleWishlistMutation,
+} from "../redux/services/wishlistApi";
 
 import cartStore from "./cart/store";
 
@@ -34,6 +41,9 @@ const EMPTY_CATEGORIES: never[] = [];
 const EMPTY_PRODUCTS: never[] = [];
 
 export default function Menu() {
+  const user = useSelector(
+    (state: { auth: { user: any | null } }) => state.auth.user
+  );
   const { data: categoryResponse } = useGetStoreCategoriesQuery({});
   const [selected, setSelected] = useState<string>("all");
   const productQuery = useMemo(
@@ -41,6 +51,38 @@ export default function Menu() {
     [selected]
   );
   const { data: productResponse } = useGetStoreProductsQuery(productQuery);
+  const { data: wishlistData } = useGetWishlistQuery(undefined, {
+    skip: !user,
+  });
+  const [toggleWishlist] = useToggleWishlistMutation();
+
+  const wishlistedIds = useMemo(
+    () =>
+      new Set(
+        (wishlistData?.data || []).map((w) => Number(w.id || w.product_id))
+      ),
+    [wishlistData]
+  );
+
+  const handleToggleWishlist = async (productId: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please sign in to save favorites");
+      return;
+    }
+    try {
+      const res = await toggleWishlist({ productId }).unwrap();
+      if (res.inWishlist) {
+        toast.success("Added to favorites ❤️");
+      } else {
+        toast.success("Removed from favorites");
+      }
+    } catch {
+      toast.error("Failed to update favorites");
+    }
+  };
+
   const categories = categoryResponse?.data || EMPTY_CATEGORIES;
   const products = productResponse?.data || EMPTY_PRODUCTS;
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -706,24 +748,56 @@ export default function Menu() {
                       </div>
                     )}
 
-                    {/* Category */}
-
-                    <div
+                    {/* Wishlist Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleWishlist(p.id, e)}
+                      aria-label="Save to favorites"
                       className="
                         absolute
                         right-2
                         top-2
-                        max-w-[45%]
+                        z-20
+                        flex
+                        h-8
+                        w-8
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-white/95
+                        shadow-md
+                        backdrop-blur-md
+                        transition
+                        hover:scale-110
+                        active:scale-95
+                      "
+                    >
+                      <Heart
+                        size={15}
+                        className={
+                          wishlistedIds.has(p.id)
+                            ? "fill-red-500 text-red-500"
+                            : "text-stone-600 hover:text-red-400"
+                        }
+                      />
+                    </button>
+
+                    {/* Category */}
+                    <div
+                      className="
+                        absolute
+                        left-2
+                        bottom-2
+                        max-w-[65%]
                         truncate
                         rounded-full
-                        bg-white/90
+                        bg-black/50
                         px-2.5
-                        py-1
+                        py-0.5
                         text-[9px]
                         font-bold
                         capitalize
-                        text-[var(--color-text-secondary)]
-                        shadow
+                        text-white
                         backdrop-blur-md
                       "
                     >

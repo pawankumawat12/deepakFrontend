@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Clock3,
   Flame,
+  Heart,
   Minus,
   Plus,
   ShoppingBag,
@@ -17,12 +18,50 @@ import {
   Utensils,
 } from "lucide-react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
+
+import {
+  useGetWishlistQuery,
+  useToggleWishlistMutation,
+} from "../redux/services/wishlistApi";
 
 export default function ProductDetailsClient({
   product,
 }: {
   product: any;
 }) {
+  const user = useSelector(
+    (state: { auth: { user: any | null } }) => state.auth.user
+  );
+  const { data: wishlistData } = useGetWishlistQuery(undefined, {
+    skip: !user,
+  });
+  const [toggleWishlist] = useToggleWishlistMutation();
+
+  const isWishlisted = Boolean(
+    (wishlistData?.data || []).some(
+      (w) => Number(w.id || w.product_id) === Number(product.id)
+    )
+  );
+
+  const handleToggleWishlist = async () => {
+    if (!user) {
+      toast.error("Please sign in to save favorites");
+      return;
+    }
+    try {
+      const res = await toggleWishlist({ productId: Number(product.id) }).unwrap();
+      if (res.inWishlist) {
+        toast.success("Added to favorites ❤️");
+      } else {
+        toast.success("Removed from favorites");
+      }
+    } catch {
+      toast.error("Failed to update favorites");
+    }
+  };
+
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   const [added, setAdded] = useState(false);
@@ -221,23 +260,56 @@ export default function ProductDetailsClient({
                 Popular Choice
               </div>
 
-              {/* Category */}
-
-              <div
+              {/* Wishlist Toggle Button */}
+              <button
+                type="button"
+                onClick={handleToggleWishlist}
+                aria-label="Add to favorites"
                 className="
                   absolute
                   right-4
                   top-4
+                  z-20
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
                   rounded-full
-                  bg-white/90
+                  bg-white/95
+                  shadow-lg
+                  backdrop-blur-md
+                  transition
+                  hover:scale-105
+                  active:scale-95
+                "
+              >
+                <Heart
+                  size={20}
+                  className={
+                    isWishlisted
+                      ? "fill-red-500 text-red-500"
+                      : "text-stone-600 hover:text-red-500"
+                  }
+                />
+              </button>
+
+              {/* Category */}
+              <div
+                className="
+                  absolute
+                  left-4
+                  bottom-4
+                  rounded-full
+                  bg-black/50
                   px-3
-                  py-1.5
+                  py-1
                   text-[10px]
-                  font-black
+                  font-bold
                   capitalize
-                  text-[var(--color-text-secondary)]
+                  text-white
                   shadow
-                  backdrop-blur
+                  backdrop-blur-md
                 "
               >
                 {product.categoryName || product.category}

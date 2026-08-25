@@ -45,6 +45,7 @@ const normalizeProduct = (product: ApiProduct) => ({
   category: String(product.category_id),
   categoryName: product.category_name || "Menu",
   price: Number(product.price),
+  stock: product.stock !== undefined ? Number(product.stock) : 1,
   img: toAssetUrl(product.images?.[0]),
   image: toAssetUrl(product.images?.[0]),
   isActive: Boolean(product.is_active),
