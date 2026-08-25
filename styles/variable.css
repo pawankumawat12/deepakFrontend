@@ -13,6 +13,7 @@
   --color-brown: #4a2e1d;
   --color-brown-dark: #2d1b0f;
   --color-brown-light: #795548;
+  --color-chocolate-dark: #2d1b0f;
 
   --color-cream: #fff8e8;
   --color-beige: #f5ead5;
@@ -39,49 +40,101 @@
   --color-star: #f5a623;
 }
 
+/* Light Theme Color Variants */
+:root[data-color-theme="caramel"] {
+  --color-primary: #e86b1a;
+  --color-primary-dark: #bf4f07;
+  --color-primary-light: #f98c42;
+  --color-primary-50: #fff3ea;
+  --bg-footer: #3a2118;
+}
 
-/* 
+:root[data-color-theme="mocha"] {
+  --color-primary: #d97706;
+  --color-primary-dark: #b45309;
+  --color-primary-light: #f59e0b;
+  --color-primary-50: #fef7e6;
+  --bg-footer: #3d2612;
+}
 
-:root {
-  --color-primary: #E85D04;          
-  --color-primary-dark: #B94300;    
-  --color-primary-light: #FF7A21;    
-  --color-primary-50: #FFF3E8;
+:root[data-color-theme="berry"] {
+  --color-primary: #e11d48;
+  --color-primary-dark: #be123c;
+  --color-primary-light: #f43f5e;
+  --color-primary-50: #ffe4e6;
+  --bg-footer: #38121a;
+}
 
-  --color-secondary: #F4A261;       
-  --color-secondary-dark: #D97932;
+/* =========================================================
+   DARK THEME BASE (WARM CAFE ROAST)
+========================================================= */
+:root[data-theme="dark"],
+.dark {
+  --color-primary: #7cb324;          
+  --color-primary-dark: #5b8715;     
+  --color-primary-light: #9ed63e;    
+  --color-primary-50: #292415;
 
-  --color-orange: #E85D04;
-  --color-orange-dark: #A83B00;
-  --color-orange-light: #FF8C42;
+  --color-secondary: #f5a623;       
+  --color-secondary-dark: #d8890b;
+  --color-green: #7cb324;
+  --color-green-dark: #223308;
+  --color-green-light: #9ed63e;
 
-  --color-cheese: #FFC857;          
-  --color-cheese-dark: #E5A900;
+  --color-brown: #332319;
+  --color-brown-dark: #1b120c;
+  --color-brown-light: #583d2c;
+  --color-chocolate-dark: #14100c;
 
-  --color-chocolate: #3A2118;        
-  --color-chocolate-dark: #24130E;
-  --color-chocolate-light: #684233;
+  --color-cream: #241c16;
+  --color-beige: #2e231c;
+  --color-gold: #f5b02e;
 
-  --color-cream: #FFF7ED;
-  --color-beige: #F5E6D3;
+  --color-white: #201914;
+  --color-black: #faf4ea;
 
-  --color-white: #FFFFFF;
-  --color-black: #17120F;
+  --color-text-primary: #faf4ea;
+  --color-text-secondary: #d8c8b8;
+  --color-text-muted: #9a8779;
 
-  --color-text-primary: #2A1A14;
-  --color-text-secondary: #705E54;
-  --color-text-muted: #A3948A;
+  --color-border: #3b2d24;
 
-  --color-border: #EBDDCF;
+  --bg-body: #14100c;
+  --bg-surface: #201914;
+  --bg-muted: #2c221b;
+  --bg-footer: #0d0a08;
 
-  --bg-body: #FFF7ED;
-  --bg-surface: #FFFFFF;
-  --bg-muted: #F5E6D3;
-  --bg-footer: #24130E;
+  --color-success: #7cb324;
+  --color-warning: #f5a623;
+  --color-error: #f87171;
+  --color-discount: #7cb324;
+  --color-star: #f5a623;
+}
 
-  --color-success: #3F7D20;
-  --color-warning: #F4A261;
-  --color-error: #D64545;
-  --color-discount: #E85D04;
-  --color-star: #FFC857;
-} */
+/* Dark Theme Color Variants */
+:root[data-theme="dark"][data-color-theme="caramel"],
+.dark[data-color-theme="caramel"] {
+  --color-primary: #e86b1a;
+  --color-primary-dark: #bf4f07;
+  --color-primary-light: #f98c42;
+  --color-primary-50: #2e1d13;
+  --color-green: #e86b1a;
+}
+
+:root[data-theme="dark"][data-color-theme="mocha"],
+.dark[data-color-theme="mocha"] {
+  --color-primary: #f5a623;
+  --color-primary-dark: #d97706;
+  --color-primary-light: #fbbf24;
+  --color-primary-50: #2d2210;
+  --color-green: #f5a623;
+}
+
+:root[data-theme="dark"][data-color-theme="berry"],
+.dark[data-color-theme="berry"] {
+  --color-primary: #f43f5e;
+  --color-primary-dark: #e11d48;
+  --color-primary-light: #fb7185;
+  --color-primary-50: #301319;
+  --color-green: #f43f5e;
+}

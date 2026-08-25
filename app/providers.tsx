@@ -6,6 +6,7 @@ import { Provider, useDispatch } from "react-redux";
 import { store } from "../redux/store";
 import { setCredentials } from "../redux/features/authSlice";
 import { useGetMeQuery } from "../redux/services/authApi";
+import { ThemeProvider } from "../context/ThemeContext";
 
 function AuthLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
@@ -20,8 +21,10 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
-    <Provider store={store}>
-      <AuthLoader>{children}</AuthLoader>
-    </Provider>
+    <ThemeProvider>
+      <Provider store={store}>
+        <AuthLoader>{children}</AuthLoader>
+      </Provider>
+    </ThemeProvider>
   );
 }

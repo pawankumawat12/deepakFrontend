@@ -161,7 +161,6 @@ export default function Profile() {
                     sm:w-24
                   "
                 >
-                  <User size={38} strokeWidth={1.8} />
                   {user?.image ? (
                     <img
                       src={toAssetUrl(user.image)}
@@ -222,13 +221,40 @@ export default function Profile() {
                   My Account
                 </p>
 
-                <h1 className="mt-1 text-2xl font-black  sm:text-3xl">
+                <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">
                   {user?.name}
                 </h1>
 
-                <p className="mt-1 text-xs">
-                  Welcome back to SFC Cafe 👋
-                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2.5">
+                  <p className="text-xs text-white/80">
+                    Welcome back to SFC Cafe 👋
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingImage}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-lg
+                      bg-white/20
+                      px-2.5
+                      py-1
+                      text-[10px]
+                      font-bold
+                      text-white
+                      backdrop-blur-sm
+                      transition
+                      hover:bg-white/30
+                      active:scale-95
+                    "
+                  >
+                    <Camera size={12} />
+                    {isUploadingImage ? "Uploading..." : user?.image ? "Change Photo" : "Upload Photo"}
+                  </button>
+                </div>
 
               </div>
 
@@ -338,6 +364,65 @@ export default function Profile() {
               {/* Form */}
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6 sm:p-8">
+
+                {/* Profile Photo Row */}
+                <div className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-[var(--bg-body)] p-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[var(--color-primary)] text-white shadow-sm">
+                      {user?.image ? (
+                        <img
+                          src={toAssetUrl(user.image)}
+                          alt={user?.name || "Profile"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User size={22} />
+                      )}
+                      {isUploadingImage && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                          <LoaderCircle size={18} className="animate-spin text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-[var(--color-text-primary)]">
+                        Profile Photo
+                      </p>
+                      <p className="text-[10px] text-[var(--color-text-muted)]">
+                        Upload JPEG, PNG or WEBP (Max 10MB)
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingImage}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      border
+                      border-[var(--color-border)]
+                      bg-white
+                      px-3.5
+                      py-2
+                      text-xs
+                      font-bold
+                      text-[var(--color-primary)]
+                      shadow-sm
+                      transition
+                      hover:bg-[var(--color-primary-50)]
+                      active:scale-95
+                      disabled:opacity-70
+                    "
+                  >
+                    <Camera size={13} />
+                    {isUploadingImage ? "Uploading..." : user?.image ? "Change Photo" : "Upload Photo"}
+                  </button>
+                </div>
 
                 {/* Name */}
 

@@ -6,22 +6,69 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Flame,
+  Heart,
   ShoppingCart,
   Star,
   Plus,
   Check,
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 import cartStore from "./cart/store";
 import { useGetStoreProductsQuery } from "../redux/services/catalogApi";
+import {
+  useGetWishlistQuery,
+  useToggleWishlistMutation,
+} from "../redux/services/wishlistApi";
 
 export default function PopularProducts() {
   const router = useRouter();
+  const user = useSelector(
+    (state: { auth: { user: any | null } }) => state.auth.user
+  );
   const { data: productResponse } = useGetStoreProductsQuery({ limit: 6 });
   const products = productResponse?.data || [];
   const [addedProduct, setAddedProduct] = React.useState<string | null>(
     null
   );
+
+  const { data: wishlistData } = useGetWishlistQuery(undefined, {
+    skip: !user,
+  });
+  const [toggleWishlist] = useToggleWishlistMutation();
+
+  const wishlistedIds = React.useMemo(
+    () =>
+      new Set(
+        (wishlistData?.data || []).map((w) => Number(w.id || w.product_id))
+      ),
+    [wishlistData]
+  );
+
+  const handleToggleWishlist = async (
+    productId: number | string,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please sign in to save favorites");
+      return;
+    }
+    try {
+      const res = await toggleWishlist({
+        productId: Number(productId),
+      }).unwrap();
+      if (res.inWishlist) {
+        toast.success("Added to favorites ❤️");
+      } else {
+        toast.success("Removed from favorites");
+      }
+    } catch {
+      toast.error("Failed to update favorites");
+    }
+  };
 
   const popularProducts = products.slice(0, 6);
 
@@ -274,17 +321,51 @@ export default function PopularProducts() {
                     </div>
                   )}
 
+                  {/* Wishlist Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleToggleWishlist(product.id, e)}
+                    aria-label="Save to favorites"
+                    className="
+                      absolute
+                      right-3
+                      top-3
+                      z-20
+                      flex
+                      h-9
+                      w-9
+                      items-center
+                      justify-center
+                      rounded-full
+                      bg-white/95
+                      shadow-md
+                      backdrop-blur-md
+                      transition
+                      hover:scale-110
+                      active:scale-95
+                    "
+                  >
+                    <Heart
+                      size={16}
+                      className={
+                        wishlistedIds.has(Number(product.id))
+                          ? "fill-red-500 text-red-500"
+                          : "text-stone-600 hover:text-red-400"
+                      }
+                    />
+                  </button>
+
                   {discount && (
                     <span
                       className="
                         absolute
-                        right-3
-                        top-3
+                        left-3
+                        bottom-10
                         rounded-full
                         bg-[var(--color-secondary)]
-                        px-3
-                        py-1.5
-                        text-[10px]
+                        px-2.5
+                        py-1
+                        text-[9px]
                         font-black
                         text-white
                         shadow-md
