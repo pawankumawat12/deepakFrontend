@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SFC Cafe — Good Food, Great Vibes",
-    short_name: "SFC Cafe",
+    name: "SFC Cafe",
+    short_name: "SFC",
     description: "Freshly prepared food, bold flavors and quick delivery.",
     start_url: "/",
     scope: "/",

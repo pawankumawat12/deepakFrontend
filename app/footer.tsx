@@ -66,23 +66,9 @@ export default function Footer() {
 
   return (
     <footer className="app-footer bg-[var(--bg-footer)] text-white">
-
-      {/* =====================================================
-          MAIN FOOTER
-      ===================================================== */}
-
-      <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
-
+      <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-6">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]">
-
-          {/* =================================================
-              BRAND
-          ================================================= */}
-
           <div>
-
-            {/* Logo */}
-
             <Link
               href="/"
               className="inline-flex items-center gap-3"
@@ -116,7 +102,6 @@ export default function Footer() {
               </div>
             </Link>
 
-            {/* Description */}
 
             <p
               className="
@@ -132,10 +117,7 @@ export default function Footer() {
               clicks away.
             </p>
 
-            {/* Social */}
-
             <div className="mt-6 flex items-center gap-2">
-
               <a
                 href="#"
                 aria-label="Facebook"
@@ -155,7 +137,6 @@ export default function Footer() {
               >
                 <span className="text-sm font-bold">f</span>
               </a>
-
               <a
                 href="#"
                 aria-label="Instagram"
@@ -175,7 +156,6 @@ export default function Footer() {
               >
             <span className="text-sm font-bold">ig</span>
               </a>
-
               <a
                 href="#"
                 aria-label="Twitter"
@@ -193,15 +173,9 @@ export default function Footer() {
                   hover:text-white
                 "
               >
-<span className="text-sm font-bold">𝕏</span>              </a>
-
+<span className="text-sm font-bold">𝕏</span> </a>
             </div>
           </div>
-
-          {/* =================================================
-              QUICK LINKS
-          ================================================= */}
-
           <div>
 
             <h3
@@ -242,11 +216,6 @@ export default function Footer() {
 
             </ul>
           </div>
-
-          {/* =================================================
-              CUSTOMER HELP
-          ================================================= */}
-
           <div>
 
             <h3
@@ -287,11 +256,6 @@ export default function Footer() {
 
             </ul>
           </div>
-
-          {/* =================================================
-              CONTACT
-          ================================================= */}
-
           <div>
 
             <h3
@@ -389,11 +353,6 @@ export default function Footer() {
             </div>
           </div>
         </div>
-
-        {/* =====================================================
-            INSTALL PWA APP
-        ===================================================== */}
-
         <div className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[var(--color-primary)]/25 via-white/5 to-transparent p-5 sm:p-6 md:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -440,11 +399,6 @@ export default function Footer() {
             </div>
           </div>
         </div>
-
-        {/* =====================================================
-            MOBILE ORDER CTA
-        ===================================================== */}
-
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 sm:hidden">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -462,17 +416,7 @@ export default function Footer() {
             </Link>
           </div>
         </div>
-
-        {/* =====================================================
-            DIVIDER
-        ===================================================== */}
-
         <div className="my-8 h-px bg-white/10" />
-
-        {/* =====================================================
-            BOTTOM BAR
-        ===================================================== */}
-
         <div
           className="
             flex
