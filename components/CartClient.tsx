@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -18,6 +18,14 @@ import {
   Utensils,
   AlertTriangle,
   ShieldCheck,
+  MapPin,
+  Home,
+  Briefcase,
+  Building,
+  CheckCircle2,
+  X,
+  Phone,
+  User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -31,6 +39,12 @@ import {
   CartItem,
 } from "../redux/services/cartApi";
 import { useCreateOrderMutation } from "../redux/services/orderApi";
+import {
+  useGetAddressesQuery,
+  useCreateAddressMutation,
+  useDeleteAddressMutation,
+  Address,
+} from "../redux/services/addressApi";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 
@@ -49,6 +63,23 @@ export default function CartClient() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  // Address State
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    label: "Home",
+    receiver_name: "",
+    phone_number: "",
+    house_number: "",
+    building_name: "",
+    landmark: "",
+    formatted_address: "",
+    city: "Jaipur",
+    state: "Rajasthan",
+    pincode: "",
+    is_default: false,
+  });
+
   const {
     data: cartResponse,
     isLoading,
@@ -56,6 +87,38 @@ export default function CartClient() {
   } = useGetCartQuery(undefined, {
     skip: !user,
   });
+
+  const { data: addressResponse, isLoading: isAddressesLoading } = useGetAddressesQuery(
+    undefined,
+    { skip: !user }
+  );
+  const addresses: Address[] = addressResponse?.data || [];
+
+  const [createAddress, { isLoading: isSavingAddress }] = useCreateAddressMutation();
+  const [deleteAddress] = useDeleteAddressMutation();
+
+  // Auto-select default or first address
+  useEffect(() => {
+    if (addresses.length > 0) {
+      if (!selectedAddressId || !addresses.some((a) => a.id === selectedAddressId)) {
+        const defaultAddr = addresses.find((a) => a.is_default);
+        setSelectedAddressId(defaultAddr ? defaultAddr.id : addresses[0].id);
+      }
+    } else {
+      setSelectedAddressId(null);
+    }
+  }, [addresses, selectedAddressId]);
+
+  // Pre-populate address form with user details when opening modal
+  useEffect(() => {
+    if (user && addressModalOpen) {
+      setAddressForm((prev) => ({
+        ...prev,
+        receiver_name: prev.receiver_name || user.name || "",
+        phone_number: prev.phone_number || user.phone || "",
+      }));
+    }
+  }, [user, addressModalOpen]);
 
   const [updateCartItem] = useUpdateCartItemMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
@@ -118,6 +181,85 @@ export default function CartClient() {
     }
   };
 
+  const handleSaveAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addressForm.receiver_name.trim()) {
+      toast.error("Please enter receiver name");
+      return;
+    }
+    if (!addressForm.phone_number.trim() || addressForm.phone_number.trim().length < 10) {
+      toast.error("Please enter a valid 10-digit phone number");
+      return;
+    }
+    if (!addressForm.house_number.trim()) {
+      toast.error("Please enter house / flat / room number");
+      return;
+    }
+    if (!addressForm.formatted_address.trim()) {
+      toast.error("Please enter street, area or locality");
+      return;
+    }
+    if (!addressForm.pincode.trim()) {
+      toast.error("Please enter postal pincode");
+      return;
+    }
+
+    try {
+      const res = await createAddress({
+        label: addressForm.label,
+        receiver_name: addressForm.receiver_name.trim(),
+        phone_number: addressForm.phone_number.trim(),
+        house_number: addressForm.house_number.trim(),
+        building_name: addressForm.building_name.trim() || undefined,
+        landmark: addressForm.landmark.trim() || undefined,
+        formatted_address: addressForm.formatted_address.trim(),
+        city: addressForm.city.trim() || "Jaipur",
+        state: addressForm.state.trim() || "Rajasthan",
+        pincode: addressForm.pincode.trim(),
+        is_default: addressForm.is_default || addresses.length === 0,
+      }).unwrap();
+
+      const newAddrId = res?.data?.id;
+      if (newAddrId) {
+        setSelectedAddressId(newAddrId);
+      }
+      toast.success("Delivery address saved successfully! 📍");
+      setAddressModalOpen(false);
+      setAddressForm({
+        label: "Home",
+        receiver_name: user?.name || "",
+        phone_number: user?.phone || "",
+        house_number: "",
+        building_name: "",
+        landmark: "",
+        formatted_address: "",
+        city: "Jaipur",
+        state: "Rajasthan",
+        pincode: "",
+        is_default: false,
+      });
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to save address");
+    }
+  };
+
+  const handleDeleteAddress = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this delivery address?")) return;
+    try {
+      await deleteAddress(id).unwrap();
+      toast.success("Address removed");
+      if (selectedAddressId === id) {
+        const remaining = addresses.filter((a) => a.id !== id);
+        setSelectedAddressId(remaining.length > 0 ? remaining[0].id : null);
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete address");
+    }
+  };
+
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId) || null;
+
   const handleCheckout = async () => {
     if (!user) {
       setAuthOpen(true);
@@ -131,12 +273,30 @@ export default function CartClient() {
       toast.error("Your cart is empty");
       return;
     }
+    if (!selectedAddress) {
+      toast.error("Please select or add a delivery address to place your order");
+      setAddressModalOpen(true);
+      return;
+    }
+
+    const addressParts = [
+      selectedAddress.house_number,
+      selectedAddress.building_name,
+      selectedAddress.landmark ? `Near ${selectedAddress.landmark}` : null,
+      selectedAddress.formatted_address,
+      `${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pincode}`,
+    ].filter(Boolean);
+
+    const shippingAddress = addressParts.join(", ");
+
     try {
       await createOrder({
-        customerName: user.name || "Customer",
+        addressId: selectedAddress.id,
+        customerName: selectedAddress.receiver_name || user.name || "Customer",
         customerEmail: user.email || "",
-        customerPhone: user.phone || "",
-        shippingAddress: "Jaipur, Rajasthan",
+        customerPhone: selectedAddress.phone_number || user.phone || "",
+        shippingAddress,
+        deliveryAddressJson: selectedAddress,
         paymentMethod: "Cash on Delivery",
       }).unwrap();
 
@@ -438,8 +598,215 @@ export default function CartClient() {
       {/* CART CONTENT GRID */}
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_390px] lg:items-start">
-          {/* ITEMS LIST */}
+          {/* ITEMS & ADDRESS SECTION */}
           <section>
+            {/* =====================================================
+                DELIVERY ADDRESS SELECTION SECTION (FLIPKART STYLE)
+            ===================================================== */}
+            <div className="mb-6 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                    <MapPin size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-[var(--color-text-primary)] sm:text-base">
+                      Delivery Address
+                    </h2>
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      {addresses.length === 0
+                        ? "Please add an address where you want your food delivered"
+                        : `${addresses.length} saved address${addresses.length === 1 ? "" : "es"} available`}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAddressModalOpen(true)}
+                  className="
+                    inline-flex
+                    items-center
+                    gap-1.5
+                    rounded-xl
+                    bg-[var(--color-primary-50)]
+                    px-3.5
+                    py-2
+                    text-xs
+                    font-bold
+                    text-[var(--color-primary)]
+                    transition
+                    hover:bg-[var(--color-primary)]
+                    hover:text-white
+                  "
+                >
+                  <Plus size={15} />
+                  <span>Add New Address</span>
+                </button>
+              </div>
+
+              {/* ADDRESSES LIST */}
+              {isAddressesLoading ? (
+                <div className="flex items-center justify-center py-6 text-xs text-[var(--color-text-muted)]">
+                  <LoaderCircle size={16} className="mr-2 animate-spin text-[var(--color-primary)]" />
+                  Loading saved addresses...
+                </div>
+              ) : addresses.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 p-5 text-center">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                    <MapPin size={22} />
+                  </div>
+                  <h3 className="mt-2.5 text-xs font-black text-amber-900 sm:text-sm">
+                    No Delivery Address Selected
+                  </h3>
+                  <p className="mx-auto mt-1 max-w-sm text-[11px] leading-5 text-amber-800">
+                    You must add a delivery address before placing your order.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setAddressModalOpen(true)}
+                    className="
+                      mt-3.5
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-amber-600
+                      px-4
+                      py-2.5
+                      text-xs
+                      font-black
+                      text-white
+                      shadow-sm
+                      transition
+                      hover:bg-amber-700
+                    "
+                  >
+                    <Plus size={15} />
+                    Add Address Now
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {addresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr.id;
+                    return (
+                      <div
+                        key={addr.id}
+                        onClick={() => setSelectedAddressId(addr.id)}
+                        className={`
+                          group
+                          relative
+                          cursor-pointer
+                          rounded-2xl
+                          border-2
+                          p-4
+                          transition-all
+                          duration-200
+                          ${
+                            isSelected
+                              ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 shadow-sm"
+                              : "border-[var(--color-border)] bg-white hover:border-stone-300"
+                          }
+                        `}
+                      >
+                        {/* Header: Label & Radio */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`
+                                inline-flex
+                                items-center
+                                gap-1
+                                rounded-lg
+                                px-2
+                                py-0.5
+                                text-[10px]
+                                font-black
+                                uppercase
+                                tracking-wider
+                                ${
+                                  addr.label === "Work"
+                                    ? "bg-blue-50 text-blue-700"
+                                    : addr.label === "Home"
+                                    ? "bg-green-50 text-green-700"
+                                    : "bg-purple-50 text-purple-700"
+                                }
+                              `}
+                            >
+                              {addr.label === "Work" ? (
+                                <Briefcase size={11} />
+                              ) : addr.label === "Home" ? (
+                                <Home size={11} />
+                              ) : (
+                                <Building size={11} />
+                              )}
+                              {addr.label}
+                            </span>
+                            {addr.is_default && (
+                              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold text-stone-600">
+                                Default
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteAddress(addr.id, e)}
+                              aria-label="Delete address"
+                              className="text-stone-400 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+
+                            <div
+                              className={`
+                                flex
+                                h-5
+                                w-5
+                                items-center
+                                justify-center
+                                rounded-full
+                                border-2
+                                transition
+                                ${
+                                  isSelected
+                                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                    : "border-stone-300 bg-white"
+                                }
+                              `}
+                            >
+                              {isSelected && <Check size={11} strokeWidth={3.5} />}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Receiver details */}
+                        <div className="mt-2.5">
+                          <p className="text-xs font-black text-[var(--color-text-primary)]">
+                            {addr.receiver_name}
+                          </p>
+                          <p className="text-[11px] font-bold text-[var(--color-text-secondary)]">
+                            {addr.phone_number}
+                          </p>
+                        </div>
+
+                        {/* Full address string */}
+                        <p className="mt-1 text-[11px] leading-4.5 text-[var(--color-text-muted)] line-clamp-2">
+                          {addr.house_number}
+                          {addr.building_name ? `, ${addr.building_name}` : ""}
+                          {addr.landmark ? `, Near ${addr.landmark}` : ""}
+                          {`, ${addr.formatted_address || `${addr.city}, ${addr.state} - ${addr.pincode}`}`}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* CART ITEMS HEADER */}
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-base font-black text-[var(--color-text-primary)] sm:text-lg">
@@ -755,6 +1122,59 @@ export default function CartClient() {
                   </div>
                 </div>
 
+                {/* SELECTED DELIVERY ADDRESS SUMMARY IN SIDEBAR */}
+                <div className="rounded-2xl border border-[var(--color-border)] bg-stone-50 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[var(--color-text-primary)]">
+                      <MapPin size={14} className="text-[var(--color-primary)]" />
+                      <span>Deliver to</span>
+                    </div>
+
+                    {selectedAddress ? (
+                      <button
+                        type="button"
+                        onClick={() => setAddressModalOpen(true)}
+                        className="text-[11px] font-bold text-[var(--color-primary)] hover:underline"
+                      >
+                        + Add New
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {selectedAddress ? (
+                    <div className="mt-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[var(--color-text-primary)]">
+                          {selectedAddress.receiver_name}
+                        </span>
+                        <span className="rounded bg-[var(--color-primary-50)] px-1.5 py-0.5 text-[9px] font-black text-[var(--color-primary)]">
+                          {selectedAddress.label}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
+                        {selectedAddress.phone_number}
+                      </p>
+                      <p className="mt-1 text-[11px] text-[var(--color-text-secondary)] line-clamp-2">
+                        {selectedAddress.house_number}, {selectedAddress.formatted_address || `${selectedAddress.city} - ${selectedAddress.pincode}`}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-center">
+                      <p className="text-[11px] font-bold text-amber-700">
+                        ⚠️ No delivery address selected
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setAddressModalOpen(true)}
+                        className="mt-2 inline-flex items-center gap-1 rounded-xl bg-[var(--color-primary)] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)]"
+                      >
+                        <Plus size={13} />
+                        Add Address
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {summary.hasOutOfStockItems && (
                   <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-[11px] font-bold text-red-600">
                     <AlertTriangle size={15} className="shrink-0" />
@@ -765,7 +1185,12 @@ export default function CartClient() {
                 {/* Checkout Button */}
                 <button
                   type="button"
-                  disabled={summary.hasOutOfStockItems || isPlacingOrder || items.length === 0}
+                  disabled={
+                    summary.hasOutOfStockItems ||
+                    isPlacingOrder ||
+                    items.length === 0 ||
+                    !selectedAddress
+                  }
                   onClick={handleCheckout}
                   className="
                     flex
@@ -796,7 +1221,9 @@ export default function CartClient() {
                       ? "Placing Order..."
                       : summary.hasOutOfStockItems
                       ? "Resolve Stock Issues"
-                      : "Proceed to Checkout"}
+                      : !selectedAddress
+                      ? "Select Delivery Address"
+                      : "Place Order (Cash on Delivery)"}
                   </span>
                   {isPlacingOrder ? (
                     <LoaderCircle size={16} className="animate-spin" />
@@ -844,6 +1271,262 @@ export default function CartClient() {
           </aside>
         </div>
       </div>
+
+      {/* =========================================================
+          ADD NEW ADDRESS MODAL
+      ========================================================= */}
+      {addressModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
+          onClick={() => setAddressModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <MapPin size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[var(--color-text-primary)] sm:text-base">
+                    Add Delivery Address
+                  </h3>
+                  <p className="text-[11px] text-[var(--color-text-muted)]">
+                    Enter complete details for doorstep delivery
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setAddressModalOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveAddress} className="max-h-[75vh] overflow-y-auto p-6 space-y-4">
+              {/* Address Label Selector */}
+              <div>
+                <label className="text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] block mb-1.5">
+                  Address Type / Label *
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { label: "Home", icon: Home },
+                    { label: "Work", icon: Briefcase },
+                    { label: "Other", icon: Building },
+                  ].map((t) => {
+                    const Icon = t.icon;
+                    const isSelected = addressForm.label === t.label;
+                    return (
+                      <button
+                        key={t.label}
+                        type="button"
+                        onClick={() => setAddressForm({ ...addressForm, label: t.label })}
+                        className={`
+                          flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 py-2.5 text-xs font-bold transition
+                          ${
+                            isSelected
+                              ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] text-[var(--color-primary)]"
+                              : "border-[var(--color-border)] bg-stone-50 text-[var(--color-text-secondary)] hover:border-stone-300"
+                          }
+                        `}
+                      >
+                        <Icon size={14} />
+                        <span>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Receiver Details */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                    Receiver's Name *
+                  </label>
+                  <div className="relative">
+                    <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. John Doe"
+                      value={addressForm.receiver_name}
+                      onChange={(e) => setAddressForm({ ...addressForm, receiver_name: e.target.value })}
+                      className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 py-2.5 pl-10 pr-3.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                    10-Digit Phone Number *
+                  </label>
+                  <div className="relative">
+                    <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      placeholder="e.g. 9876543210"
+                      value={addressForm.phone_number}
+                      onChange={(e) => setAddressForm({ ...addressForm, phone_number: e.target.value.replace(/\D/g, "") })}
+                      className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 py-2.5 pl-10 pr-3.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Flat / House No */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                    Flat / House No. / Room No. *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Flat 302 / House 12"
+                    value={addressForm.house_number}
+                    onChange={(e) => setAddressForm({ ...addressForm, house_number: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                    Building / Apartment Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Green Heights"
+                    value={addressForm.building_name}
+                    onChange={(e) => setAddressForm({ ...addressForm, building_name: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              {/* Area / Street & Landmark */}
+              <div>
+                <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                  Street / Area / Sector / Locality *
+                </label>
+                <textarea
+                  required
+                  rows={2}
+                  placeholder="e.g. Malviya Nagar, Sector 4, Near Apex Mall"
+                  value={addressForm.formatted_address}
+                  onChange={(e) => setAddressForm({ ...addressForm, formatted_address: e.target.value })}
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                    Landmark (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Near Water Tank"
+                    value={addressForm.landmark}
+                    onChange={(e) => setAddressForm({ ...addressForm, landmark: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Jaipur"
+                    value={addressForm.city}
+                    onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
+                    Pincode *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    placeholder="e.g. 302017"
+                    value={addressForm.pincode}
+                    onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, "") })}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              {/* Make Default Checkbox */}
+              <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={addressForm.is_default}
+                  onChange={(e) => setAddressForm({ ...addressForm, is_default: e.target.checked })}
+                  className="h-4 w-4 rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                />
+                <span className="text-xs font-bold text-[var(--color-text-secondary)]">
+                  Set as default delivery address
+                </span>
+              </label>
+
+              {/* Submit Button */}
+              <div className="pt-3">
+                <button
+                  type="submit"
+                  disabled={isSavingAddress}
+                  className="
+                    flex
+                    h-12
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-2xl
+                    bg-[var(--color-primary)]
+                    text-xs
+                    font-black
+                    text-white
+                    shadow-lg
+                    shadow-[var(--color-primary)]/25
+                    transition
+                    hover:bg-[var(--color-primary-dark)]
+                    disabled:opacity-50
+                  "
+                >
+                  {isSavingAddress ? (
+                    <>
+                      <LoaderCircle size={16} className="animate-spin" />
+                      <span>Saving Address...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      <span>Save & Deliver Here</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

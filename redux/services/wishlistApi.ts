@@ -10,6 +10,7 @@ const toAssetUrl = (path?: string) => {
 };
 
 export type WishlistItem = {
+  availability_type: string;
   wishlist_id: number;
   product_id: number;
   wishlisted_at: string;
@@ -40,16 +41,21 @@ export const wishlistApi = baseApi.injectEndpoints({
       query: () => "/wishlist",
       transformResponse: (response: WishlistResponse) => ({
         ...response,
-        data: (response.data || []).map((item) => ({
-          ...item,
-          id: Number(item.product_id || item.id),
-          price: Number(item.price),
-          stock: item.stock !== undefined ? Number(item.stock) : 1,
-          category: item.category_name || "Menu",
-          categoryName: item.category_name || "Menu",
-          img: toAssetUrl(item.images?.[0]),
-          image: toAssetUrl(item.images?.[0]),
-        })),
+        data: (response.data || []).map((item) => {
+          const isMadeToOrder = String(item.availability_type || "").toUpperCase() === "MADE_TO_ORDER";
+          return {
+            ...item,
+            id: Number(item.product_id || item.id),
+            price: Number(item.price),
+            stock: isMadeToOrder ? Infinity : (item.stock !== undefined ? Number(item.stock) : 1),
+            availability_type: item.availability_type || "IN_STOCK",
+            isMadeToOrder,
+            category: item.category_name || "Menu",
+            categoryName: item.category_name || "Menu",
+            img: toAssetUrl(item.images?.[0]),
+            image: toAssetUrl(item.images?.[0]),
+          };
+        }),
       }),
       providesTags: ["Wishlist"],
     }),

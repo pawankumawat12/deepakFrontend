@@ -39,17 +39,24 @@ const toAssetUrl = (path?: string) => {
   return `${assetOrigin}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
-const normalizeProduct = (product: ApiProduct) => ({
-  ...product,
-  id: Number(product.id),
-  category: String(product.category_id),
-  categoryName: product.category_name || "Menu",
-  price: Number(product.price),
-  stock: product.stock !== undefined ? Number(product.stock) : 1,
-  img: toAssetUrl(product.images?.[0]),
-  image: toAssetUrl(product.images?.[0]),
-  isActive: Boolean(product.is_active),
-});
+const normalizeProduct = (product: ApiProduct) => {
+  const availabilityType = String(product.availability_type || "IN_STOCK").toUpperCase();
+  const isMadeToOrder = availabilityType === "MADE_TO_ORDER";
+  return {
+    ...product,
+    id: Number(product.id),
+    category: String(product.category_id),
+    categoryName: product.category_name || "Menu",
+    price: Number(product.price),
+    // MADE_TO_ORDER products have unlimited stock — never treat as 0
+    stock: isMadeToOrder ? Infinity : (product.stock !== undefined ? Number(product.stock) : 1),
+    img: toAssetUrl(product.images?.[0]),
+    image: toAssetUrl(product.images?.[0]),
+    isActive: Boolean(product.is_active),
+    availability_type: availabilityType,
+    isMadeToOrder,
+  };
+};
 
 const normalizeCategory = (category: ApiCategory) => ({
   ...category,

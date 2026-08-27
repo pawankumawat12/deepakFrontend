@@ -11,6 +11,7 @@ import {
   Minus,
   Plus,
   ShoppingBag,
+  Sparkles,
   Star,
   Utensils,
 } from "lucide-react";
@@ -661,7 +662,10 @@ export default function Menu() {
             {pagedProducts.map((p, index) => {
               const inCartQty = cartItemsMap.get(Number(p.id)) || 0;
               const inCart = inCartQty > 0;
-              const isMadeToOrder = p.availability_type === "MADE_TO_ORDER";
+              const isMadeToOrder = Boolean(
+                p.isMadeToOrder ||
+                String(p.availability_type || "").toUpperCase() === "MADE_TO_ORDER"
+              );
               const outOfStock = !isMadeToOrder && Number(p.stock) <= 0;
 
               return (

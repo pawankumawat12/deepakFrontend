@@ -22,6 +22,7 @@ export interface Order {
   customer_email?: string;
   customer_phone?: string;
   shipping_address?: string;
+  delivery_address_json?: any;
   subtotal: number;
   delivery_fee: number;
   discount: number;
@@ -35,10 +36,12 @@ export interface Order {
 }
 
 export interface CreateOrderPayload {
+  addressId?: number;
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
   shippingAddress?: string;
+  deliveryAddressJson?: any;
   paymentMethod?: string;
   notes?: string;
 }

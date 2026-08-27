@@ -80,7 +80,9 @@ export default function PopularProducts() {
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
-    if (Number(product.stock) <= 0) {
+    const isMadeToOrder = product.isMadeToOrder ||
+      String(product.availability_type || "").toUpperCase() === "MADE_TO_ORDER";
+    if (!isMadeToOrder && Number(product.stock) <= 0) {
       toast.error("Product is out of stock");
       return;
     }
@@ -234,7 +236,9 @@ export default function PopularProducts() {
               "Delicious Food";
 
             const price = Number(product.price ?? 0);
-            const outOfStock = Number(product.stock) <= 0;
+            const isMadeToOrder = product.isMadeToOrder ||
+              String(product.availability_type || "").toUpperCase() === "MADE_TO_ORDER";
+            const outOfStock = !isMadeToOrder && Number(product.stock) <= 0;
 
             const isAdded = addedProduct === product.id;
 

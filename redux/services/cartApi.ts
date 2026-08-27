@@ -21,6 +21,8 @@ export interface CartItem {
   image?: string | null;
   img: string;
   is_active: boolean;
+  availability_type: "IN_STOCK" | "MADE_TO_ORDER";
+  isMadeToOrder: boolean;
   category_id: number | string;
   category_name: string;
   quantity: number;
@@ -66,6 +68,11 @@ const transformCartResponse = (response: any): CartResponse => {
     const price = Number(item.price) || 0;
     const quantity = Number(item.quantity) || 0;
     const stock = Number(item.stock) || 0;
+    const availabilityType: "IN_STOCK" | "MADE_TO_ORDER" =
+      String(item.availability_type || "IN_STOCK").toUpperCase() === "MADE_TO_ORDER"
+        ? "MADE_TO_ORDER"
+        : "IN_STOCK";
+    const isMadeToOrder = availabilityType === "MADE_TO_ORDER";
     const firstImg = Array.isArray(item.images)
       ? item.images[0]
       : item.image || item.img || null;
@@ -82,12 +89,15 @@ const transformCartResponse = (response: any): CartResponse => {
       image: toAssetUrl(firstImg),
       img: toAssetUrl(firstImg),
       is_active: item.is_active !== undefined ? Boolean(item.is_active) : true,
+      availability_type: availabilityType,
+      isMadeToOrder,
       category_id: item.category_id || "",
       category_name: item.category_name || "Menu",
       quantity,
       itemTotal: price * quantity,
-      isOutOfStock: stock <= 0 || item.is_active === false,
-      exceedsStock: quantity > stock,
+      // MADE_TO_ORDER products are never out of stock
+      isOutOfStock: isMadeToOrder ? false : (stock <= 0 || item.is_active === false),
+      exceedsStock: isMadeToOrder ? false : quantity > stock,
       added_at: item.added_at,
       updated_at: item.updated_at,
     };

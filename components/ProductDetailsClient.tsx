@@ -89,6 +89,12 @@ export default function ProductDetailsClient({
     requestAnimationFrame(() => el.classList.add("revealed"));
   }, []);
 
+  const isMadeToOrder = Boolean(
+    product?.isMadeToOrder ||
+    String(product?.availability_type || "").toUpperCase() === "MADE_TO_ORDER"
+  );
+  const isOutOfStock = !isMadeToOrder && Number(product?.stock) <= 0;
+
   function formatRupee(v: number) {
     return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   }
@@ -99,7 +105,7 @@ export default function ProductDetailsClient({
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
-    if (Number(product.stock) <= 0) {
+    if (isOutOfStock) {
       toast.error("Product is out of stock");
       return;
     }
@@ -119,7 +125,7 @@ export default function ProductDetailsClient({
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
-    if (newQty > Number(product.stock)) {
+    if (!isMadeToOrder && newQty > Number(product.stock)) {
       toast.error(`Only ${product.stock} items available in stock`);
       return;
     }
@@ -871,7 +877,7 @@ export default function ProductDetailsClient({
               {!inCartQty && (
                 <button
                   type="button"
-                  disabled={product.availability_type !== "MADE_TO_ORDER" && Number(product.stock) <= 0}
+                  disabled={isOutOfStock}
                   onClick={handleAdd}
                   className={`
                     mt-4
@@ -894,7 +900,7 @@ export default function ProductDetailsClient({
                     disabled:opacity-50
                     ${added
                       ? "bg-[var(--color-success)]"
-                      : product.availability_type !== "MADE_TO_ORDER" && Number(product.stock) <= 0
+                      : isOutOfStock
                       ? "bg-stone-400"
                       : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
                     }
@@ -907,7 +913,7 @@ export default function ProductDetailsClient({
 
                       Added to Cart
                     </>
-                  ) : product.availability_type !== "MADE_TO_ORDER" && Number(product.stock) <= 0 ? (
+                  ) : isOutOfStock ? (
                     <span>Out of Stock</span>
                   ) : (
                     <>

@@ -80,9 +80,20 @@ export default function Orders() {
   const orders = useMemo(() => {
     return rawOrders.map((o) => {
       const d = new Date(o.created_at);
+      let addressJson = o.delivery_address_json;
+      if (typeof addressJson === "string") {
+        try {
+          addressJson = JSON.parse(addressJson);
+        } catch {
+          addressJson = null;
+        }
+      }
+
       return {
         id: o.order_number || `SFC-${o.id}`,
         dbId: o.id,
+        customerName: o.customer_name || addressJson?.receiver_name,
+        customerPhone: o.customer_phone || addressJson?.phone_number,
         date: d.toLocaleDateString("en-IN", {
           day: "2-digit",
           month: "short",
@@ -95,7 +106,8 @@ export default function Orders() {
         }),
         status: o.status as OrderStatus,
         total: Number(o.total_amount || 0),
-        address: o.shipping_address || "Jaipur, Rajasthan",
+        address: o.shipping_address || (addressJson ? `${addressJson.house_number}, ${addressJson.formatted_address || `${addressJson.city} - ${addressJson.pincode}`}` : "Jaipur, Rajasthan"),
+        addressJson,
         payment: o.payment_method || "Cash on Delivery",
         items: (o.items || []).map((it) => ({
           id: it.id,
