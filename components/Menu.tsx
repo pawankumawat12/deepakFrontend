@@ -25,17 +25,15 @@ import {
   useGetWishlistQuery,
   useToggleWishlistMutation,
 } from "../redux/services/wishlistApi";
-
-import cartStore from "./cart/store";
+import {
+  useGetCartQuery,
+  useAddCartItemMutation,
+  useUpdateCartItemMutation,
+} from "../redux/services/cartApi";
 
 function formatRupee(v: number) {
   return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
-
-type CartItem = {
-  id: number;
-  qty: number;
-};
 
 const EMPTY_CATEGORIES: never[] = [];
 const EMPTY_PRODUCTS: never[] = [];
@@ -56,6 +54,25 @@ export default function Menu() {
   });
   const [toggleWishlist] = useToggleWishlistMutation();
 
+  const { data: cartResponse } = useGetCartQuery(undefined, {
+    skip: !user,
+  });
+  const [addCartItem] = useAddCartItemMutation();
+  const [updateCartItem] = useUpdateCartItemMutation();
+
+  const cartItemsMap = useMemo(
+    () =>
+      new Map(
+        (cartResponse?.data?.items || []).map((it) => [Number(it.id), it.quantity])
+      ),
+    [cartResponse]
+  );
+
+  const cartSummary = cartResponse?.data?.summary || {
+    totalItems: 0,
+    grandTotal: 0,
+  };
+
   const wishlistedIds = useMemo(
     () =>
       new Set(
@@ -69,6 +86,7 @@ export default function Menu() {
     e.stopPropagation();
     if (!user) {
       toast.error("Please sign in to save favorites");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
     try {
@@ -83,9 +101,51 @@ export default function Menu() {
     }
   };
 
+  const handleAddToCart = async (productId: number, stock: number, isMadeToOrder?: boolean) => {
+    if (!user) {
+      toast.error("Please sign in to add items to cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (!isMadeToOrder && stock <= 0) {
+      toast.error("Product is out of stock");
+      return;
+    }
+    try {
+      await addCartItem({ productId, quantity: 1 }).unwrap();
+      toast.success("Added to cart 🛒");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to add to cart");
+    }
+  };
+
+  const handleChangeQty = async (
+    productId: number,
+    nextQty: number,
+    maxStock: number,
+    isMadeToOrder?: boolean
+  ) => {
+    if (!user) {
+      toast.error("Please sign in to modify cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (!isMadeToOrder && nextQty > maxStock) {
+      toast.error(`Only ${maxStock} items available in stock`);
+      return;
+    }
+    try {
+      await updateCartItem({ productId, quantity: nextQty }).unwrap();
+      if (nextQty === 0) {
+        toast.success("Removed from cart");
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update quantity");
+    }
+  };
+
   const categories = categoryResponse?.data || EMPTY_CATEGORIES;
   const products = productResponse?.data || EMPTY_PRODUCTS;
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [page, setPage] = useState<number>(1);
 
   const pageSize = 8;
@@ -117,55 +177,8 @@ export default function Menu() {
   }, [searchParams, categories]);
 
   const pagedProducts = useMemo(() => {
-    const start = 0;
-
     return visibleProducts.slice(0, page * pageSize);
   }, [visibleProducts, page]);
-
-  function addToCart(productId: number) {
-    const next = cartStore.addToCart(productId, 1);
-
-    setCart(next);
-  }
-
-  function changeQty(productId: number, qty: number) {
-    const next = cartStore.updateQty(productId, qty);
-
-    setCart(next);
-  }
-
-  const summary = useMemo(() => {
-    const items = cart.reduce((acc, it) => acc + it.qty, 0);
-
-    const total = cart.reduce((acc, it) => {
-      const p = products.find((x) => x.id === it.id)!;
-
-      return acc + p?.price * it.qty;
-    }, 0);
-
-    return {
-      items,
-      total,
-    };
-  }, [cart, products]);
-
-  // sync cart from storage on mount
-  useEffect(() => {
-    setCart(cartStore.getCart());
-  }, []);
-
-  // listen for cart updates from other components
-  useEffect(() => {
-    function onUpdate() {
-      setCart(cartStore.getCart());
-    }
-
-    window.addEventListener("sfc_cart_updated", onUpdate);
-
-    return () => {
-      window.removeEventListener("sfc_cart_updated", onUpdate);
-    };
-  }, []);
 
   // Smooth scroll to grid when selecting category
   function selectCategory(id: string) {
@@ -646,11 +659,10 @@ export default function Menu() {
           >
 
             {pagedProducts.map((p, index) => {
-
-              const inCart = cart.find(
-                (c) => c.id === p.id
-              );
-              const outOfStock = Number(p.stock) <= 0;
+              const inCartQty = cartItemsMap.get(Number(p.id)) || 0;
+              const inCart = inCartQty > 0;
+              const isMadeToOrder = p.availability_type === "MADE_TO_ORDER";
+              const outOfStock = !isMadeToOrder && Number(p.stock) <= 0;
 
               return (
                 <article
@@ -701,6 +713,15 @@ export default function Menu() {
                       <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
                         <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[var(--color-text-primary)]">
                           Out of stock
+                        </span>
+                      </div>
+                    )}
+
+                    {isMadeToOrder && (
+                      <div className="absolute right-2 top-2 z-10">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-600/90 px-2 py-0.5 text-[9px] font-black text-white shadow backdrop-blur-sm">
+                          <Sparkles size={10} />
+                          Made to Order
                         </span>
                       </div>
                     )}
@@ -892,88 +913,108 @@ export default function Menu() {
                       </div>
 
                       {/* =================================================
-                          EXISTING CART LOGIC
+                          AUTHENTICATED CART CONTROLS
                       ================================================= */}
 
                       {inCart ? (
 
-                        <div
-                          className="
-                            flex
-                            items-center
-                            gap-1
-                            rounded-full
-                            bg-[var(--color-primary-50)]
-                            p-1
-                            ring-1
-                            ring-[var(--color-primary)]/10
-                          "
-                        >
-
-                          <button
-                            type="button"
-                            aria-label="Decrease quantity"
-                            onClick={() =>
-                              changeQty(
-                                p.id,
-                                Math.max(0, inCart.qty - 1)
-                              )
-                            }
-                            className="
-                              flex
-                              h-7
-                              w-7
-                              items-center
-                              justify-center
-                              rounded-full
-                              bg-white
-                              text-[var(--color-primary)]
-                              shadow-sm
-                              transition
-                              active:scale-90
-                            "
-                          >
-                            <Minus size={13} strokeWidth={3} />
-                          </button>
-
+                        <div className="flex flex-col items-end gap-1">
                           <div
                             className="
-                              min-w-[22px]
-                              text-center
-                              text-xs
-                              font-black
-                              text-[var(--color-primary)]
+                              flex
+                              items-center
+                              gap-1
+                              rounded-full
+                              bg-[var(--color-primary-50)]
+                              p-1
+                              ring-1
+                              ring-[var(--color-primary)]/10
                             "
                           >
-                            {inCart.qty}
+
+                            <button
+                              type="button"
+                              aria-label="Decrease quantity"
+                              onClick={() =>
+                                handleChangeQty(
+                                  p.id,
+                                  inCartQty - 1,
+                                  Number(p.stock)
+                                )
+                              }
+                              className="
+                                flex
+                                h-7
+                                w-7
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-white
+                                text-[var(--color-primary)]
+                                shadow-sm
+                                transition
+                                active:scale-90
+                              "
+                            >
+                              <Minus size={13} strokeWidth={3} />
+                            </button>
+
+                            <div
+                              className="
+                                min-w-[22px]
+                                text-center
+                                text-xs
+                                font-black
+                                text-[var(--color-primary)]
+                              "
+                            >
+                              {inCartQty}
+                            </div>
+
+                            <button
+                              type="button"
+                              aria-label="Increase quantity"
+                              title={!isMadeToOrder && inCartQty >= Number(p.stock) ? `Only ${p.stock} items available in stock` : "Increase quantity"}
+                              disabled={!isMadeToOrder && inCartQty >= Number(p.stock)}
+                              onClick={() =>
+                                handleChangeQty(
+                                  p.id,
+                                  inCartQty + 1,
+                                  Number(p.stock),
+                                  isMadeToOrder
+                                )
+                              }
+                              className="
+                                flex
+                                h-7
+                                w-7
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+                                transition
+                                disabled:cursor-not-allowed
+                                disabled:opacity-40
+                                active:scale-90
+                              "
+                            >
+                              <Plus size={13} strokeWidth={3} />
+                            </button>
+
                           </div>
 
-                          <button
-                            type="button"
-                            aria-label="Increase quantity"
-                            onClick={() =>
-                              changeQty(
-                                p.id,
-                                inCart.qty + 1
-                              )
-                            }
-                            className="
-                              flex
-                              h-7
-                              w-7
-                              items-center
-                              justify-center
-                              rounded-full
-                              bg-[var(--color-primary)]
-                              text-white
-                              shadow-sm
-                              transition
-                              active:scale-90
-                            "
-                          >
-                            <Plus size={13} strokeWidth={3} />
-                          </button>
-
+                          {!isMadeToOrder && inCartQty >= Number(p.stock) && (
+                            <span className="text-[9px] font-bold text-amber-600">
+                              Max ({p.stock})
+                            </span>
+                          )}
+                          {isMadeToOrder && (
+                            <span className="text-[9px] font-bold text-orange-600">
+                              Fresh Order
+                            </span>
+                          )}
                         </div>
 
                       ) : outOfStock ? (
@@ -984,7 +1025,7 @@ export default function Menu() {
 
                         <button
                           type="button"
-                          onClick={() => addToCart(p.id)}
+                          onClick={() => handleAddToCart(p.id, Number(p.stock), isMadeToOrder)}
                           className="
                             flex
                             h-9
@@ -1068,7 +1109,7 @@ export default function Menu() {
           STICKY CART
       ========================================================= */}
 
-      {summary.items > 0 && (
+      {user && cartSummary.totalItems > 0 && (
         <div
           className="
             cart-bar
@@ -1118,12 +1159,12 @@ export default function Menu() {
               <div className="min-w-0">
 
                 <p className="truncate text-[10px] font-semibold text-white/60">
-                  {summary.items} item
-                  {summary.items !== 1 ? "s" : ""} in your cart
+                  {cartSummary.totalItems} item
+                  {cartSummary.totalItems !== 1 ? "s" : ""} in your cart
                 </p>
 
                 <p className="text-sm font-black">
-                  ₹{formatRupee(summary.total)}
+                  ₹{formatRupee(cartSummary.grandTotal)}
                 </p>
 
               </div>
@@ -1145,7 +1186,7 @@ export default function Menu() {
                 px-4
                 text-xs
                 font-black
-                text-[var(--color-primary-dark)]
+                text-white
                 transition
                 hover:-translate-y-0.5
                 active:scale-95

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import cartStore from "./cart/store";
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,6 +24,11 @@ import {
   useGetWishlistQuery,
   useToggleWishlistMutation,
 } from "../redux/services/wishlistApi";
+import {
+  useGetCartQuery,
+  useAddCartItemMutation,
+  useUpdateCartItemMutation,
+} from "../redux/services/cartApi";
 
 export default function ProductDetailsClient({
   product,
@@ -39,6 +43,17 @@ export default function ProductDetailsClient({
   });
   const [toggleWishlist] = useToggleWishlistMutation();
 
+  const { data: cartResponse } = useGetCartQuery(undefined, {
+    skip: !user,
+  });
+  const [addCartItem] = useAddCartItemMutation();
+  const [updateCartItem] = useUpdateCartItemMutation();
+
+  const inCartItem = (cartResponse?.data?.items || []).find(
+    (c) => Number(c.id) === Number(product.id)
+  );
+  const inCartQty = inCartItem?.quantity || null;
+
   const isWishlisted = Boolean(
     (wishlistData?.data || []).some(
       (w) => Number(w.id || w.product_id) === Number(product.id)
@@ -48,6 +63,7 @@ export default function ProductDetailsClient({
   const handleToggleWishlist = async () => {
     if (!user) {
       toast.error("Please sign in to save favorites");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
     try {
@@ -66,54 +82,55 @@ export default function ProductDetailsClient({
 
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState<number>(1);
-  const [inCartQty, setInCartQty] = useState<number | null>(null);
 
   useEffect(() => {
     const el = imgRef.current;
-
     if (!el) return;
-
     requestAnimationFrame(() => el.classList.add("revealed"));
   }, []);
-
-  useEffect(() => {
-    const cur = cartStore.getCart();
-
-    const found = cur.find((c) => c.id === product.id);
-
-    if (found) {
-      setInCartQty(found.qty);
-    }
-  }, [product.id]);
 
   function formatRupee(v: number) {
     return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   }
 
-  function handleAdd() {
-    cartStore.addToCart(product.id, qty);
-
-    setInCartQty((q) => (q || 0) + qty);
-
-    setAdded(true);
-
-    setTimeout(() => setAdded(false), 900);
-  }
-
-  function changeQty(newQty: number) {
-    if (newQty <= 0) {
-      cartStore.updateQty(product.id, 0);
-
-      setInCartQty(null);
-
+  async function handleAdd() {
+    if (!user) {
+      toast.error("Please sign in to add items to cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
+    if (Number(product.stock) <= 0) {
+      toast.error("Product is out of stock");
+      return;
+    }
+    try {
+      await addCartItem({ productId: Number(product.id), quantity: qty }).unwrap();
+      setAdded(true);
+      toast.success("Added to cart 🛒");
+      setTimeout(() => setAdded(false), 900);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to add to cart");
+    }
+  }
 
-    const next = cartStore.updateQty(product.id, newQty);
-
-    const found = next.find((c) => c.id === product.id);
-
-    setInCartQty(found ? found.qty : null);
+  async function changeQty(newQty: number) {
+    if (!user) {
+      toast.error("Please sign in to modify cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (newQty > Number(product.stock)) {
+      toast.error(`Only ${product.stock} items available in stock`);
+      return;
+    }
+    try {
+      await updateCartItem({ productId: Number(product.id), quantity: newQty }).unwrap();
+      if (newQty === 0) {
+        toast.success("Removed from cart");
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update quantity");
+    }
   }
 
   return (
@@ -641,160 +658,208 @@ export default function ProductDetailsClient({
 
                 {inCartQty ? (
 
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-1
-                      rounded-full
-                      bg-[var(--color-primary-50)]
-                      p-1
-                      ring-1
-                      ring-[var(--color-primary)]/10
-                    "
-                  >
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        changeQty(
-                          Math.max(0, inCartQty - 1)
-                        )
-                      }
+                  <div className="flex flex-col items-end gap-1">
+                    <div
                       className="
                         flex
-                        h-9
-                        w-9
                         items-center
-                        justify-center
+                        gap-1
                         rounded-full
-                        bg-white
-                        text-[var(--color-primary)]
-                        shadow-sm
-                        transition
-                        active:scale-90
+                        bg-[var(--color-primary-50)]
+                        p-1
+                        ring-1
+                        ring-[var(--color-primary)]/10
                       "
                     >
-                      <Minus
-                        size={15}
-                        strokeWidth={3}
-                      />
-                    </button>
 
-                    <span
-                      className="
-                        min-w-[34px]
-                        text-center
-                        text-sm
-                        font-black
-                        text-[var(--color-primary)]
-                      "
-                    >
-                      {inCartQty}
-                    </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          changeQty(
+                            Math.max(0, inCartQty - 1)
+                          )
+                        }
+                        className="
+                          flex
+                          h-9
+                          w-9
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-white
+                          text-[var(--color-primary)]
+                          shadow-sm
+                          transition
+                          active:scale-90
+                        "
+                      >
+                        <Minus
+                          size={15}
+                          strokeWidth={3}
+                        />
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        changeQty(inCartQty + 1)
-                      }
-                      className="
-                        flex
-                        h-9
-                        w-9
-                        items-center
-                        justify-center
-                        rounded-full
-                        bg-[var(--color-primary)]
-                        text-white
-                        shadow-sm
-                        transition
-                        active:scale-90
-                      "
-                    >
-                      <Plus
-                        size={15}
-                        strokeWidth={3}
-                      />
-                    </button>
+                      <span
+                        className="
+                          min-w-[34px]
+                          text-center
+                          text-sm
+                          font-black
+                          text-[var(--color-primary)]
+                        "
+                      >
+                        {inCartQty}
+                      </span>
 
+                      <button
+                        type="button"
+                        title={
+                          product.availability_type !== "MADE_TO_ORDER" &&
+                          inCartQty >= Number(product.stock)
+                            ? `Only ${product.stock} items available in stock`
+                            : "Increase quantity"
+                        }
+                        disabled={
+                          product.availability_type !== "MADE_TO_ORDER" &&
+                          inCartQty >= Number(product.stock)
+                        }
+                        onClick={() =>
+                          changeQty(inCartQty + 1)
+                        }
+                        className="
+                          flex
+                          h-9
+                          w-9
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-[var(--color-primary)]
+                          text-white
+                          shadow-sm
+                          transition
+                          disabled:cursor-not-allowed
+                          disabled:opacity-40
+                          active:scale-90
+                        "
+                      >
+                        <Plus
+                          size={15}
+                          strokeWidth={3}
+                        />
+                      </button>
+
+                    </div>
+
+                    {product.availability_type === "MADE_TO_ORDER" ? (
+                      <span className="text-[10px] font-bold text-orange-600">
+                        Freshly Made to Order
+                      </span>
+                    ) : inCartQty >= Number(product.stock) ? (
+                      <span className="text-[10px] font-bold text-amber-600">
+                        Max stock ({product.stock}) reached
+                      </span>
+                    ) : null}
                   </div>
 
                 ) : (
 
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-1
-                      rounded-full
-                      bg-[var(--color-primary-50)]
-                      p-1
-                    "
-                  >
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setQty(Math.max(1, qty - 1))
-                      }
+                  <div className="flex flex-col items-end gap-1">
+                    <div
                       className="
                         flex
-                        h-9
-                        w-9
                         items-center
-                        justify-center
+                        gap-1
                         rounded-full
-                        bg-white
-                        text-[var(--color-primary)]
-                        shadow-sm
-                        transition
-                        active:scale-90
+                        bg-[var(--color-primary-50)]
+                        p-1
                       "
                     >
-                      <Minus
-                        size={15}
-                        strokeWidth={3}
-                      />
-                    </button>
 
-                    <span
-                      className="
-                        min-w-[34px]
-                        text-center
-                        text-sm
-                        font-black
-                        text-[var(--color-primary)]
-                      "
-                    >
-                      {qty}
-                    </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setQty(Math.max(1, qty - 1))
+                        }
+                        className="
+                          flex
+                          h-9
+                          w-9
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-white
+                          text-[var(--color-primary)]
+                          shadow-sm
+                          transition
+                          active:scale-90
+                        "
+                      >
+                        <Minus
+                          size={15}
+                          strokeWidth={3}
+                        />
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setQty(qty + 1)
-                      }
-                      className="
-                        flex
-                        h-9
-                        w-9
-                        items-center
-                        justify-center
-                        rounded-full
-                        bg-[var(--color-primary)]
-                        text-white
-                        shadow-sm
-                        transition
-                        active:scale-90
-                      "
-                    >
-                      <Plus
-                        size={15}
-                        strokeWidth={3}
-                      />
-                    </button>
+                      <span
+                        className="
+                          min-w-[34px]
+                          text-center
+                          text-sm
+                          font-black
+                          text-[var(--color-primary)]
+                        "
+                      >
+                        {qty}
+                      </span>
 
+                      <button
+                        type="button"
+                        title={
+                          product.availability_type !== "MADE_TO_ORDER" &&
+                          qty >= Number(product.stock)
+                            ? `Only ${product.stock} items available in stock`
+                            : "Increase quantity"
+                        }
+                        disabled={
+                          product.availability_type !== "MADE_TO_ORDER" &&
+                          qty >= Number(product.stock)
+                        }
+                        onClick={() =>
+                          setQty(qty + 1)
+                        }
+                        className="
+                          flex
+                          h-9
+                          w-9
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-[var(--color-primary)]
+                          text-white
+                          shadow-sm
+                          transition
+                          disabled:cursor-not-allowed
+                          disabled:opacity-40
+                          active:scale-90
+                        "
+                      >
+                        <Plus
+                          size={15}
+                          strokeWidth={3}
+                        />
+                      </button>
+
+                    </div>
+
+                    {product.availability_type === "MADE_TO_ORDER" ? (
+                      <span className="text-[10px] font-bold text-orange-600">
+                        Cooked on demand
+                      </span>
+                    ) : Number(product.stock) <= 5 && Number(product.stock) > 0 ? (
+                      <span className="text-[10px] font-bold text-amber-600">
+                        Only {product.stock} left in stock
+                      </span>
+                    ) : null}
                   </div>
 
                 )}
@@ -806,6 +871,7 @@ export default function ProductDetailsClient({
               {!inCartQty && (
                 <button
                   type="button"
+                  disabled={product.availability_type !== "MADE_TO_ORDER" && Number(product.stock) <= 0}
                   onClick={handleAdd}
                   className={`
                     mt-4
@@ -824,8 +890,12 @@ export default function ProductDetailsClient({
                     transition-all
                     duration-200
                     active:scale-[0.98]
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
                     ${added
                       ? "bg-[var(--color-success)]"
+                      : product.availability_type !== "MADE_TO_ORDER" && Number(product.stock) <= 0
+                      ? "bg-stone-400"
                       : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
                     }
                   `}
@@ -837,6 +907,8 @@ export default function ProductDetailsClient({
 
                       Added to Cart
                     </>
+                  ) : product.availability_type !== "MADE_TO_ORDER" && Number(product.stock) <= 0 ? (
+                    <span>Out of Stock</span>
                   ) : (
                     <>
                       <ShoppingBag

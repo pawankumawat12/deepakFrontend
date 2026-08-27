@@ -21,10 +21,10 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider>
-      <Provider store={store}>
+    <Provider store={store}>
+      <ThemeProvider>
         <AuthLoader>{children}</AuthLoader>
-      </Provider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Provider>
   );
 }

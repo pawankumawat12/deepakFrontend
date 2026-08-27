@@ -15,12 +15,12 @@ import {
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
-import cartStore from "./cart/store";
 import { useGetStoreProductsQuery } from "../redux/services/catalogApi";
 import {
   useGetWishlistQuery,
   useToggleWishlistMutation,
 } from "../redux/services/wishlistApi";
+import { useAddCartItemMutation } from "../redux/services/cartApi";
 
 export default function PopularProducts() {
   const router = useRouter();
@@ -37,6 +37,7 @@ export default function PopularProducts() {
     skip: !user,
   });
   const [toggleWishlist] = useToggleWishlistMutation();
+  const [addCartItem] = useAddCartItemMutation();
 
   const wishlistedIds = React.useMemo(
     () =>
@@ -54,6 +55,7 @@ export default function PopularProducts() {
     e.stopPropagation();
     if (!user) {
       toast.error("Please sign in to save favorites");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
     try {
@@ -72,16 +74,25 @@ export default function PopularProducts() {
 
   const popularProducts = products.slice(0, 6);
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = async (product: any) => {
+    if (!user) {
+      toast.error("Please sign in to add items to cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (Number(product.stock) <= 0) {
+      toast.error("Product is out of stock");
+      return;
+    }
     try {
-      cartStore.addToCart(product.id);
+      await addCartItem({ productId: Number(product.id), quantity: 1 }).unwrap();
       setAddedProduct(product.id);
-      window.dispatchEvent(new Event("sfc_cart_updated"));
+      toast.success("Added to cart 🛒");
       setTimeout(() => {
         setAddedProduct(null);
       }, 1200);
-    } catch (error) {
-      console.error("Failed to add product to cart:", error);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to add product to cart");
     }
   };
 

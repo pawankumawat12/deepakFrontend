@@ -1,125 +1,59 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useGetThemeQuery, ColorThemeItem } from "../redux/services/settingsApi";
 
 export type Theme = "light" | "dark";
-export type ColorTheme = "matcha" | "caramel" | "mocha" | "berry";
-
-export interface ColorThemeOption {
-  id: ColorTheme;
-  name: string;
-  color: string;
-  desc: string;
-}
-
-export const COLOR_THEMES: ColorThemeOption[] = [
-  {
-    id: "matcha",
-    name: "Matcha Green",
-    color: "#7cb324",
-    desc: "Organic matcha & espresso",
-  },
-  {
-    id: "caramel",
-    name: "Espresso Caramel",
-    color: "#e86b1a",
-    desc: "Warm roasted caramel",
-  },
-  {
-    id: "mocha",
-    name: "Golden Mocha",
-    color: "#f5a623",
-    desc: "Golden honey & cocoa",
-  },
-  {
-    id: "berry",
-    name: "Velvet Berry",
-    color: "#e11d48",
-    desc: "Rich berry roast",
-  },
-];
 
 interface ThemeContextType {
   theme: Theme;
-  colorTheme: ColorTheme;
-  toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
-  setColorTheme: (colorTheme: ColorTheme) => void;
+  colorTheme: string;
+  availableColorThemes: ColorThemeItem[];
+  isLoading: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function applyThemeToDOM(nextTheme: Theme, nextColor: string) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  if (nextTheme === "dark") {
+    root.classList.add("dark");
+    root.setAttribute("data-theme", "dark");
+  } else {
+    root.classList.remove("dark");
+    root.setAttribute("data-theme", "light");
+  }
+  root.setAttribute("data-color-theme", nextColor);
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const { data: themeResponse, isLoading } = useGetThemeQuery(undefined, {
+    pollingInterval: 15000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
+
   const [theme, setThemeState] = useState<Theme>("light");
-  const [colorTheme, setColorThemeState] = useState<ColorTheme>("matcha");
-  const [mounted, setMounted] = useState(false);
+  const [colorTheme, setColorThemeState] = useState<string>("matcha");
+  const [availableColorThemes, setAvailableColorThemes] = useState<ColorThemeItem[]>([]);
 
   useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem("sfc_theme") as Theme | null;
-      const savedColor = localStorage.getItem("sfc_color_theme") as ColorTheme | null;
+    if (themeResponse?.data) {
+      const serverTheme = themeResponse.data.theme === "dark" ? "dark" : "light";
+      const serverColor = themeResponse.data.colorTheme || "matcha";
+      const serverPalettes = themeResponse.data.availableColorThemes || [];
 
-      const activeColor =
-        savedColor === "matcha" ||
-        savedColor === "caramel" ||
-        savedColor === "mocha" ||
-        savedColor === "berry"
-          ? savedColor
-          : "matcha";
-
-      setColorThemeState(activeColor);
-
-      if (savedTheme === "dark" || savedTheme === "light") {
-        setThemeState(savedTheme);
-        applyTheme(savedTheme, activeColor);
-      } else {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const initial = prefersDark ? "dark" : "light";
-        setThemeState(initial);
-        applyTheme(initial, activeColor);
-      }
-    } catch {
-      applyTheme("light", "matcha");
+      setThemeState(serverTheme);
+      setColorThemeState(serverColor);
+      setAvailableColorThemes(serverPalettes);
+      applyThemeToDOM(serverTheme, serverColor);
     }
-    setMounted(true);
-  }, []);
-
-  const applyTheme = (nextTheme: Theme, nextColor: ColorTheme) => {
-    const root = document.documentElement;
-    if (nextTheme === "dark") {
-      root.classList.add("dark");
-      root.setAttribute("data-theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      root.setAttribute("data-theme", "light");
-    }
-    root.setAttribute("data-color-theme", nextColor);
-  };
-
-  const setTheme = (nextTheme: Theme) => {
-    setThemeState(nextTheme);
-    try {
-      localStorage.setItem("sfc_theme", nextTheme);
-    } catch {}
-    applyTheme(nextTheme, colorTheme);
-  };
-
-  const setColorTheme = (nextColor: ColorTheme) => {
-    setColorThemeState(nextColor);
-    try {
-      localStorage.setItem("sfc_color_theme", nextColor);
-    } catch {}
-    applyTheme(theme, nextColor);
-  };
-
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-  };
+  }, [themeResponse]);
 
   return (
     <ThemeContext.Provider
-      value={{ theme, colorTheme, toggleTheme, setTheme, setColorTheme }}
+      value={{ theme, colorTheme, availableColorThemes, isLoading }}
     >
       {children}
     </ThemeContext.Provider>
@@ -131,10 +65,9 @@ export function useTheme() {
   if (!context) {
     return {
       theme: "light" as Theme,
-      colorTheme: "matcha" as ColorTheme,
-      toggleTheme: () => {},
-      setTheme: () => {},
-      setColorTheme: () => {},
+      colorTheme: "matcha",
+      availableColorThemes: [],
+      isLoading: false,
     };
   }
   return context;

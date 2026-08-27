@@ -22,7 +22,7 @@ import {
   useRemoveWishlistItemMutation,
   WishlistItem,
 } from "../redux/services/wishlistApi";
-import cartStore from "./cart/store";
+import { useAddCartItemMutation } from "../redux/services/cartApi";
 
 function formatRupee(value: number) {
   return `₹${Number(value).toLocaleString("en-IN")}`;
@@ -43,6 +43,7 @@ export default function FavoritesPage() {
   });
 
   const [removeWishlistItem] = useRemoveWishlistItemMutation();
+  const [addCartItem] = useAddCartItemMutation();
   const [activeCategory, setActiveCategory] = useState("All");
   const [addedItems, setAddedItems] = useState<number[]>([]);
   const [removingId, setRemovingId] = useState<number | null>(null);
@@ -79,18 +80,27 @@ export default function FavoritesPage() {
     }
   };
 
-  const handleAddToCart = (product: WishlistItem) => {
-    cartStore.addToCart(product.id, 1);
-    setAddedItems((current) =>
-      current.includes(product.id) ? current : [...current, product.id]
-    );
-    toast.success(`${product.name} added to cart!`);
-
-    setTimeout(() => {
+  const handleAddToCart = async (product: WishlistItem) => {
+    if (!user) {
+      toast.error("Please sign in to add items to cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    try {
+      await addCartItem({ productId: Number(product.id), quantity: 1 }).unwrap();
       setAddedItems((current) =>
-        current.filter((itemId) => itemId !== product.id)
+        current.includes(product.id) ? current : [...current, product.id]
       );
-    }, 1200);
+      toast.success(`${product.name} added to cart! 🛒`);
+
+      setTimeout(() => {
+        setAddedItems((current) =>
+          current.filter((itemId) => itemId !== product.id)
+        );
+      }, 1200);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to add to cart");
+    }
   };
 
   return (

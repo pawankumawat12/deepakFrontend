@@ -14,115 +14,13 @@ import {
   XCircle,
   RotateCcw,
   MessageCircle,
+  Sparkles,
+  LoaderCircle,
 } from "lucide-react";
 import OrderChat from "./OrderChat";
+import { useGetOrdersQuery } from "../redux/services/orderApi";
 
 type OrderStatus = "Delivered" | "Preparing" | "Out for Delivery" | "Cancelled";
-
-type Order = {
-  id: string;
-  date: string;
-  time: string;
-  status: OrderStatus;
-  items: {
-    name: string;
-    qty: number;
-    price: number;
-    img: string;
-  }[];
-  total: number;
-  address: string;
-  payment: string;
-};
-
-const orders: Order[] = [
-  {
-    id: "SFC-1025",
-    date: "12 Aug 2026",
-    time: "07:35 PM",
-    status: "Preparing",
-    items: [
-      {
-        name: "Classic Cheese Burger",
-        qty: 2,
-        price: 149,
-        img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80",
-      },
-      {
-        name: "French Fries",
-        qty: 1,
-        price: 99,
-        img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=300&q=80",
-      },
-    ],
-    total: 397,
-    address: "Jaipur, Rajasthan",
-    payment: "UPI",
-  },
-  {
-    id: "SFC-1021",
-    date: "09 Aug 2026",
-    time: "02:15 PM",
-    status: "Delivered",
-    items: [
-      {
-        name: "Veg Pizza",
-        qty: 1,
-        price: 299,
-        img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=300&q=80",
-      },
-      {
-        name: "Cold Coffee",
-        qty: 2,
-        price: 119,
-        img: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=300&q=80",
-      },
-    ],
-    total: 537,
-    address: "Jaipur, Rajasthan",
-    payment: "Cash on Delivery",
-  },
-  {
-    id: "SFC-1014",
-    date: "04 Aug 2026",
-    time: "08:10 PM",
-    status: "Delivered",
-    items: [
-      {
-        name: "Chicken Burger",
-        qty: 1,
-        price: 189,
-        img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80",
-      },
-      {
-        name: "Coke",
-        qty: 1,
-        price: 60,
-        img: "https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=300&q=80",
-      },
-    ],
-    total: 249,
-    address: "Jaipur, Rajasthan",
-    payment: "UPI",
-  },
-  {
-    id: "SFC-1007",
-    date: "28 Jul 2026",
-    time: "06:20 PM",
-    status: "Cancelled",
-    items: [
-      {
-        name: "Paneer Wrap",
-        qty: 2,
-        price: 129,
-        img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=300&q=80",
-      },
-    ],
-    total: 258,
-    address: "Jaipur, Rajasthan",
-    payment: "UPI",
-  },
-];
 
 const filters = [
   "All",
@@ -136,7 +34,7 @@ function formatRupee(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
 }
 
-function StatusIcon({ status }: { status: OrderStatus }) {
+function StatusIcon({ status }: { status: string }) {
   if (status === "Delivered") {
     return <CheckCircle2 size={17} />;
   }
@@ -152,7 +50,7 @@ function StatusIcon({ status }: { status: OrderStatus }) {
   return <Clock3 size={17} />;
 }
 
-function statusClasses(status: OrderStatus) {
+function statusClasses(status: string) {
   switch (status) {
     case "Delivered":
       return "bg-green-50 text-green-700 border-green-100";
@@ -171,11 +69,59 @@ function statusClasses(status: OrderStatus) {
 export default function Orders() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+
+  const { data: orderResponse, isLoading } = useGetOrdersQuery(undefined, {
+    pollingInterval: 15000,
+    refetchOnFocus: true,
+  });
+
+  const rawOrders = orderResponse?.data || [];
+
+  const orders = useMemo(() => {
+    return rawOrders.map((o) => {
+      const d = new Date(o.created_at);
+      return {
+        id: o.order_number || `SFC-${o.id}`,
+        dbId: o.id,
+        date: d.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        time: d.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        status: o.status as OrderStatus,
+        total: Number(o.total_amount || 0),
+        address: o.shipping_address || "Jaipur, Rajasthan",
+        payment: o.payment_method || "Cash on Delivery",
+        items: (o.items || []).map((it) => ({
+          id: it.id,
+          name: it.product_name,
+          qty: it.quantity,
+          price: Number(it.price || 0),
+          img: it.image || "/images/placeholder.png",
+          availability_type: it.availability_type,
+          production_status: it.production_status,
+        })),
+      };
+    });
+  }, [rawOrders]);
+
   const filteredOrders = useMemo(() => {
     if (activeFilter === "All") return orders;
-
     return orders.filter((order) => order.status === activeFilter);
-  }, [activeFilter]);
+  }, [activeFilter, orders]);
+
+  const stats = useMemo(() => {
+    const total = orders.length;
+    const delivered = orders.filter((o) => o.status === "Delivered").length;
+    const preparing = orders.filter((o) => o.status === "Preparing").length;
+    const cancelled = orders.filter((o) => o.status === "Cancelled").length;
+    return { total, delivered, preparing, cancelled };
+  }, [orders]);
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
@@ -209,13 +155,12 @@ export default function Orders() {
                 SFC Cafe
               </p>
 
-              <h1 className="mt-2 text-3xl font-black  sm:text-4xl">
+              <h1 className="mt-2 text-3xl font-black sm:text-4xl text-white">
                 My Orders
               </h1>
 
-              <p className="mt-2 max-w-lg text-xs leading-5 ">
-                Track your current order and quickly reorder your favourite
-                food.
+              <p className="mt-2 max-w-lg text-xs leading-5 text-white/70">
+                Track your current order and fresh kitchen preparation in real time.
               </p>
             </div>
 
@@ -258,7 +203,7 @@ export default function Orders() {
             </p>
 
             <p className="mt-2 text-2xl font-black text-[var(--color-text-primary)]">
-              24
+              {stats.total}
             </p>
           </div>
 
@@ -268,7 +213,7 @@ export default function Orders() {
             </p>
 
             <p className="mt-2 text-2xl font-black text-[var(--color-primary)]">
-              21
+              {stats.delivered}
             </p>
           </div>
 
@@ -278,7 +223,7 @@ export default function Orders() {
             </p>
 
             <p className="mt-2 text-2xl font-black text-[var(--color-secondary)]">
-              1
+              {stats.preparing}
             </p>
           </div>
 
@@ -287,7 +232,9 @@ export default function Orders() {
               Cancelled
             </p>
 
-            <p className="mt-2 text-2xl font-black text-red-500">2</p>
+            <p className="mt-2 text-2xl font-black text-red-500">
+              {stats.cancelled}
+            </p>
           </div>
         </div>
       </section>
@@ -334,7 +281,11 @@ export default function Orders() {
       ===================================================== */}
 
       <section className="mx-auto max-w-6xl px-5 py-6 pb-16 sm:px-8">
-        {filteredOrders.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20 text-[var(--color-primary)]">
+            <LoaderCircle size={32} className="animate-spin" />
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div
             className="
               rounded-[2rem]
@@ -477,7 +428,7 @@ export default function Orders() {
                   <div className="space-y-3">
                     {order.items.map((item) => (
                       <div
-                        key={item.name}
+                        key={item.id}
                         className="
                           flex
                           items-center
@@ -497,9 +448,17 @@ export default function Orders() {
                         />
 
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-[var(--color-text-primary)]">
-                            {item.name}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-xs font-bold text-[var(--color-text-primary)]">
+                              {item.name}
+                            </p>
+                            {item.availability_type === "MADE_TO_ORDER" && (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-black text-orange-700 border border-orange-200/60">
+                                <Sparkles size={10} />
+                                Made to Order
+                              </span>
+                            )}
+                          </div>
 
                           <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                             Qty: {item.qty}
@@ -557,116 +516,13 @@ export default function Orders() {
                     </div>
 
                     <div className="flex gap-2">
-                      {order.status === "Delivered" && (
-                        <button
-                          type="button"
-                          className="
-                            inline-flex
-                            items-center
-                            justify-center
-                            gap-2
-                            rounded-xl
-                            border
-                            border-[var(--color-border)]
-                            px-4
-                            py-2.5
-                            text-[10px]
-                            font-bold
-                            text-[var(--color-primary)]
-                            transition
-                            hover:bg-[var(--color-primary-50)]
-                          "
-                        >
-                          <RotateCcw size={14} />
-                          Reorder
-                        </button>
-                      )}
-
-                      {order.status === "Preparing" && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => setChatOrderId(order.id)}
-                            className="
-    inline-flex
-    items-center
-    justify-center
-    gap-2
-    rounded-xl
-    border
-    border-[var(--color-primary)]
-    bg-[var(--color-primary-50)]
-    px-4
-    py-2.5
-    text-[10px]
-    font-bold
-    text-[var(--color-primary)]
-    transition
-    hover:bg-[var(--color-primary)]
-    hover:text-white
-  "
-                          >
-                            <MessageCircle size={14} />
-                            Chat
-                          </button>
-
-                          <button
-                            type="button"
-                            className="
-                            inline-flex
-                            items-center
-                            justify-center
-                            gap-2
-                            rounded-xl
-                            bg-[var(--color-primary)]
-                            px-4
-                            py-2.5
-                            text-[10px]
-                            font-bold
-                            text-white
-                            shadow-sm
-                            transition
-                            hover:bg-[var(--color-primary-dark)]
-                          "
-                          >
-                            Track Order
-                            <ChevronRight size={14} />
-                          </button>
-                        </>
-                      )}
-
-                      {order.status === "Cancelled" && (
-                        <button
-                          type="button"
-                          className="
-                            inline-flex
-                            items-center
-                            justify-center
-                            gap-2
-                            rounded-xl
-                            border
-                            border-[var(--color-border)]
-                            px-4
-                            py-2.5
-                            text-[10px]
-                            font-bold
-                            text-[var(--color-primary)]
-                            transition
-                            hover:bg-[var(--color-primary-50)]
-                          "
-                        >
-                          <RotateCcw size={14} />
-                          Order Again
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
+                      <Link
+                        href="/menu"
                         className="
                           inline-flex
                           items-center
                           justify-center
-                          gap-1
+                          gap-2
                           rounded-xl
                           border
                           border-[var(--color-border)]
@@ -674,15 +530,44 @@ export default function Orders() {
                           py-2.5
                           text-[10px]
                           font-bold
-                          text-[var(--color-text-secondary)]
+                          text-[var(--color-primary)]
                           transition
-                          hover:border-[var(--color-primary)]
-                          hover:text-[var(--color-primary)]
+                          hover:bg-[var(--color-primary-50)]
                         "
                       >
-                        Details
-                        <ChevronRight size={13} />
-                      </button>
+                        <RotateCcw size={14} />
+                        Order Again
+                      </Link>
+
+                      {order.status === "Preparing" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setChatOrderId(order.id)}
+                            className="
+                              inline-flex
+                              items-center
+                              justify-center
+                              gap-2
+                              rounded-xl
+                              border
+                              border-[var(--color-primary)]
+                              bg-[var(--color-primary-50)]
+                              px-4
+                              py-2.5
+                              text-[10px]
+                              font-bold
+                              text-[var(--color-primary)]
+                              transition
+                              hover:bg-[var(--color-primary)]
+                              hover:text-white
+                            "
+                          >
+                            <MessageCircle size={14} />
+                            Chat
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

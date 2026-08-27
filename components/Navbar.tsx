@@ -23,13 +23,12 @@ import {
   Bell,
 } from "lucide-react";
 
-import cartStore from "./cart/store";
+import { useGetCartQuery } from "../redux/services/cartApi";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import { logout } from "../redux/features/authSlice";
 import { useLogoutMutation } from "../redux/services/authApi";
 import { useGetWishlistQuery } from "../redux/services/wishlistApi";
-import { useTheme, COLOR_THEMES, ColorTheme } from "../context/ThemeContext";
 import LogoutModal from "@/models/LogoutModel";
 const apiUrl =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
@@ -44,7 +43,6 @@ const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
-  const { theme, colorTheme, toggleTheme, setColorTheme } = useTheme();
   const user = useSelector(
     (state: { auth: { user: { name?: string; image?: string | null } | null } }) => state.auth.user
   );
@@ -54,16 +52,18 @@ const Navbar = () => {
   });
   const wishlistCount = wishlistData?.data?.length || 0;
 
+  const { data: cartData } = useGetCartQuery(undefined, {
+    skip: !user,
+  });
+  const cartCount = user ? cartData?.data?.summary?.itemTypesCount || 0 : 0;
+
   const [logoutRequest] = useLogoutMutation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
   const [logoutModal, setLogoutModal] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
-  const paletteRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     try {
@@ -77,31 +77,13 @@ const Navbar = () => {
   };
 
   useEffect(() => {
-    const updateCart = () => {
-      const cart = cartStore.getCart();
-
-      const count = cart.reduce((acc, item) => acc + item.qty, 0);
-
-      setCartCount(count);
-    };
-
-    updateCart();
-
-    window.addEventListener("sfc_cart_updated", updateCart);
-
-    return () => {
-      window.removeEventListener("sfc_cart_updated", updateCart);
-    };
-  }, []);
-
-  useEffect(() => {
     const openLoginModal = () => setAuthOpen(true);
 
     window.addEventListener("sfc_open_login", openLoginModal);
     return () => window.removeEventListener("sfc_open_login", openLoginModal);
   }, []);
 
-  /* ---------------- CLOSE PROFILE & PALETTE OUTSIDE ---------------- */
+  /* ---------------- CLOSE PROFILE OUTSIDE ---------------- */
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -110,12 +92,6 @@ const Navbar = () => {
         !profileRef.current.contains(event.target as Node)
       ) {
         setDropdownOpen(false);
-      }
-      if (
-        paletteRef.current &&
-        !paletteRef.current.contains(event.target as Node)
-      ) {
-        setPaletteOpen(false);
       }
     };
 
@@ -364,114 +340,6 @@ const Navbar = () => {
                 )}
               </Link>
 
-              {/* Theme Toggle (Dark / Light Mode) */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
-                title={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
-                className="
-                  relative
-                  flex h-10 w-10 items-center justify-center
-                  rounded-full
-                  text-[var(--color-text-primary)]
-                  transition-all
-                  duration-300
-                  hover:bg-[var(--color-primary-50)]
-                  hover:text-[var(--color-primary)]
-                  active:scale-90
-                "
-              >
-                {theme === "light" ? (
-                  <Moon size={19} className="transition-transform duration-300 hover:-rotate-12" />
-                ) : (
-                  <Sun size={19} className="text-amber-400 transition-transform duration-300 hover:rotate-45" />
-                )}
-              </button>
-
-              {/* Cafe Color Theme Palette Picker */}
-              <div ref={paletteRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setPaletteOpen((prev) => !prev)}
-                  aria-label="Choose cafe color theme"
-                  title="Choose cafe color theme"
-                  className="
-                    relative
-                    flex h-10 w-10 items-center justify-center
-                    rounded-full
-                    text-[var(--color-text-primary)]
-                    transition-all
-                    duration-300
-                    hover:bg-[var(--color-primary-50)]
-                    hover:text-[var(--color-primary)]
-                    active:scale-90
-                  "
-                >
-                  <Palette size={19} />
-                  <span
-                    className="absolute bottom-2 right-2 h-2 w-2 rounded-full ring-1 ring-[var(--bg-surface)]"
-                    style={{ backgroundColor: "var(--color-primary)" }}
-                  />
-                </button>
-
-                {paletteOpen && (
-                  <div
-                    className="
-                      absolute
-                      right-0
-                      top-[calc(100%+10px)]
-                      w-60
-                      overflow-hidden
-                      rounded-2xl
-                      border
-                      border-[var(--color-border)]
-                      bg-[var(--bg-surface)]
-                      p-3
-                      shadow-[0_20px_50px_rgba(0,0,0,0.25)]
-                      z-50
-                    "
-                  >
-                    <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">
-                      Cafe Color Theme
-                    </p>
-
-                    <div className="mt-2.5 flex flex-col gap-1">
-                      {COLOR_THEMES.map((c) => {
-                        const isSelected = colorTheme === c.id;
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => {
-                              setColorTheme(c.id);
-                              setPaletteOpen(false);
-                            }}
-                            className={`
-                              flex items-center gap-3 rounded-xl p-2 text-left transition
-                              ${
-                                isSelected
-                                  ? "bg-[var(--color-primary-50)] font-bold text-[var(--color-primary)] ring-1 ring-[var(--color-primary)]"
-                                  : "text-[var(--color-text-primary)] hover:bg-[var(--color-primary-50)]"
-                              }
-                            `}
-                          >
-                            <span
-                              className="h-4 w-4 shrink-0 rounded-full border border-black/10 shadow-xs"
-                              style={{ backgroundColor: c.color }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs leading-tight font-bold">{c.name}</p>
-                              <p className="text-[10px] text-[var(--color-text-muted)] truncate">{c.desc}</p>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Profile */}
 
               {user && (
@@ -596,70 +464,6 @@ const Navbar = () => {
                         )}
                       </Link>
 
-                      {/* Theme switcher in dropdown */}
-                      <button
-                        type="button"
-                        onClick={() => toggleTheme()}
-                        className="
-                          flex w-full items-center justify-between
-                          rounded-xl
-                          px-4 py-2.5
-                          text-sm font-semibold
-                          text-[var(--color-text-primary)]
-                          transition
-                          hover:bg-[var(--color-primary-50)]
-                          hover:text-[var(--color-primary)]
-                        "
-                      >
-                        <div className="flex items-center gap-3">
-                          {theme === "light" ? (
-                            <Moon size={17} />
-                          ) : (
-                            <Sun size={17} className="text-amber-400" />
-                          )}
-                          <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
-                        </div>
-                        <span className="text-[10px] font-bold uppercase text-[var(--color-text-muted)]">
-                          {theme}
-                        </span>
-                      </button>
-
-                      {/* Color Palette Selector in dropdown */}
-                      <div className="px-4 py-2">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                          Color Theme
-                        </p>
-                        <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-                          {COLOR_THEMES.map((c) => {
-                            const isSelected = colorTheme === c.id;
-                            return (
-                              <button
-                                key={c.id}
-                                type="button"
-                                onClick={() => setColorTheme(c.id)}
-                                title={c.name}
-                                className={`
-                                  flex flex-col items-center gap-1 rounded-lg p-1.5 transition-all
-                                  ${
-                                    isSelected
-                                      ? "bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)] font-bold text-[var(--color-primary)]"
-                                      : "hover:bg-[var(--color-primary-50)] text-[var(--color-text-secondary)]"
-                                  }
-                                `}
-                              >
-                                <span
-                                  className="h-3.5 w-3.5 rounded-full border border-black/10 shadow-xs"
-                                  style={{ backgroundColor: c.color }}
-                                />
-                                <span className="text-[8px] font-bold capitalize">
-                                  {c.id}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
                       <div className="my-1 h-px bg-[var(--color-border)]" />
 
                       <button
@@ -780,23 +584,25 @@ const Navbar = () => {
               >
                 <ShoppingCart size={21} />
 
-                <span
-                  className="
-                    absolute
-                    -right-1
-                    -top-1
-                    flex h-5 min-w-5
-                    items-center justify-center
-                    rounded-full
-                    bg-[var(--color-primary)]
-                    px-1
-                    text-[10px]
-                    font-bold
-                    text-white
-                  "
-                >
-                  0
-                </span>
+                {cartCount > 0 && (
+                  <span
+                    className="
+                      absolute
+                      -right-1
+                      -top-1
+                      flex h-5 min-w-5
+                      items-center justify-center
+                      rounded-full
+                      bg-[var(--color-primary)]
+                      px-1
+                      text-[10px]
+                      font-bold
+                      text-white
+                    "
+                  >
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             </div>
           </div>
@@ -1015,69 +821,6 @@ const Navbar = () => {
                       </span>
                     )}
                   </Link>
-
-                  {/* Theme Switcher in mobile drawer */}
-                  <button
-                    type="button"
-                    onClick={() => toggleTheme()}
-                    className="
-                      flex w-full items-center justify-between
-                      rounded-xl
-                      px-3 py-2.5
-                      text-sm font-semibold
-                      text-[var(--color-text-primary)]
-                      hover:bg-[var(--color-primary-50)]
-                      hover:text-[var(--color-primary)]
-                    "
-                  >
-                    <div className="flex items-center gap-3">
-                      {theme === "light" ? (
-                        <Moon size={17} />
-                      ) : (
-                        <Sun size={17} className="text-amber-400" />
-                      )}
-                      <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
-                    </div>
-                    <span className="text-[10px] font-bold uppercase text-[var(--color-text-muted)]">
-                      {theme}
-                    </span>
-                  </button>
-
-                  {/* Color Palette in mobile drawer */}
-                  <div className="px-3 py-2">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                      Color Theme
-                    </p>
-                    <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-                      {COLOR_THEMES.map((c) => {
-                        const isSelected = colorTheme === c.id;
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => setColorTheme(c.id)}
-                            title={c.name}
-                            className={`
-                              flex flex-col items-center gap-1 rounded-lg p-1.5 transition-all
-                              ${
-                                isSelected
-                                  ? "bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)] font-bold text-[var(--color-primary)]"
-                                  : "hover:bg-[var(--color-primary-50)] text-[var(--color-text-secondary)]"
-                              }
-                            `}
-                          >
-                            <span
-                              className="h-3.5 w-3.5 rounded-full border border-black/10 shadow-xs"
-                              style={{ backgroundColor: c.color }}
-                            />
-                            <span className="text-[8px] font-bold capitalize">
-                              {c.id}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
 
                   <div className="my-1 h-px bg-[var(--color-border)]" />
 
