@@ -504,7 +504,7 @@ const Navbar = () => {
                 </button>
               )}
 
-              <Link
+              {/* <Link
                 href="/menu"
                 className="
                   ml-2
@@ -517,7 +517,6 @@ const Navbar = () => {
                   px-6
                   text-sm
                   font-bold
-                  text-white
                   shadow-[0_8px_20px_rgba(79,125,22,0.22)]
                   transition-all
                   duration-200
@@ -525,15 +524,16 @@ const Navbar = () => {
                   hover:bg-[var(--color-primary-dark)]
                   hover:shadow-[0_10px_25px_rgba(79,125,22,0.30)]
                 "
+                style={{ color: "white" }}
               >
                 Order Now
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
       </header>
 
-          {/* MOBILE / PWA TOP BAR */}
+      {/* MOBILE / PWA TOP BAR */}
 
       <header
         className="md:hidden fixed top-0 inset-x-0 z-50"

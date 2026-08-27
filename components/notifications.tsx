@@ -176,7 +176,7 @@ export default function NotificationsPage() {
           HEADER
       ===================================================== */}
 
-      <section className="bg-[var(--color-chocolate-dark)]">
+      <section className="">
 
         <div className="mx-auto max-w-5xl px-5 py-9 sm:px-8 md:py-12">
 

@@ -306,13 +306,9 @@ export default function CartClient() {
       toast.error(err?.data?.message || "Failed to place order. Please try again.");
     }
   };
-
-  /* ============================================================
-     1. NOT LOGGED IN (FLIPKART STYLE: "Missing Cart items?")
-  ============================================================ */
   if (!user) {
     return (
-      <main className="min-h-screen bg-[var(--bg-body)] pt-24 pb-20">
+      <main className="min-h-screen bg-[var(--bg-body)]">
         <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center px-4">
           <div className="w-full rounded-3xl border border-[var(--color-border)] bg-white p-8 text-center shadow-sm sm:p-12">
             <div
@@ -545,11 +541,8 @@ export default function CartClient() {
     );
   }
 
-  /* ============================================================
-     4. ACTIVE CART WITH ITEMS (FLIPKART STYLE)
-  ============================================================ */
   return (
-    <main className="min-h-screen bg-[var(--bg-body)] pt-20 pb-24">
+    <main className="min-h-screen bg-[var(--bg-body)]">
       {/* HEADER BAR */}
       <section className="bg-[var(--color-primary-dark)]">
         <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-9">

@@ -27,31 +27,16 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
-
-      {/* =========================================================
-          HERO
-      ========================================================= */}
-
-      <section className="relative overflow-hidden bg-[var(--color-chocolate-dark)]">
-
-        {/* Decorative circles */}
-
-        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--color-primary)]/10" />
-
-        <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[var(--color-cheese)]/10" />
-
+      {/* <section className="relative overflow-hidden  ">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full " />
+        <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full" />
         <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 md:py-20">
-
           <div className="max-w-2xl">
-
             <div className="mb-4 flex items-center gap-2">
-
               <span className="h-2 w-2 rounded-full bg-[var(--color-primary)]" />
-
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--color-primary-light)]">
                 Get In Touch
               </span>
-
             </div>
 
             <h1 className="text-4xl font-black leading-tight  sm:text-5xl md:text-6xl">
@@ -81,12 +66,12 @@ export default function ContactPage() {
                   py-3
                   text-xs
                   font-bold
-                  text-white
                   transition
                   hover:-translate-y-0.5
                   hover:bg-[var(--color-primary-dark)]
                   active:scale-95
                 "
+                style={{color: "white"}}
               >
                 <Phone size={15} />
                 Call Us
@@ -122,11 +107,8 @@ export default function ContactPage() {
 
         </div>
 
-      </section>
+      </section> */}
 
-      {/* =========================================================
-          CONTACT INFO
-      ========================================================= */}
 
       <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 md:py-16">
 
@@ -550,13 +532,7 @@ export default function ContactPage() {
             </form>
 
           </div>
-
-          {/* RIGHT - LOCATION */}
-
-          <div className="relative min-h-[520px] bg-[var(--color-chocolate-dark)]">
-
-            {/* Fake map background */}
-
+          <div className="relative min-h-[520px]">
             <div
               className="
                 absolute

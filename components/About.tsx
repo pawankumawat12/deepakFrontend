@@ -36,7 +36,7 @@ export default function AboutPage() {
 
       {/* ================= HERO ================= */}
 
-      <section className="relative overflow-hidden bg-[var(--color-chocolate-dark)]">
+      <section className="relative overflow-hidden ">
 
         {/* Background decoration */}
 

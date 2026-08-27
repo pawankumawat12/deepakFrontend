@@ -137,11 +137,8 @@ export default function Orders() {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
 
-      <section className="bg-[var(--color-chocolate-dark)]">
+      <section className="bg-[var(--color-primary-dark)]">
         <div className="mx-auto max-w-6xl px-5 py-9 sm:px-8 md:py-12">
           <Link
             href="/profile"
@@ -156,6 +153,7 @@ export default function Orders() {
               transition
               hover:text-white
             "
+            style={{ color: "white" }}
           >
             <ArrowLeft size={15} />
             Back to Profile
@@ -195,6 +193,7 @@ export default function Orders() {
                 hover:-translate-y-0.5
                 hover:bg-[var(--color-primary-dark)]
               "
+              style={{ color: "white" }}
             >
               <ShoppingBag size={16} />
               Order Again
@@ -202,10 +201,6 @@ export default function Orders() {
           </div>
         </div>
       </section>
-
-      {/* =====================================================
-          ORDER STATS
-      ===================================================== */}
 
       <section className="mx-auto max-w-6xl px-5 pt-7 sm:px-8">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -274,10 +269,9 @@ export default function Orders() {
                   text-[11px]
                   font-bold
                   transition
-                  ${
-                    active
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-sm"
-                      : "border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  ${active
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-sm"
+                    : "border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                   }
                 `}
               >

@@ -131,9 +131,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-body)] mt-[60px]">
+    <div className="min-h-screen bg-[var(--bg-body)]">
 
-      <section className="bg-[var(--color-chocolate-dark)]">
+      <section className="bg-[var(--color-primary-dark)]">
 
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 md:py-14">
 
@@ -217,7 +217,7 @@ export default function Profile() {
 
               <div>
 
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary-light)]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary-50)]">
                   My Account
                 </p>
 
@@ -260,7 +260,6 @@ export default function Profile() {
 
             </div>
 
-            {/* Order Button */}
 
             <Link
               href="/menu"
@@ -275,12 +274,12 @@ export default function Profile() {
                 py-3
                 text-xs
                 font-bold
-                text-white
                 shadow-lg
                 transition
                 hover:-translate-y-0.5
                 hover:bg-[var(--color-primary-dark)]
               "
+              style={{color: "white"}}
             >
               Order Something
               <ShoppingBag size={15} />

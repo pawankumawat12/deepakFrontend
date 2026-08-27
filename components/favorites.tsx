@@ -105,10 +105,7 @@ export default function FavoritesPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)] mt-[60px]">
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-      <section className="bg-[var(--color-chocolate-dark)]">
+      <section>
         <div className="mx-auto max-w-6xl px-5 py-9 sm:px-8 md:py-12">
           <Link
             href="/profile"

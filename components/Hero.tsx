@@ -164,7 +164,7 @@ export default function Hero() {
             relative
             mx-auto
             flex
-            min-h-[720px]
+            min-h-[500px]
             max-w-7xl
             items-center
             px-5
