@@ -29,6 +29,7 @@ import RegisterModal from "./RegisterModal";
 import { logout } from "../redux/features/authSlice";
 import { useLogoutMutation } from "../redux/services/authApi";
 import { useGetWishlistQuery } from "../redux/services/wishlistApi";
+import { useGetLogoQuery } from "../redux/services/settingsApi";
 import LogoutModal from "@/models/LogoutModel";
 const apiUrl =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
@@ -56,6 +57,9 @@ const Navbar = () => {
     skip: !user,
   });
   const cartCount = user ? cartData?.data?.summary?.itemTypesCount || 0 : 0;
+
+  const { data: logoData } = useGetLogoQuery();
+  const logoUrl = logoData?.data?.logo_url ? toAssetUrl(logoData.data.logo_url) : "/images/sfcLogo.png";
 
   const [logoutRequest] = useLogoutMutation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -174,7 +178,7 @@ const Navbar = () => {
                   group-hover:scale-105
                 "
               >
-                <img src="/images/sfcLogo.png" />
+                <img src={logoUrl} alt="SFC Cafe" />
               </div>
 
             </Link>
@@ -555,7 +559,7 @@ const Navbar = () => {
                   rounded-xl
                 "
               >
-                <img src="/images/sfcLogo.png" />
+                <img src={logoUrl} alt="SFC Cafe" />
               </div>
             </Link>
 

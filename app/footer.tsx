@@ -14,6 +14,16 @@ import {
   Wifi,
 } from "lucide-react";
 import PWAInstallButton from "@/components/PWAInstallButton";
+import { useGetFooterQuery, useGetLogoQuery } from "../redux/services/settingsApi";
+
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const assetOrigin = new URL(apiUrl).origin;
+
+const toAssetUrl = (path?: string | null) => {
+  if (!path || /^https?:\/\//i.test(path)) return path || "";
+  return `${assetOrigin}${path.startsWith("/") ? path : `/${path}`}`;
+};
 
 const quickLinks = [
   {
@@ -63,6 +73,10 @@ const helpLinks = [
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { data: footerResponse } = useGetFooterQuery();
+  const { data: logoResponse } = useGetLogoQuery();
+  const footerSettings = footerResponse?.data;
+  const logoUrl = logoResponse?.data?.logo_url ? toAssetUrl(logoResponse.data.logo_url) : null;
 
   return (
     <footer className="app-footer bg-[var(--bg-footer)] text-white">
@@ -73,23 +87,29 @@ export default function Footer() {
               href="/"
               className="inline-flex items-center gap-3"
             >
-              <div
-                className="
-                  flex
-                  h-11
-                  w-11
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-[var(--color-primary)]
-                  text-lg
-                  font-black
-                  text-white
-                  shadow-lg
-                "
-              >
-                S
-              </div>
+              {logoUrl ? (
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white p-1.5 shadow-lg">
+                  <img src={logoUrl} alt="SFC Cafe" className="h-full w-full object-contain" />
+                </div>
+              ) : (
+                <div
+                  className="
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-[var(--color-primary)]
+                    text-lg
+                    font-black
+                    text-white
+                    shadow-lg
+                  "
+                >
+                  S
+                </div>
+              )}
 
               <div>
                 <span className="block text-xl font-black tracking-tight">
@@ -119,7 +139,9 @@ export default function Footer() {
 
             <div className="mt-6 flex items-center gap-2">
               <a
-                href="#"
+                href={footerSettings?.facebook || "#"}
+                target={footerSettings?.facebook ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 aria-label="Facebook"
                 className="
                   flex
@@ -138,7 +160,9 @@ export default function Footer() {
                 <span className="text-sm font-bold">f</span>
               </a>
               <a
-                href="#"
+                href={footerSettings?.instagram || "#"}
+                target={footerSettings?.instagram ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="
                   flex
@@ -154,10 +178,12 @@ export default function Footer() {
                   hover:text-white
                 "
               >
-            <span className="text-sm font-bold">ig</span>
+                <span className="text-sm font-bold">ig</span>
               </a>
               <a
-                href="#"
+                href={footerSettings?.twitter || "#"}
+                target={footerSettings?.twitter ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 aria-label="Twitter"
                 className="
                   flex
@@ -173,7 +199,8 @@ export default function Footer() {
                   hover:text-white
                 "
               >
-<span className="text-sm font-bold">𝕏</span> </a>
+                <span className="text-sm font-bold">𝕏</span>
+              </a>
             </div>
           </div>
           <div>
@@ -282,9 +309,13 @@ export default function Footer() {
                 />
 
                 <p className="text-sm leading-6 text-white/55">
-                  123 Main Street,
-                  <br />
-                  Jaipur, Rajasthan 302017
+                  {footerSettings?.location || (
+                    <>
+                      123 Main Street,
+                      <br />
+                      Jaipur, Rajasthan 302017
+                    </>
+                  )}
                 </p>
 
               </div>
@@ -292,7 +323,7 @@ export default function Footer() {
               {/* Phone */}
 
               <a
-                href="tel:+919876543210"
+                href={`tel:${footerSettings?.phone_number || "+919876543210"}`}
                 className="
                   flex
                   items-center
@@ -308,13 +339,13 @@ export default function Footer() {
                   className="text-[var(--color-primary-light)]"
                 />
 
-                +91 98765 43210
+                {footerSettings?.phone_number || "+91 98765 43210"}
               </a>
 
               {/* Email */}
 
               <a
-                href="mailto:hello@sfccafe.com"
+                href={`mailto:${footerSettings?.email || "hello@sfccafe.com"}`}
                 className="
                   flex
                   items-center
@@ -331,7 +362,7 @@ export default function Footer() {
                   className="shrink-0 text-[var(--color-primary-light)]"
                 />
 
-                hello@sfccafe.com
+                {footerSettings?.email || "hello@sfccafe.com"}
               </a>
 
               {/* Timing */}
@@ -344,8 +375,16 @@ export default function Footer() {
                 />
 
                 <div className="text-sm text-white/55">
-                  <p>Mon - Fri: 10 AM - 11 PM</p>
-                  <p>Sat - Sun: 9 AM - 11:30 PM</p>
+                  {footerSettings?.working_hours ? (
+                    footerSettings.working_hours.split("\n").map((line: string, idx: number) => (
+                      <p key={idx}>{line}</p>
+                    ))
+                  ) : (
+                    <>
+                      <p>Mon - Fri: 10 AM - 11 PM</p>
+                      <p>Sat - Sun: 9 AM - 11:30 PM</p>
+                    </>
+                  )}
                 </div>
 
               </div>
@@ -358,7 +397,7 @@ export default function Footer() {
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
               <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.25)] ring-1 ring-white/20">
                 <img
-                  src="/images/sfcLogo.png"
+                  src={logoUrl || "/images/sfcLogo.png"}
                   alt="SFC Cafe app icon"
                   className="h-full w-full object-contain"
                 />
