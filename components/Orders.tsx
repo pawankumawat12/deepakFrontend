@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useSelector } from "react-redux";
 import {
   ArrowLeft,
   ChevronRight,
@@ -16,9 +18,23 @@ import {
   MessageCircle,
   Sparkles,
   LoaderCircle,
+  QrCode,
+  Banknote,
+  Check,
+  X,
+  ExternalLink,
+  Copy,
+  Zap,
+  ShieldCheck,
 } from "lucide-react";
 import OrderChat from "./OrderChat";
-import { useGetOrdersQuery } from "../redux/services/orderApi";
+import {
+  useGetOrdersQuery,
+  useConfirmPaymentMutation,
+} from "../redux/services/orderApi";
+import { useGetPaymentQrQuery } from "../redux/services/settingsApi";
+import { getSocket } from "../lib/socket";
+import toast from "react-hot-toast";
 
 type OrderStatus = "Delivered" | "Preparing" | "Out for Delivery" | "Cancelled";
 
@@ -67,13 +83,90 @@ function statusClasses(status: string) {
 }
 
 export default function Orders() {
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+  const user = useSelector(
+    (state: { auth: { user: any | null } }) => state.auth.user
+  );
 
-  const { data: orderResponse, isLoading } = useGetOrdersQuery(undefined, {
-    pollingInterval: 15000,
+  const searchParams = useSearchParams();
+  const payOrderIdParam = searchParams ? searchParams.get("payOrderId") : null;
+
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [selectedChatOrder, setSelectedChatOrder] = useState<any | null>(null);
+  const [paymentModalOrder, setPaymentModalOrder] = useState<any | null>(null);
+  const [selectedPaymentApp, setSelectedPaymentApp] = useState("Google Pay");
+
+  const { data: qrResponse } = useGetPaymentQrQuery();
+  const paymentQr = qrResponse?.data;
+
+  const [confirmPaymentMutation, { isLoading: isSubmittingProof }] =
+    useConfirmPaymentMutation();
+
+  const { data: orderResponse, isLoading, refetch } = useGetOrdersQuery(undefined, {
+    pollingInterval: 20000,
     refetchOnFocus: true,
   });
+
+  // Socket.IO real-time event listeners for customer
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const socket = getSocket(user.id);
+
+    const handleOrderAccepted = (data: any) => {
+      toast.success(
+        `🎉 Your Order #${data.orderNumber || data.orderId} was ACCEPTED! Food is being prepared.`,
+        { duration: 6000 }
+      );
+      refetch();
+    };
+
+    const handleOrderRejected = (data: any) => {
+      toast.error(
+        `⚠️ Your Order #${data.orderNumber || data.orderId} was declined. Reason: ${data.cancelReason || "Not specified"}`,
+        { duration: 8000 }
+      );
+      refetch();
+    };
+
+    const handleOrderStatusUpdated = (data: any) => {
+      toast(
+        `📦 Order #${data.orderNumber || data.orderId} status updated to: ${data.status}`,
+        { icon: "🔔" }
+      );
+      refetch();
+    };
+
+    const handlePaymentStatusUpdated = (data: any) => {
+      toast.success(
+        `💳 Payment status for Order #${data.orderNumber || data.orderId}: ${data.paymentStatus}`,
+        { duration: 5000 }
+      );
+      refetch();
+    };
+
+    const handleNewMessage = (data: any) => {
+      if (!selectedChatOrder || String(selectedChatOrder.dbId) !== String(data.orderId)) {
+        toast(
+          `💬 New message from store on #${data.orderNumber}: "${data.message?.message?.substring(0, 40)}..."`,
+          { icon: "💬" }
+        );
+      }
+    };
+
+    socket.on("order_accepted", handleOrderAccepted);
+    socket.on("order_rejected", handleOrderRejected);
+    socket.on("order_status_updated", handleOrderStatusUpdated);
+    socket.on("payment_status_updated", handlePaymentStatusUpdated);
+    socket.on("customer_new_message", handleNewMessage);
+
+    return () => {
+      socket.off("order_accepted", handleOrderAccepted);
+      socket.off("order_rejected", handleOrderRejected);
+      socket.off("order_status_updated", handleOrderStatusUpdated);
+      socket.off("payment_status_updated", handlePaymentStatusUpdated);
+      socket.off("customer_new_message", handleNewMessage);
+    };
+  }, [user?.id, selectedChatOrder, refetch]);
 
   const rawOrders = orderResponse?.data || [];
 
@@ -86,6 +179,24 @@ export default function Orders() {
           addressJson = JSON.parse(addressJson);
         } catch {
           addressJson = null;
+        }
+      }
+
+      let pricingJson = (o as any).pricing_details_json;
+      if (typeof pricingJson === "string") {
+        try {
+          pricingJson = JSON.parse(pricingJson);
+        } catch {
+          pricingJson = null;
+        }
+      }
+
+      let paymentDetailsJson = (o as any).payment_details_json;
+      if (typeof paymentDetailsJson === "string") {
+        try {
+          paymentDetailsJson = JSON.parse(paymentDetailsJson);
+        } catch {
+          paymentDetailsJson = null;
         }
       }
 
@@ -105,10 +216,18 @@ export default function Orders() {
           hour12: true,
         }),
         status: o.status as OrderStatus,
+        subtotal: Number(o.subtotal || 0),
+        deliveryFee: Number(o.delivery_fee || 0),
+        discount: Number(o.discount || 0),
+        taxAmount: Number((o as any).tax_amount || 0),
         total: Number(o.total_amount || 0),
+        pricingJson,
         address: o.shipping_address || (addressJson ? `${addressJson.house_number}, ${addressJson.formatted_address || `${addressJson.city} - ${addressJson.pincode}`}` : "Jaipur, Rajasthan"),
         addressJson,
         payment: o.payment_method || "Cash on Delivery",
+        paymentStatus: (o as any).payment_status || "Pending",
+        transactionId: (o as any).transaction_id,
+        paymentDetailsJson,
         items: (o.items || []).map((it) => ({
           id: it.id,
           name: it.product_name,
@@ -126,6 +245,18 @@ export default function Orders() {
     if (activeFilter === "All") return orders;
     return orders.filter((order) => order.status === activeFilter);
   }, [activeFilter, orders]);
+
+  // Auto-open UPI Payment modal when redirected from checkout
+  useEffect(() => {
+    if (payOrderIdParam && orders.length > 0) {
+      const match = orders.find(
+        (o) => String(o.dbId) === String(payOrderIdParam) || o.id === payOrderIdParam
+      );
+      if (match && match.paymentStatus !== "Paid") {
+        setPaymentModalOrder(match);
+      }
+    }
+  }, [payOrderIdParam, orders]);
 
   const stats = useMemo(() => {
     const total = orders.length;
@@ -494,7 +625,7 @@ export default function Orders() {
                       sm:justify-between
                     "
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <div
                         className="
                           flex
@@ -507,21 +638,75 @@ export default function Orders() {
                           text-[var(--color-primary)]
                         "
                       >
-                        <PackageCheck size={15} />
+                        {order.payment?.toLowerCase().includes("online") ? (
+                          <QrCode size={15} />
+                        ) : (
+                          <Banknote size={15} />
+                        )}
                       </div>
 
                       <div>
-                        <p className="text-[9px] font-bold text-[var(--color-text-muted)]">
-                          Payment
-                        </p>
-
-                        <p className="text-[10px] font-bold text-[var(--color-text-primary)]">
-                          {order.payment}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] font-bold text-[var(--color-text-primary)]">
+                            {order.payment}
+                          </p>
+                          {order.paymentStatus === "Paid" ? (
+                            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">
+                              ✓ Paid
+                            </span>
+                          ) : order.paymentStatus === "Pending Verification" ? (
+                            <span className="rounded bg-purple-50 px-1.5 py-0.5 text-[9px] font-black text-purple-700">
+                              ⏱ Verification Pending
+                            </span>
+                          ) : (
+                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-black text-amber-700">
+                              Payment Pending
+                            </span>
+                          )}
+                        </div>
+                        {order.transactionId && (
+                          <p className="text-[9px] text-stone-400 font-mono">
+                            Ref: {order.transactionId}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      {order.payment?.toLowerCase().includes("online") &&
+                        order.paymentStatus !== "Paid" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentModalOrder(order);
+                            }}
+                            className="
+                              inline-flex
+                              items-center
+                              justify-center
+                              gap-1.5
+                              rounded-xl
+                              border
+                              border-emerald-500
+                              bg-emerald-500
+                              px-4
+                              py-2.5
+                              text-[10px]
+                              font-black
+                              text-white
+                              shadow-sm
+                              transition
+                              hover:bg-emerald-600
+                              active:scale-95
+                            "
+                          >
+                            <Zap size={13} className="fill-current" />
+                            {order.paymentStatus === "Pending Verification"
+                              ? "⚡ Pay Again / In Review"
+                              : `⚡ Pay Now (${formatRupee(order.total)})`}
+                          </button>
+                        )}
+
                       <Link
                         href="/menu"
                         className="
@@ -545,35 +730,31 @@ export default function Orders() {
                         Order Again
                       </Link>
 
-                      {order.status === "Preparing" && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => setChatOrderId(order.id)}
-                            className="
-                              inline-flex
-                              items-center
-                              justify-center
-                              gap-2
-                              rounded-xl
-                              border
-                              border-[var(--color-primary)]
-                              bg-[var(--color-primary-50)]
-                              px-4
-                              py-2.5
-                              text-[10px]
-                              font-bold
-                              text-[var(--color-primary)]
-                              transition
-                              hover:bg-[var(--color-primary)]
-                              hover:text-white
-                            "
-                          >
-                            <MessageCircle size={14} />
-                            Chat
-                          </button>
-                        </>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedChatOrder(order)}
+                        className="
+                          inline-flex
+                          items-center
+                          justify-center
+                          gap-2
+                          rounded-xl
+                          border
+                          border-[var(--color-primary)]
+                          bg-[var(--color-primary-50)]
+                          px-4
+                          py-2.5
+                          text-[10px]
+                          font-bold
+                          text-[var(--color-primary)]
+                          transition
+                          hover:bg-[var(--color-primary)]
+                          hover:text-white
+                        "
+                      >
+                        <MessageCircle size={14} />
+                        Chat with Store
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -582,11 +763,256 @@ export default function Orders() {
           </div>
         )}
       </section>
-      {chatOrderId && (
+
+      {/* SEAMLESS UPI DEEP LINK PAYMENT MODAL (NO MANUAL UTR REQUIRED) */}
+      {paymentModalOrder && (() => {
+        const merchantUpi = paymentQr?.upi_id || "sfccafe@upi";
+        const merchantName = paymentQr?.merchant_name || "SFC Cafe";
+        const totalAmount = Number(paymentModalOrder.total || 0).toFixed(2);
+        const orderNote = `Order ${paymentModalOrder.id}`;
+
+        const baseUpiUrl = `upi://pay?pa=${merchantUpi}&pn=${encodeURIComponent(
+          merchantName
+        )}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(orderNote)}`;
+
+        const gpayUrl = `tez://upi/pay?pa=${merchantUpi}&pn=${encodeURIComponent(
+          merchantName
+        )}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(orderNote)}`;
+
+        const phonepeUrl = `phonepe://pay?pa=${merchantUpi}&pn=${encodeURIComponent(
+          merchantName
+        )}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(orderNote)}`;
+
+        const paytmUrl = `paytmmp://pay?pa=${merchantUpi}&pn=${encodeURIComponent(
+          merchantName
+        )}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(orderNote)}`;
+
+        const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+          baseUpiUrl
+        )}`;
+
+        const handleDirectPay = (url: string, appName: string) => {
+          setSelectedPaymentApp(appName);
+          window.location.href = url;
+        };
+
+        const handleConfirmPayment = async () => {
+          try {
+            await confirmPaymentMutation({
+              orderId: paymentModalOrder.dbId,
+              paymentApp: selectedPaymentApp,
+              paymentDetails: {
+                method: "UPI Deep Link",
+                app: selectedPaymentApp,
+                status: "Payment Completed by Customer",
+              },
+            }).unwrap();
+
+            toast.success(
+              "🎉 Payment status updated! The store manager has been notified to confirm your order."
+            );
+            setPaymentModalOrder(null);
+            refetch();
+          } catch (err: any) {
+            toast.error(err?.data?.message || "Failed to submit payment confirmation");
+          }
+        };
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/65 p-0 sm:p-4 backdrop-blur-xs animate-in fade-in"
+            onClick={() => setPaymentModalOrder(null)}
+          >
+            <div
+              className="w-full max-w-lg rounded-t-[2rem] sm:rounded-3xl border border-stone-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-stone-100 pb-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <Zap size={20} className="fill-current" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-stone-900 leading-tight">
+                      Pay with UPI
+                    </h3>
+                    <p className="text-xs text-stone-500 font-mono">
+                      #{paymentModalOrder.id}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPaymentModalOrder(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-stone-400 hover:bg-stone-200 hover:text-stone-700 transition"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Exact Amount Banner (Non-editable) */}
+              <div className="rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 p-4 text-white shadow-md flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                    Exact Payable Amount
+                  </p>
+                  <p className="text-2xl font-black tracking-tight">
+                    {formatRupee(paymentModalOrder.total)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-xs">
+                    <ShieldCheck size={12} /> Pre-filled & Verified
+                  </span>
+                  <p className="text-[10px] text-emerald-100 mt-1 font-mono">
+                    {merchantUpi}
+                  </p>
+                </div>
+              </div>
+
+              {/* QR Scanner & Merchant details */}
+              <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 rounded-2xl border border-stone-200 bg-stone-50/70 p-4">
+                <div className="flex flex-col items-center justify-center bg-white p-3 rounded-xl border border-stone-200 shadow-xs shrink-0">
+                  <img
+                    src={qrCodeApiUrl}
+                    alt="Scan UPI QR"
+                    className="h-32 w-32 object-contain"
+                  />
+                  <span className="text-[9px] font-bold text-stone-500 mt-1">
+                    Scan with Any UPI App
+                  </span>
+                </div>
+
+                <div className="flex-1 space-y-2 text-center sm:text-left">
+                  <div>
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                      Merchant Name
+                    </span>
+                    <p className="text-xs font-bold text-stone-800">
+                      {merchantName}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <div className="rounded-lg bg-white px-2.5 py-1 border border-stone-200 font-mono text-[11px] font-bold text-stone-700">
+                      {merchantUpi}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(merchantUpi);
+                        toast.success("Merchant UPI ID copied!");
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg bg-stone-200/80 px-2 py-1 text-[10px] font-bold text-stone-700 hover:bg-stone-300"
+                    >
+                      <Copy size={11} /> Copy
+                    </button>
+                  </div>
+
+                  <p className="text-[10px] text-stone-500 leading-relaxed">
+                    Amount is pre-filled automatically when opening UPI app.
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick 1-Click Launch UPI App Buttons */}
+              <div className="mt-4">
+                <p className="text-xs font-black text-stone-700 mb-2">
+                  Choose your UPI app to pay:
+                </p>
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  {[
+                    {
+                      name: "Google Pay",
+                      url: gpayUrl,
+                      bg: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200",
+                    },
+                    {
+                      name: "PhonePe",
+                      url: phonepeUrl,
+                      bg: "bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200",
+                    },
+                    {
+                      name: "Paytm",
+                      url: paytmUrl,
+                      bg: "bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200",
+                    },
+                    {
+                      name: "Any UPI / BHIM",
+                      url: baseUpiUrl,
+                      bg: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200",
+                    },
+                  ].map((app) => (
+                    <button
+                      key={app.name}
+                      type="button"
+                      onClick={() => handleDirectPay(app.url, app.name)}
+                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-xs font-bold transition shadow-xs active:scale-95 text-center ${app.bg}`}
+                    >
+                      <span className="leading-tight">{app.name}</span>
+                      <span className="mt-1 flex items-center gap-0.5 text-[9px] opacity-80">
+                        <span>Open</span>
+                        <ExternalLink size={9} />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Main Pay Now Deep Link Primary Action */}
+              <div className="mt-5 space-y-2.5">
+                <a
+                  href={baseUpiUrl}
+                  onClick={() => setSelectedPaymentApp("Default UPI App")}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-black text-white shadow-lg transition hover:bg-emerald-700 active:scale-98"
+                >
+                  <Zap size={17} className="fill-current" />
+                  <span>Pay Now ({formatRupee(paymentModalOrder.total)})</span>
+                </a>
+
+                {/* Confirm Payment Submission Button */}
+                <button
+                  type="button"
+                  disabled={isSubmittingProof}
+                  onClick={handleConfirmPayment}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-300 bg-stone-100 py-3 text-xs font-bold text-stone-800 transition hover:bg-stone-200 active:scale-98 disabled:opacity-50"
+                >
+                  {isSubmittingProof ? (
+                    <LoaderCircle size={15} className="animate-spin" />
+                  ) : (
+                    <Check size={15} />
+                  )}
+                  <span>✓ I Have Completed Payment</span>
+                </button>
+
+                <div className="flex items-center justify-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentModalOrder(null);
+                      setSelectedChatOrder(paymentModalOrder);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--color-primary)] hover:underline"
+                  >
+                    <MessageCircle size={13} />
+                    <span>Have payment questions? Chat with Store</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {selectedChatOrder && (
         <OrderChat
           open={true}
-          orderId={chatOrderId}
-          onClose={() => setChatOrderId(null)}
+          orderId={selectedChatOrder.dbId}
+          dbOrderId={selectedChatOrder.dbId}
+          orderNumber={selectedChatOrder.id}
+          orderStatus={selectedChatOrder.status}
+          onClose={() => setSelectedChatOrder(null)}
         />
       )}
     </main>

@@ -26,9 +26,20 @@ export interface Order {
   subtotal: number;
   delivery_fee: number;
   discount: number;
+  tax_amount?: number;
+  packaging_fee?: number;
+  platform_fee?: number;
+  cod_fee?: number;
+  distance_km?: number;
+  tax_inclusive?: boolean;
   total_amount: number;
+  pricing_details_json?: any;
   status: "Preparing" | "Out for Delivery" | "Delivered" | "Cancelled";
   payment_method: string;
+  payment_status?: string;
+  transaction_id?: string;
+  payment_details_json?: any;
+  cancel_reason?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -43,7 +54,17 @@ export interface CreateOrderPayload {
   shippingAddress?: string;
   deliveryAddressJson?: any;
   paymentMethod?: string;
+  paymentStatus?: string;
+  transactionId?: string;
+  paymentDetailsJson?: any;
   notes?: string;
+}
+
+export interface ConfirmPaymentPayload {
+  orderId: number;
+  transactionId?: string;
+  paymentApp?: string;
+  paymentDetails?: any;
 }
 
 export interface OrderResponse<T = Order> {
@@ -70,6 +91,25 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Order", "Cart", "Product"],
     }),
+    confirmPayment: build.mutation<OrderResponse<Order>, ConfirmPaymentPayload>({
+      query: ({ orderId, ...body }) => ({
+        url: `/orders/${orderId}/payment-confirm`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Order"],
+    }),
+    cancelOrder: build.mutation<
+      OrderResponse<Order>,
+      { orderId: number; cancelReason: string }
+    >({
+      query: ({ orderId, cancelReason }) => ({
+        url: `/orders/${orderId}/cancel`,
+        method: "POST",
+        body: { cancelReason },
+      }),
+      invalidatesTags: ["Order", "Product"],
+    }),
   }),
 });
 
@@ -77,5 +117,7 @@ export const {
   useGetOrdersQuery,
   useGetOrderDetailsQuery,
   useCreateOrderMutation,
+  useConfirmPaymentMutation,
+  useCancelOrderMutation,
 } = orderApi;
 

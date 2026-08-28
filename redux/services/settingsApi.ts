@@ -46,6 +46,21 @@ export interface LogoSettingsResponse {
   data: LogoSettings;
 }
 
+export interface PaymentQrSettings {
+  qr_code_url: string;
+  upi_id: string;
+  merchant_name: string;
+  account_name: string;
+  is_enabled: boolean;
+  instructions: string;
+}
+
+export interface PaymentQrSettingsResponse {
+  success: boolean;
+  message?: string;
+  data: PaymentQrSettings;
+}
+
 export const settingsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getTheme: build.query<ThemeSettingsResponse, void>({
@@ -60,6 +75,10 @@ export const settingsApi = baseApi.injectEndpoints({
       query: () => "/settings/logo",
       providesTags: ["Settings"],
     }),
+    getPaymentQr: build.query<PaymentQrSettingsResponse, void>({
+      query: () => "/settings/payment-qr",
+      providesTags: ["Settings"],
+    }),
   }),
 });
 
@@ -67,4 +86,5 @@ export const {
   useGetThemeQuery,
   useGetFooterQuery,
   useGetLogoQuery,
+  useGetPaymentQrQuery,
 } = settingsApi;
