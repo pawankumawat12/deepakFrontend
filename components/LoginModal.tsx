@@ -1,10 +1,12 @@
 "use client";
 
-import { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
   Info,
+  KeyRound,
+  LoaderCircle,
   Lock,
   LogInIcon,
   Mail,
@@ -19,10 +21,16 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import toast from "react-hot-toast";
-import { useLazyGetMeQuery, useLoginMutation } from '../redux/services/authApi';
+import {
+  useLazyGetMeQuery,
+  useLoginMutation,
+  useSendOtpMutation,
+  useVerifyOtpMutation,
+} from "../redux/services/authApi";
 import { emailLoginSchema } from "@/schemas/authSchema";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../redux/features/authSlice";
+
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
@@ -30,18 +38,28 @@ interface LoginModalProps {
 }
 
 type LoginMethod = "phone" | "email";
-type Step = "welcome" | "phone" | "email";
+type Step = "welcome" | "phone" | "email" | "verifyOtp";
 
-export default function LoginModal({ open, onClose, onOpenRegister }: LoginModalProps) {
+const RESEND_COOLDOWN_SECONDS = 30;
+
+export default function LoginModal({
+  open,
+  onClose,
+  onOpenRegister,
+}: LoginModalProps) {
   const [step, setStep] = useState<Step>("welcome");
-
   const [rememberMe, setRememberMe] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-
   const [error, setError] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
+  const [resendTimer, setResendTimer] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
+  const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const [login, { isLoading }] = useLoginMutation();
+  const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
+  const [sendOtp, { isLoading: isSendingOtp }] = useSendOtpMutation();
   const [getMe] = useLazyGetMeQuery();
   const dispatch = useDispatch();
 
@@ -58,25 +76,114 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
     },
   });
 
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = window.setInterval(() => {
+      setResendTimer((sec) => Math.max(0, sec - 1));
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [resendTimer]);
+
   const onSubmit = async (data: { email: string; password: string }) => {
     if (!acceptedTerms) {
       setError("Please accept the Terms & Conditions to continue.");
       return;
     }
 
+    const cleanEmail = data.email.trim().toLowerCase();
+
     try {
       setError("");
-      await login({
-        email: data.email.trim().toLowerCase(),
+      const res = await login({
+        email: cleanEmail,
         password: data.password,
       }).unwrap();
+
       dispatch(setCredentials(await getMe().unwrap()));
       reset();
       toast.success("Logged in successfully.");
       onClose();
     } catch (loginError: unknown) {
-      const apiError = loginError as { data?: { message?: string } };
-      setError(apiError.data?.message || "Unable to log in. Please try again.");
+      const apiError = loginError as {
+        data?: {
+          message?: string;
+          requiresVerification?: boolean;
+          email?: string;
+        };
+      };
+
+      if (apiError.data?.requiresVerification) {
+        setPendingEmail(apiError.data.email || cleanEmail);
+        setOtpDigits(["", "", "", ""]);
+        setStep("verifyOtp");
+        setResendTimer(RESEND_COOLDOWN_SECONDS);
+        toast("Please verify your email with the 4-digit code.", {
+          icon: "📩",
+        });
+      } else {
+        setError(
+          apiError.data?.message || "Unable to log in. Please try again."
+        );
+      }
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const nextDigits = [...otpDigits];
+    nextDigits[index] = value.slice(-1);
+    setOtpDigits(nextDigits);
+
+    if (value && index < 3) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const fullOtp = otpDigits.join("");
+    if (fullOtp.length < 4) {
+      setError("Please enter the complete 4-digit OTP.");
+      return;
+    }
+
+    try {
+      setError("");
+      await verifyOtp({
+        email: pendingEmail,
+        otp: fullOtp,
+      }).unwrap();
+
+      dispatch(setCredentials(await getMe().unwrap()));
+      toast.success("Email verified and logged in successfully!");
+      reset();
+      onClose();
+    } catch (err: unknown) {
+      const apiError = err as { data?: { message?: string } };
+      setError(
+        apiError.data?.message || "Invalid or expired OTP. Please try again."
+      );
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0 || isSendingOtp) return;
+    try {
+      setError("");
+      await sendOtp(pendingEmail).unwrap();
+      setResendTimer(RESEND_COOLDOWN_SECONDS);
+      toast.success("A fresh OTP has been sent to your email.");
+    } catch (err: unknown) {
+      const apiError = err as { data?: { message?: string } };
+      setError(apiError.data?.message || "Failed to resend OTP.");
     }
   };
 
@@ -84,11 +191,13 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
     if (!open) {
       setStep("welcome");
       setError("");
+      setPendingEmail("");
+      setOtpDigits(["", "", "", ""]);
     }
   }, [open]);
 
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent | any) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
@@ -147,6 +256,7 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
           duration-200
         "
       >
+        {/* MODAL HEADER */}
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
           <div className="flex items-center gap-3">
             {step !== "welcome" && (
@@ -173,18 +283,16 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
             <div>
               <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
                 {step === "welcome" && "Welcome to SFC Cafe"}
-
                 {step === "phone" && "Continue with Phone"}
-
-                {step === "email" && "Continue with Email"}
+                {step === "email" && "Sign In with Email"}
+                {step === "verifyOtp" && "Verify Your Email"}
               </h2>
 
               <p className="text-xs text-[var(--color-text-muted)]">
                 {step === "welcome" && "Sign in to continue ordering"}
-
                 {step === "phone" && "We'll send a verification code"}
-
-                {step === "email" && ""}
+                {step === "email" && "Enter your credentials to continue"}
+                {step === "verifyOtp" && `Enter 4-digit code sent to ${pendingEmail}`}
               </p>
             </div>
           </div>
@@ -206,7 +314,9 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
           </button>
         </div>
 
+        {/* MODAL BODY */}
         <div className="p-5 sm:p-6">
+          {/* STEP 1: WELCOME */}
           {step === "welcome" && (
             <div className="space-y-4">
               <div className="mb-6 text-center">
@@ -233,14 +343,12 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
               </div>
 
               {/* PHONE */}
-
               <button
                 type="button"
-                // onClick={() => handleSelectMethod("phone")}
                 onClick={() =>
-                  toast("Comming soon", {
+                  toast("Phone login coming soon. Please use Email login.", {
                     icon: <Info />,
-                    duration: 1000,
+                    duration: 2000,
                   })
                 }
                 className="
@@ -290,7 +398,6 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
               </button>
 
               {/* EMAIL */}
-
               <button
                 type="button"
                 onClick={() => handleSelectMethod("email")}
@@ -325,7 +432,7 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
                   </p>
 
                   <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-                    Receive OTP securely in your inbox
+                    Use your registered email & password
                   </p>
                 </div>
 
@@ -340,162 +447,120 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
                 />
               </button>
 
-              <p className="pt-2 text-center text-xs text-[var(--color-text-muted)]">
-                By continuing, you agree to our Terms & Privacy Policy.
-              </p>
-              <p className="text-center text-sm text-[var(--color-text-secondary)]">
-                New here?{" "}
+              <div className="pt-2 text-center text-xs text-[var(--color-text-muted)]">
+                Don't have an account?{" "}
                 <button
                   type="button"
-                  onClick={onOpenRegister}
-                  className="font-semibold text-[var(--color-primary)]"
+                  onClick={() => {
+                    onClose();
+                    onOpenRegister();
+                  }}
+                  className="font-semibold text-[var(--color-primary)] hover:underline"
                 >
                   Create an account
                 </button>
-              </p>
+              </div>
             </div>
           )}
 
-          {(step === "phone" || step === "email") && (
-            <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
-              {/* {step === "phone" && (
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]">
-                    Phone number
-                  </label>
+          {/* STEP 2: EMAIL LOGIN FORM */}
+          {step === "email" && (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]">
+                  Email address
+                </label>
 
-                  <div className="flex gap-2">
-                    <div
-                      className="
-                        flex h-12 items-center
-                        rounded-xl
-                        border border-[var(--color-border)]
-                        bg-[var(--bg-body)]
-                        px-3
-                        text-sm font-medium
-                      "
-                    >
-                      +91
-                    </div>
+                <div className="relative">
+                  <Mail
+                    size={18}
+                    className="
+                      absolute left-4 top-1/2
+                      -translate-y-1/2
+                      text-[var(--color-text-muted)]
+                    "
+                  />
 
-                    <input
-                      type="tel"
-                      placeholder="Enter mobile number"
-                      maxLength={10}
-                      className="
-                        h-12 flex-1
-                        rounded-xl
-                        border border-[var(--color-border)]
-                        px-4
-                        text-sm
-                        outline-none
-                        transition
-                        focus:border-[var(--color-primary)]
-                        focus:ring-2
-                        focus:ring-[var(--color-primary)]/10
-                      "
-                    />
-                  </div>
-
-                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                    We'll send a 6-digit OTP to this number.
-                  </p>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    className="
+                      h-12 w-full
+                      rounded-xl
+                      border border-[var(--color-border)]
+                      py-3 pl-11 pr-4
+                      text-sm
+                      outline-none
+                      transition
+                      focus:border-[var(--color-primary)]
+                      focus:ring-2
+                      focus:ring-[var(--color-primary)]/10
+                    "
+                    {...register("email")}
+                  />
                 </div>
-              )} */}
+                {errors.email?.message && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
 
-              {/* EMAIL */}
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-sm font-semibold text-[var(--color-text-primary)]">
+                    Password
+                  </label>
+                  <a
+                    href="/forgot-password"
+                    className="text-xs font-medium text-[var(--color-primary)] hover:underline"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
 
-              {step === "email" && (
-                <>
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]">
-                      Email address
-                    </label>
+                <div className="relative">
+                  <Lock
+                    size={18}
+                    className="
+                      absolute left-4 top-1/2
+                      -translate-y-1/2
+                      text-[var(--color-text-muted)]
+                    "
+                  />
 
-                    <div className="relative">
-                      <Mail
-                        size={18}
-                        className="
-                        absolute left-4 top-1/2
-                        -translate-y-1/2
-                        text-[var(--color-text-muted)]
-                      "
-                      />
-
-                      <input
-                        type="email"
-                        placeholder="you@example.com"
-                        className="
-                        h-12 w-full
-                        rounded-xl
-                        border border-[var(--color-border)]
-                        py-3 pl-11 pr-4
-                        text-sm
-                        outline-none
-                        transition
-                        focus:border-[var(--color-primary)]
-                        focus:ring-2
-                        focus:ring-[var(--color-primary)]/10
-                      "
-                        {...register("email")}
-                      />
-                    </div>
-                    {errors.email?.message && (
-                      <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]">
-                      Password
-                    </label>
-
-                    <div className="relative">
-                      <Lock
-                        size={18}
-                        className="
-                        absolute left-4 top-1/2
-                        -translate-y-1/2
-                        text-[var(--color-text-muted)]
-                      "
-                      />
-
-                      <input
-                        type="password"
-                        placeholder="System@123"
-                        className="
-                        h-12 w-full
-                        rounded-xl
-                        border border-[var(--color-border)]
-                        py-3 pl-11 pr-4
-                        text-sm
-                        outline-none
-                        transition
-                        focus:border-[var(--color-primary)]
-                        focus:ring-2
-                        focus:ring-[var(--color-primary)]/10
-                      "
-                        {...register("password")}
-                      />
-                    </div>
-                    {errors.password?.message && (
-                      <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-                    )}
-                  </div>
-                </>
-              )}
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="
+                      h-12 w-full
+                      rounded-xl
+                      border border-[var(--color-border)]
+                      py-3 pl-11 pr-4
+                      text-sm
+                      outline-none
+                      transition
+                      focus:border-[var(--color-primary)]
+                      focus:ring-2
+                      focus:ring-[var(--color-primary)]/10
+                    "
+                    {...register("password")}
+                  />
+                </div>
+                {errors.password?.message && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
 
               {/* REMEMBER ME */}
-
               <label className="flex cursor-pointer items-center gap-3">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="
-                    h-4 w-4
-                    accent-[var(--color-primary)]
-                  "
+                  className="h-4 w-4 accent-[var(--color-primary)]"
                 />
 
                 <span className="text-sm text-[var(--color-text-secondary)]">
@@ -504,286 +569,177 @@ export default function LoginModal({ open, onClose, onOpenRegister }: LoginModal
               </label>
 
               {/* TERMS */}
-
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="
-                    mt-1 h-4 w-4 shrink-0
-                    accent-[var(--color-primary)]
-                  "
+                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-primary)]"
                 />
 
                 <span className="text-xs leading-5 text-[var(--color-text-secondary)]">
                   I agree to the{" "}
-                  <button
-                    type="button"
-                    className="
-                      font-semibold
-                      text-[var(--color-primary)]
-                      hover:underline
-                    "
-                  >
+                  <a href="/terms" className="text-[var(--color-primary)] underline">
                     Terms & Conditions
-                  </button>{" "}
+                  </a>{" "}
                   and{" "}
-                  <button
-                    type="button"
-                    className="
-                      font-semibold
-                      text-[var(--color-primary)]
-                      hover:underline
-                    "
-                  >
+                  <a href="/privacy" className="text-[var(--color-primary)] underline">
                     Privacy Policy
-                  </button>
+                  </a>
                   .
                 </span>
               </label>
 
-              {/* ERROR */}
-
               {error && (
-                <div
-                  className="
-                    rounded-xl
-                    bg-red-50
-                    px-4 py-3
-                    text-sm
-                    text-red-600
-                  "
-                >
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
                   {error}
                 </div>
               )}
 
-              {/* SUBMIT */}
-
               <button
                 type="submit"
+                disabled={isLoading}
                 className="
                   flex h-12 w-full
                   items-center justify-center
                   gap-2
                   rounded-xl
                   bg-[var(--color-primary)]
-                  text-sm
-                  font-semibold
+                  text-sm font-semibold
                   text-white
-                  shadow-lg
+                  shadow-md
                   transition
                   hover:bg-[var(--color-primary-dark)]
-                  disabled:cursor-not-allowed
+                  active:scale-[0.99]
                   disabled:opacity-60
                 "
-                disabled={isLoading}
               >
-                {isLoading ? "Logging in..." : "Login"}
-                <LogInIcon size={17} />
+                {isLoading ? (
+                  <LoaderCircle size={18} className="animate-spin" />
+                ) : (
+                  <>
+                    <LogInIcon size={18} />
+                    <span>Sign In</span>
+                  </>
+                )}
               </button>
+
+              <div className="pt-2 text-center text-xs text-[var(--color-text-muted)]">
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenRegister();
+                  }}
+                  className="font-semibold text-[var(--color-primary)] hover:underline"
+                >
+                  Create an account
+                </button>
+              </div>
             </form>
           )}
 
-          {/* {step === "otp" && (
-            <form
-              onSubmit={handleVerifyOtp}
-              className="space-y-6"
-            >
-              <div className="text-center">
-                <div
-                  className="
-                    mx-auto mb-4
-                    flex h-12 w-12
-                    items-center justify-center
-                    rounded-2xl
-                    bg-[var(--color-primary-50)]
-                    text-[var(--color-primary)]
-                  "
-                >
-                  <Check size={24} />
+          {/* STEP 3: OTP VERIFICATION STEP (FOR UNVERIFIED ACCOUNTS) */}
+          {step === "verifyOtp" && (
+            <div className="space-y-4 animate-in fade-in duration-150">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 leading-relaxed">
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <KeyRound size={15} className="text-amber-700" />
+                  <span>Email Verification Pending</span>
                 </div>
-
-                <p className="text-sm text-[var(--color-text-secondary)]">
-                  Enter the 6-digit code sent to
-                </p>
-
-                <p className="mt-1 break-all font-semibold text-[var(--color-text-primary)]">
-                  {contact}
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => setStep(method)}
-                  className="
-                    mt-2
-                    text-xs
-                    font-semibold
-                    text-[var(--color-primary)]
-                    hover:underline
-                  "
-                >
-                  Change {method === "phone" ? "number" : "email"}
-                </button>
+                Your account was registered but not verified yet. We just sent a
+                4-digit code to <b>{pendingEmail}</b>. Please enter it below to complete verification and log in.
               </div>
 
-
-              <div className="grid grid-cols-6 gap-2 sm:gap-3">
-                {otpValue.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={(el) => {
-                      otpRefs.current[index] = el;
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) =>
-                      handleOtpChange(
-                        index,
-                        e.target.value
-                      )
-                    }
-                    onKeyDown={(e) =>
-                      handleOtpKeyDown(index, e)
-                    }
-                    onPaste={handleOtpPaste}
-                    className="
-                      aspect-square
-                      w-full
-                      rounded-xl
-                      border border-[var(--color-border)]
-                      bg-[var(--bg-body)]
-                      text-center
-                      text-lg
-                      font-bold
-                      outline-none
-                      transition
-                      focus:border-[var(--color-primary)]
-                      focus:bg-white
-                      focus:ring-2
-                      focus:ring-[var(--color-primary)]/10
-                    "
-                  />
-                ))}
+              <div>
+                <label className="mb-2 block text-center text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  Enter 4-Digit Code
+                </label>
+                <div className="flex justify-center gap-3">
+                  {otpDigits.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => {
+                        otpRefs.current[index] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="
+                        h-14 w-12
+                        rounded-xl
+                        border-2 border-[var(--color-border)]
+                        text-center text-xl font-bold
+                        outline-none
+                        transition
+                        focus:border-[var(--color-primary)]
+                        focus:ring-2 focus:ring-[var(--color-primary)]/15
+                      "
+                    />
+                  ))}
+                </div>
               </div>
 
               {error && (
-                <div
-                  className="
-                    rounded-xl
-                    bg-red-50
-                    px-4 py-3
-                    text-center
-                    text-sm
-                    text-red-600
-                  "
-                >
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
                   {error}
                 </div>
               )}
 
-
               <button
-                type="submit"
-                disabled={
-                  isSubmitting ||
-                  otpValue.some((digit) => !digit)
-                }
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={isVerifying || otpDigits.join("").length < 4}
                 className="
                   flex h-12 w-full
                   items-center justify-center
                   gap-2
                   rounded-xl
                   bg-[var(--color-primary)]
-                  text-sm
-                  font-semibold
+                  text-sm font-semibold
                   text-white
-                  shadow-lg
+                  shadow-md
                   transition
                   hover:bg-[var(--color-primary-dark)]
-                  disabled:cursor-not-allowed
+                  active:scale-[0.99]
                   disabled:opacity-50
                 "
               >
-                {isSubmitting
-                  ? "Verifying..."
-                  : "Verify & Continue"}
-
-                <ShieldCheck size={17} />
+                {isVerifying ? (
+                  <LoaderCircle size={18} className="animate-spin" />
+                ) : (
+                  <span>Verify Email & Log In</span>
+                )}
               </button>
 
-
-              <div className="text-center">
-                <p className="text-xs text-[var(--color-text-muted)]">
-                  Didn't receive the code?
-                </p>
+              <div className="flex items-center justify-between pt-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setStep("email")}
+                  className="font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
+                >
+                  ← Back to Login
+                </button>
 
                 <button
                   type="button"
-                  disabled={
-                    resendTimer > 0 || isSubmitting
-                  }
-                  onClick={handleResend}
-                  className="
-                    mt-2
-                    inline-flex
-                    items-center
-                    gap-2
-                    text-sm
-                    font-semibold
-                    text-[var(--color-primary)]
-                    disabled:text-[var(--color-text-muted)]
-                  "
+                  onClick={handleResendOtp}
+                  disabled={resendTimer > 0 || isSendingOtp}
+                  className="font-semibold text-[var(--color-primary)] hover:underline disabled:opacity-50"
                 >
-                  <RefreshCcw size={15} />
-
-                  {resendTimer > 0
-                    ? `Resend OTP in ${resendTimer}s`
-                    : "Resend OTP"}
+                  {isSendingOtp
+                    ? "Sending..."
+                    : resendTimer > 0
+                    ? `Resend in ${resendTimer}s`
+                    : "Resend Code"}
                 </button>
               </div>
-
-
-              <div
-                className="
-                  flex items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[var(--color-primary-50)]
-                  px-4 py-3
-                  text-xs
-                  text-[var(--color-text-secondary)]
-                "
-              >
-                <ShieldCheck
-                  size={16}
-                  className="text-[var(--color-primary)]"
-                />
-
-                {rememberMe
-                  ? "You will stay signed in on this device."
-                  : "You will be signed out when your session ends."}
-              </div>
-            </form>
-          )} */}
-        </div>
-
-        <div
-          className="
-            border-t
-            border-[var(--color-border)]
-            bg-[var(--bg-body)]
-            px-5 py-3
-            text-center
-          "
-        >
-          <p className="text-[11px] text-[var(--color-text-muted)]">
-            🔒 Your information is securely protected by SFC Cafe.
-          </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
