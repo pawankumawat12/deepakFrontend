@@ -53,13 +53,12 @@ export default function ForgotPasswordPage() {
           )}
           {error && (
             <p className="text-sm text-red-600">
-              Unable to send the reset link. Please try again.
+            {(error as any)?.data?.message || "Email does not exist. Please check and try again."}
             </p>
           )}
           {sent && (
             <p className="text-sm text-lime-700">
-              If that email is registered, a reset link has been sent. Check
-              your inbox.
+              A reset link has been sent to your email. Please check your inbox.
             </p>
           )}
           <button

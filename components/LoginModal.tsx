@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -178,7 +179,7 @@ export default function LoginModal({
     if (resendTimer > 0 || isSendingOtp) return;
     try {
       setError("");
-      await sendOtp(pendingEmail).unwrap();
+      await sendOtp({ email: pendingEmail }).unwrap();
       setResendTimer(RESEND_COOLDOWN_SECONDS);
       toast.success("A fresh OTP has been sent to your email.");
     } catch (err: unknown) {
@@ -511,12 +512,13 @@ export default function LoginModal({
                   <label className="text-sm font-semibold text-[var(--color-text-primary)]">
                     Password
                   </label>
-                  <a
+                  <Link
                     href="/forgot-password"
+                    onClick={onClose}
                     className="text-xs font-medium text-[var(--color-primary)] hover:underline"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
 
                 <div className="relative">
@@ -579,13 +581,21 @@ export default function LoginModal({
 
                 <span className="text-xs leading-5 text-[var(--color-text-secondary)]">
                   I agree to the{" "}
-                  <a href="/terms" className="text-[var(--color-primary)] underline">
+                  <Link
+                    href="/terms"
+                    onClick={onClose}
+                    className="text-[var(--color-primary)] underline"
+                  >
                     Terms & Conditions
-                  </a>{" "}
+                  </Link>{" "}
                   and{" "}
-                  <a href="/privacy" className="text-[var(--color-primary)] underline">
+                  <Link
+                    href="/privacy"
+                    onClick={onClose}
+                    className="text-[var(--color-primary)] underline"
+                  >
                     Privacy Policy
-                  </a>
+                  </Link>
                   .
                 </span>
               </label>

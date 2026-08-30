@@ -505,15 +505,10 @@ export default function OrderChat({
             </div>
           ) : (
             liveMessages.map((item) => {
-              const currentUserId = user?.id ?? user?._id;
-              const isCustomerMsg =
-                item.sender_role === "customer" ||
-                (currentUserId != null &&
-                  item.sender_id != null &&
-                  String(item.sender_id) === String(currentUserId) &&
-                  item.sender_role !== "admin");
-
-              const isMe = isCustomerMsg;
+              const isAdminMsg = item.sender_role === "admin";
+              const isCustomerMsg = item.sender_role === "customer";
+              // In customer view: Customer is 'Me' (Right), Admin is 'Received' (Left)
+              const isMe = !isAdminMsg && isCustomerMsg;
               const hasAttachment = Boolean(item.attachment_url);
 
               const timeStr = new Date(item.created_at).toLocaleTimeString([], {

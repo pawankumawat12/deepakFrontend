@@ -20,7 +20,11 @@ export const authApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/auth/register", method: "POST", body }),
     }),
     sendOtp: builder.mutation({
-      query: (body) => ({ url: "/auth/send-otp", method: "POST", body }),
+      query: (body: string | { email: string }) => ({
+        url: "/auth/send-otp",
+        method: "POST",
+        body: typeof body === "string" ? { email: body } : body,
+      }),
     }),
     verifyOtp: builder.mutation({
       query: (body) => ({ url: "/auth/verify-otp", method: "POST", body }),
@@ -48,7 +52,11 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
     forgotPassword: builder.mutation({
-      query: (email: string) => ({ url: "/auth/forgot-password", method: "POST", body: { email } }),
+      query: (email: string) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body: { email, role: "user" },
+      }),
     }),
     verifyResetPasswordToken: builder.mutation({
       query: (accessToken: string) => ({
@@ -61,6 +69,13 @@ export const authApi = baseApi.injectEndpoints({
         url: `/auth/reset-password/${encodeURIComponent(accessToken)}`,
         method: "POST",
         body: { password },
+      }),
+    }),
+    submitBlockedSupportRequest: builder.mutation({
+      query: (body: { email: string; name?: string; phone?: string; message: string }) => ({
+        url: "/auth/blocked-support-request",
+        method: "POST",
+        body,
       }),
     }),
   }),
@@ -79,4 +94,5 @@ export const {
   useForgotPasswordMutation,
   useVerifyResetPasswordTokenMutation,
   useResetPasswordMutation,
+  useSubmitBlockedSupportRequestMutation,
 } = authApi;
