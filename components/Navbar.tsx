@@ -21,6 +21,7 @@ import {
   X,
   ChevronDown,
   Bell,
+  Star,
 } from "lucide-react";
 
 import { useGetCartQuery } from "../redux/services/cartApi";

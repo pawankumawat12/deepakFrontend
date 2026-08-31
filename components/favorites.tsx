@@ -9,6 +9,7 @@ import {
   Star,
   Trash2,
   Plus,
+  Minus,
   Check,
   ShoppingBag,
   LoaderCircle,
@@ -22,7 +23,11 @@ import {
   useRemoveWishlistItemMutation,
   WishlistItem,
 } from "../redux/services/wishlistApi";
-import { useAddCartItemMutation } from "../redux/services/cartApi";
+import {
+  useGetCartQuery,
+  useAddCartItemMutation,
+  useUpdateCartItemMutation,
+} from "../redux/services/cartApi";
 
 function formatRupee(value: number) {
   return `₹${Number(value).toLocaleString("en-IN")}`;
@@ -42,11 +47,28 @@ export default function FavoritesPage() {
     skip: !user,
   });
 
+  const { data: cartResponse } = useGetCartQuery(undefined, {
+    skip: !user,
+  });
+
   const [removeWishlistItem] = useRemoveWishlistItemMutation();
   const [addCartItem] = useAddCartItemMutation();
+  const [updateCartItem] = useUpdateCartItemMutation();
+
   const [activeCategory, setActiveCategory] = useState("All");
   const [addedItems, setAddedItems] = useState<number[]>([]);
   const [removingId, setRemovingId] = useState<number | null>(null);
+
+  const cartItemsMap = useMemo(
+    () =>
+      new Map(
+        (cartResponse?.data?.items || []).map((it) => [
+          Number(it.id),
+          it.quantity,
+        ])
+      ),
+    [cartResponse]
+  );
 
   const favorites: WishlistItem[] = wishlistResponse?.data || [];
 
@@ -103,9 +125,34 @@ export default function FavoritesPage() {
     }
   };
 
+  const handleChangeQty = async (
+    productId: number,
+    nextQty: number,
+    maxStock: number,
+    isMadeToOrder?: boolean
+  ) => {
+    if (!user) {
+      toast.error("Please sign in to modify cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (!isMadeToOrder && nextQty > maxStock) {
+      toast.error(`Only ${maxStock} items available in stock`);
+      return;
+    }
+    try {
+      await updateCartItem({ productId, quantity: nextQty }).unwrap();
+      if (nextQty === 0) {
+        toast.success("Removed from cart");
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update quantity");
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[var(--bg-body)] mt-[60px]">
-      <section>
+    <main className="min-h-screen bg-[var(--bg-body)]">
+      <section className="relative overflow-hidden bg-[var(--color-primary-dark)]">
         <div className="mx-auto max-w-6xl px-5 py-9 sm:px-8 md:py-12">
           <Link
             href="/profile"
@@ -148,20 +195,87 @@ export default function FavoritesPage() {
                 </p>
               </div>
 
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl text-white">
-                Favorites
+              <h1 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl md:text-4xl">
+                Favorite Items
               </h1>
 
-              <p className="mt-2 max-w-lg text-xs leading-5 text-white/80">
-                Keep your favourite food close. Order them whenever you crave
-                something delicious.
+              <p className="mt-1 text-xs text-white/70 sm:text-sm">
+                The food you love the most, saved in one place for quick reordering.
               </p>
             </div>
 
-            <Link
-              href="/menu"
+            <div className="flex items-center gap-3">
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-white/10
+                  px-4
+                  py-2.5
+                  text-xs
+                  font-bold
+                  text-white
+                  backdrop-blur-md
+                "
+              >
+                <ShoppingBag size={15} />
+                <span>{favorites.length} Saved Items</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
+        {!user ? (
+          <div
+            className="
+              mx-auto
+              max-w-md
+              rounded-3xl
+              border
+              border-[var(--color-border)]
+              bg-white
+              p-8
+              text-center
+              shadow-sm
+            "
+          >
+            <div
               className="
+                mx-auto
+                flex
+                h-16
+                w-16
+                items-center
+                justify-center
+                rounded-2xl
+                bg-[var(--color-primary-50)]
+                text-[var(--color-primary)]
+              "
+            >
+              <LogIn size={26} />
+            </div>
+
+            <h2 className="mt-4 text-lg font-black text-[var(--color-text-primary)]">
+              Sign in to view favorites
+            </h2>
+
+            <p className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)]">
+              Log in to see the dishes you have saved and reorder them anytime.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("sfc_open_login"))}
+              className="
+                mt-6
                 inline-flex
+                w-full
                 items-center
                 justify-center
                 gap-2
@@ -172,158 +286,80 @@ export default function FavoritesPage() {
                 text-xs
                 font-bold
                 text-white
-                shadow-lg
+                shadow-md
                 transition
-                hover:-translate-y-0.5
                 hover:bg-[var(--color-primary-dark)]
               "
             >
-              <ShoppingBag size={16} />
-              Explore Menu
-            </Link>
+              Sign In
+            </button>
           </div>
-        </div>
-      </section>
-
-      {/* =====================================================
-          SUMMARY
-      ===================================================== */}
-      {user && (
-        <section className="mx-auto max-w-6xl px-5 pt-7 sm:px-8">
+        ) : isLoading || isFetching ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <LoaderCircle
+              size={34}
+              className="animate-spin text-[var(--color-primary)]"
+            />
+            <p className="mt-4 text-xs font-semibold text-[var(--color-text-muted)]">
+              Loading your favorites...
+            </p>
+          </div>
+        ) : error ? (
           <div
             className="
-              flex
-              flex-col
-              gap-4
-              rounded-2xl
+              mx-auto
+              max-w-md
+              rounded-3xl
               border
-              border-[var(--color-border)]
-              bg-white
-              p-4
-              shadow-sm
-              sm:flex-row
-              sm:items-center
-              sm:justify-between
+              border-red-100
+              bg-red-50/70
+              p-8
+              text-center
             "
           >
-            <div className="flex items-center gap-3">
-              <div
-                className="
-                  flex
-                  h-11
-                  w-11
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-[var(--color-primary-50)]
-                  text-[var(--color-primary)]
-                "
-              >
-                <Heart size={20} fill="currentColor" />
-              </div>
-
-              <div>
-                <p className="text-xs font-black text-[var(--color-text-primary)]">
-                  {favorites.length} Favourite {favorites.length === 1 ? "Item" : "Items"}
-                </p>
-
-                <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
-                  Your saved food items
-                </p>
-              </div>
-            </div>
-
-            <div className="text-left sm:text-right">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Favourite Collection
-              </p>
-
-              <p className="mt-1 text-sm font-black text-[var(--color-primary)]">
-                Made for your cravings ❤️
-              </p>
-            </div>
+            <p className="text-sm font-bold text-red-700">
+              Could not load your favorites
+            </p>
+            <p className="mt-1 text-xs text-red-500">
+              Please check your connection and try again.
+            </p>
           </div>
-        </section>
-      )}
-
-      {/* =====================================================
-          CATEGORY FILTER
-      ===================================================== */}
-      {user && categories.length > 2 && (
-        <section className="mx-auto max-w-6xl px-5 pt-7 sm:px-8">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {categories.map((category) => {
-              const active = activeCategory === category;
-
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => setActiveCategory(category)}
-                  className={`
-                    shrink-0
-                    rounded-full
-                    border
-                    px-4
-                    py-2
-                    text-[11px]
-                    font-bold
-                    transition
-                    ${
-                      active
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-sm"
-                        : "border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                    }
-                  `}
-                >
-                  {category}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* =====================================================
-          FAVORITE PRODUCTS / EMPTY / AUTH REQUIRED STATE
-      ===================================================== */}
-      <section className="mx-auto max-w-6xl px-5 py-6 pb-16 sm:px-8">
-        {!user ? (
-          /* NOT LOGGED IN */
+        ) : favorites.length === 0 ? (
           <div
             className="
-              rounded-[2rem]
+              mx-auto
+              max-w-lg
+              rounded-3xl
               border
+              border-dashed
               border-[var(--color-border)]
               bg-white
-              px-6
-              py-16
+              p-10
               text-center
-              shadow-sm
             "
           >
             <div
               className="
                 mx-auto
                 flex
-                h-20
-                w-20
+                h-16
+                w-16
                 items-center
                 justify-center
-                rounded-[1.5rem]
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
+                rounded-2xl
+                bg-red-50
+                text-red-500
               "
             >
-              <Heart size={34} strokeWidth={1.7} />
+              <Heart size={28} />
             </div>
 
-            <h2 className="mt-6 text-xl font-black text-[var(--color-text-primary)]">
-              Sign in to view Favorites
+            <h2 className="mt-4 text-lg font-black text-[var(--color-text-primary)]">
+              No favorites saved yet
             </h2>
 
-            <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-[var(--color-text-muted)]">
-              Please sign in to save your favorite dishes and order them anytime.
+            <p className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)]">
+              Explore our menu and tap the heart icon on any dish to save it here for fast ordering.
             </p>
 
             <Link
@@ -345,84 +381,11 @@ export default function FavoritesPage() {
                 hover:bg-[var(--color-primary-dark)]
               "
             >
-              <ShoppingBag size={15} />
+              <ShoppingCart size={15} />
               Browse Menu
             </Link>
           </div>
-        ) : isLoading ? (
-          /* LOADING SPINNER */
-          <div className="flex flex-col items-center justify-center py-20">
-            <LoaderCircle
-              size={40}
-              className="animate-spin text-[var(--color-primary)]"
-            />
-            <p className="mt-4 text-xs font-semibold text-[var(--color-text-muted)]">
-              Loading your favorites...
-            </p>
-          </div>
-        ) : filteredFavorites.length === 0 ? (
-          /* EMPTY STATE */
-          <div
-            className="
-              rounded-[2rem]
-              border
-              border-[var(--color-border)]
-              bg-white
-              px-6
-              py-16
-              text-center
-              shadow-sm
-            "
-          >
-            <div
-              className="
-                mx-auto
-                flex
-                h-20
-                w-20
-                items-center
-                justify-center
-                rounded-[1.5rem]
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
-              "
-            >
-              <Heart size={34} strokeWidth={1.7} />
-            </div>
-
-            <h2 className="mt-6 text-xl font-black text-[var(--color-text-primary)]">
-              No favourites yet
-            </h2>
-
-            <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-[var(--color-text-muted)]">
-              Start exploring our menu and tap the heart icon on items you love.
-            </p>
-
-            <Link
-              href="/menu"
-              className="
-                mt-6
-                inline-flex
-                items-center
-                gap-2
-                rounded-xl
-                bg-[var(--color-primary)]
-                px-5
-                py-3
-                text-xs
-                font-bold
-                text-white
-                shadow-md
-                transition
-                hover:bg-[var(--color-primary-dark)]
-              "
-            >
-              <ShoppingBag size={15} />
-              Explore Menu
-            </Link>
-          </div>
         ) : (
-          /* PRODUCT GRID */
           <div
             className="
               grid
@@ -435,6 +398,12 @@ export default function FavoritesPage() {
             {filteredFavorites.map((product) => {
               const added = addedItems.includes(product.id);
               const isItemRemoving = removingId === product.id;
+              const inCartQty = cartItemsMap.get(Number(product.id)) || 0;
+              const inCart = inCartQty > 0;
+              const isMadeToOrder = Boolean(
+                (product as any).isMadeToOrder ||
+                String((product as any).availability_type || "").toUpperCase() === "MADE_TO_ORDER"
+              );
 
               return (
                 <article
@@ -538,43 +507,138 @@ export default function FavoritesPage() {
 
                     {/* ACTIONS */}
                     <div className="mt-5 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleAddToCart(product)}
-                        className={`
-                          flex
-                          flex-1
-                          items-center
-                          justify-center
-                          gap-2
-                          rounded-xl
-                          px-4
-                          py-3
-                          text-[10px]
-                          font-black
-                          text-white
-                          shadow-sm
-                          transition
-                          active:scale-95
-                          ${
-                            added
-                              ? "bg-[var(--color-secondary)]"
-                              : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
-                          }
-                        `}
-                      >
-                        {added ? (
-                          <>
-                            <Check size={15} />
-                            Added
-                          </>
-                        ) : (
-                          <>
-                            <Plus size={15} />
-                            Add to Cart
-                          </>
-                        )}
-                      </button>
+                      {inCart ? (
+                        <div
+                          className="
+                            flex
+                            flex-1
+                            h-11
+                            items-center
+                            justify-between
+                            gap-1.5
+                            rounded-xl
+                            bg-[var(--color-primary-50)]
+                            p-1
+                            ring-1
+                            ring-[var(--color-primary)]/20
+                          "
+                        >
+                          <button
+                            type="button"
+                            aria-label="Decrease quantity"
+                            onClick={() =>
+                              handleChangeQty(
+                                Number(product.id),
+                                inCartQty - 1,
+                                Number(product.stock || 999),
+                                isMadeToOrder
+                              )
+                            }
+                            className="
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-lg
+                              bg-white
+                              text-[var(--color-primary)]
+                              shadow-xs
+                              transition
+                              hover:bg-[var(--color-primary)]
+                              hover:text-white
+                              active:scale-90
+                            "
+                          >
+                            <Minus size={14} strokeWidth={3} />
+                          </button>
+
+                          <span
+                            className="
+                              text-xs
+                              font-black
+                              text-[var(--color-primary)]
+                            "
+                          >
+                            {inCartQty} in cart
+                          </span>
+
+                          <button
+                            type="button"
+                            aria-label="Increase quantity"
+                            disabled={
+                              !isMadeToOrder &&
+                              product.stock !== undefined &&
+                              inCartQty >= Number(product.stock)
+                            }
+                            onClick={() =>
+                              handleChangeQty(
+                                Number(product.id),
+                                inCartQty + 1,
+                                Number(product.stock || 999),
+                                isMadeToOrder
+                              )
+                            }
+                            className="
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-lg
+                              bg-[var(--color-primary)]
+                              text-white
+                              shadow-xs
+                              transition
+                              hover:bg-[var(--color-primary-dark)]
+                              disabled:cursor-not-allowed
+                              disabled:opacity-40
+                              active:scale-90
+                            "
+                          >
+                            <Plus size={14} strokeWidth={3} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAddToCart(product)}
+                          className={`
+                            flex
+                            flex-1
+                            h-11
+                            items-center
+                            justify-center
+                            gap-2
+                            rounded-xl
+                            px-4
+                            py-3
+                            text-[10px]
+                            font-black
+                            text-white
+                            shadow-sm
+                            transition
+                            active:scale-95
+                            ${
+                              added
+                                ? "bg-[var(--color-secondary)]"
+                                : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
+                            }
+                          `}
+                        >
+                          {added ? (
+                            <>
+                              <Check size={15} />
+                              Added
+                            </>
+                          ) : (
+                            <>
+                              <Plus size={15} />
+                              Add to Cart
+                            </>
+                          )}
+                        </button>
+                      )}
 
                       <button
                         type="button"
