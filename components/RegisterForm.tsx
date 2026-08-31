@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
@@ -239,14 +240,42 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
               {...registration.register("confirmPassword")}
             />
           </Input>
+
           <label className="flex cursor-pointer items-start gap-2 text-sm text-[var(--color-text-secondary)]">
             <input
-              className="mt-1 h-4 w-4 accent-[var(--color-primary)]"
+              className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-primary)]"
               type="checkbox"
               {...registration.register("termsAccepted")}
             />
-            <span>I accept the Terms & Conditions.</span>
+            <span className="text-xs leading-5">
+              I agree to the{" "}
+              <Link
+                href="/terms"
+                target="_blank"
+                className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
+              >
+                Terms & Conditions
+              </Link>
+              ,{" "}
+              <Link
+                href="/privacy-policy"
+                target="_blank"
+                className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
+              >
+                Privacy Policy
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/refund-policy"
+                target="_blank"
+                className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
+              >
+                Refund Policy
+              </Link>
+              .
+            </span>
           </label>
+
           {registration.formState.errors.termsAccepted?.message && (
             <span className="-mt-2 block text-xs font-normal text-red-600">
               {registration.formState.errors.termsAccepted.message}

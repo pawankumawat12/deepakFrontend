@@ -1626,6 +1626,22 @@ export default function CartClient() {
                     <ArrowRight size={16} />
                   )}
                 </button>
+
+                <p className="text-center text-[10px] text-[var(--color-text-muted)]">
+                  By placing an order, you agree to our{" "}
+                  <Link href="/terms" target="_blank" className="underline hover:text-[var(--color-primary)]">
+                    Terms
+                  </Link>
+                  ,{" "}
+                  <Link href="/privacy-policy" target="_blank" className="underline hover:text-[var(--color-primary)]">
+                    Privacy Policy
+                  </Link>{" "}
+                  &{" "}
+                  <Link href="/refund-policy" target="_blank" className="underline hover:text-[var(--color-primary)]">
+                    Refund Policy
+                  </Link>
+                  .
+                </p>
               </div>
 
               {/* Secure guarantee badge */}

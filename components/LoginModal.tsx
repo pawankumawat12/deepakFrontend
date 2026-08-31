@@ -461,6 +461,34 @@ export default function LoginModal({
                   Create an account
                 </button>
               </div>
+
+              <div className="pt-3 border-t border-[var(--color-border)] text-center text-[11px] text-[var(--color-text-muted)]">
+                By continuing, you agree to our{" "}
+                <Link
+                  href="/terms"
+                  onClick={onClose}
+                  className="underline hover:text-[var(--color-primary)]"
+                >
+                  Terms
+                </Link>
+                ,{" "}
+                <Link
+                  href="/privacy-policy"
+                  onClick={onClose}
+                  className="underline hover:text-[var(--color-primary)]"
+                >
+                  Privacy Policy
+                </Link>{" "}
+                &{" "}
+                <Link
+                  href="/refund-policy"
+                  onClick={onClose}
+                  className="underline hover:text-[var(--color-primary)]"
+                >
+                  Refund Policy
+                </Link>
+                .
+              </div>
             </div>
           )}
 
@@ -584,17 +612,25 @@ export default function LoginModal({
                   <Link
                     href="/terms"
                     onClick={onClose}
-                    className="text-[var(--color-primary)] underline"
+                    className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
                   >
                     Terms & Conditions
+                  </Link>
+                  ,{" "}
+                  <Link
+                    href="/privacy-policy"
+                    onClick={onClose}
+                    className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
+                  >
+                    Privacy Policy
                   </Link>{" "}
                   and{" "}
                   <Link
-                    href="/privacy"
+                    href="/refund-policy"
                     onClick={onClose}
-                    className="text-[var(--color-primary)] underline"
+                    className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
                   >
-                    Privacy Policy
+                    Refund Policy
                   </Link>
                   .
                 </span>

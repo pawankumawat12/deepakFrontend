@@ -468,10 +468,23 @@ export default function Footer() {
             sm:text-left
           "
         >
-
           <p className="text-xs text-white/40">
             © {currentYear} SFC Cafe. All rights reserved.
           </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/40">
+            <Link href="/privacy-policy" className="hover:text-white transition">
+              Privacy Policy
+            </Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-white transition">
+              Terms & Conditions
+            </Link>
+            <span>•</span>
+            <Link href="/refund-policy" className="hover:text-white transition">
+              Refund Policy
+            </Link>
+          </div>
 
           <p
             className="
@@ -484,16 +497,13 @@ export default function Footer() {
             "
           >
             Made with
-
             <Heart
               size={12}
               fill="currentColor"
               className="text-[var(--color-secondary)]"
             />
-
             for food lovers
           </p>
-
         </div>
       </div>
     </footer>
