@@ -125,73 +125,48 @@ export default function Hero() {
     <main className="w-full overflow-hidden bg-[var(--bg-body)]">
 
 
-      <section className="relative min-h-[720px] overflow-hidden bg-[var(--color-cream)]">
+      <section className="relative min-h-[640px] md:min-h-[700px] lg:min-h-[760px] overflow-hidden bg-stone-900 flex items-center">
 
-        {/* Decorative background circles */}
+        {/* Full Background Slider Image */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <img
+            key={currentSlide.img}
+            src={currentSlide.img}
+            alt={currentSlide.highlight}
+            className="h-full w-full object-cover object-center transition-all duration-1000 scale-105"
+          />
 
-        <div
-          className="
-            absolute
-            -left-40
-            top-20
-            h-80
-            w-80
-            rounded-full
-            bg-[var(--color-primary)]
-            opacity-[0.06]
-            blur-3xl
-          "
-        />
-
-        <div
-          className="
-            absolute
-            -right-40
-            bottom-0
-            h-96
-            w-96
-            rounded-full
-            bg-[var(--color-secondary)]
-            opacity-[0.08]
-            blur-3xl
-          "
-        />
+          {/* Contrast & Depth Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/35 sm:to-black/25" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/20 to-black/60" />
+        </div>
 
         {/* Main hero container */}
-
         <div
           className="
             relative
+            z-20
             mx-auto
             flex
-            min-h-[500px]
+            w-full
             max-w-7xl
-            items-center
+            flex-col
+            justify-between
+            gap-8
             px-5
             py-20
             md:px-8
+            lg:flex-row
+            lg:items-center
             lg:px-10
           "
         >
-
           {/* =================================================
               LEFT CONTENT
           ================================================= */}
-
-          <div
-            className="
-              relative
-              z-20
-              w-full
-              max-w-xl
-              pt-6
-              lg:w-[52%]
-              lg:pt-0
-            "
-          >
-
+          <div className="relative z-20 w-full max-w-xl pt-4 lg:w-[58%] lg:pt-0">
             {/* Small Tag */}
-
             <div
               className="
                 mb-5
@@ -200,39 +175,38 @@ export default function Hero() {
                 gap-2
                 rounded-full
                 border
-                border-[var(--color-primary)]/20
-                bg-white/70
+                border-white/20
+                bg-white/15
                 px-4
                 py-2
                 text-xs
                 font-bold
                 tracking-[0.15em]
-                text-[var(--color-primary)]
-                shadow-sm
-                backdrop-blur
+                text-white
+                shadow-lg
+                backdrop-blur-md
               "
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-50)]">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white">
                 <Leaf size={12} />
               </span>
-
               {currentSlide.tag}
             </div>
 
             {/* Heading */}
-
             <div
               key={`heading-${index}`}
               className="animate-fade-up"
             >
               <p
                 className="
-                  mb-1
+                  mb-1.5
                   font-serif
-                  text-3xl
+                  text-2xl
                   italic
                   font-semibold
-                  text-[var(--color-primary)]
+                  text-[var(--color-secondary)]
+                  sm:text-3xl
                   md:text-4xl
                 "
               >
@@ -242,12 +216,13 @@ export default function Hero() {
               <h1
                 className="
                   max-w-2xl
-                  text-5xl
+                  text-4xl
                   font-black
                   uppercase
-                  leading-[0.95]
+                  leading-[0.98]
                   tracking-tight
-                  text-[var(--color-brown)]
+                  text-white
+                  drop-shadow-lg
                   sm:text-6xl
                   lg:text-7xl
                 "
@@ -257,7 +232,6 @@ export default function Hero() {
             </div>
 
             {/* Description */}
-
             <p
               key={`subtitle-${index}`}
               className="
@@ -266,17 +240,16 @@ export default function Hero() {
                 max-w-lg
                 text-base
                 leading-7
-                text-[var(--color-text-secondary)]
-                md:text-lg
+                text-white/85
+                drop-shadow
+                sm:text-lg
               "
             >
               {currentSlide.subtitle}
             </p>
 
             {/* Buttons */}
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-
+            <div className="mt-8 flex flex-wrap items-center gap-3.5">
               <Link
                 href={currentSlide.href}
                 className="
@@ -286,12 +259,12 @@ export default function Hero() {
                   gap-3
                   rounded-xl
                   bg-[var(--color-primary)]
-                  px-6
+                  px-7
                   py-3.5
                   text-sm
                   font-bold
                   text-white
-                  shadow-[0_10px_25px_rgba(79,125,22,0.25)]
+                  shadow-[0_10px_25px_rgba(79,125,22,0.4)]
                   transition-all
                   duration-300
                   hover:-translate-y-1
@@ -299,14 +272,9 @@ export default function Hero() {
                 "
               >
                 {currentSlide.cta}
-
                 <ArrowRight
                   size={18}
-                  className="
-                    transition-transform
-                    duration-300
-                    group-hover:translate-x-1
-                  "
+                  className="transition-transform duration-300 group-hover:translate-x-1"
                 />
               </Link>
 
@@ -318,18 +286,19 @@ export default function Hero() {
                   justify-center
                   rounded-xl
                   border
-                  border-[var(--color-primary)]
-                  bg-white/70
+                  border-white/40
+                  bg-white/15
                   px-6
                   py-3.5
                   text-sm
                   font-bold
-                  text-[var(--color-primary)]
+                  text-white
+                  backdrop-blur-md
                   transition-all
                   duration-300
                   hover:-translate-y-1
-                  hover:bg-[var(--color-primary)]
-                  hover:text-white
+                  hover:bg-white
+                  hover:text-[var(--color-primary)]
                 "
               >
                 {currentSlide.secondaryCta}
@@ -339,7 +308,6 @@ export default function Hero() {
             {/* =================================================
                 BENEFITS
             ================================================= */}
-
             <div
               className="
                 mt-10
@@ -347,16 +315,14 @@ export default function Hero() {
                 grid-cols-3
                 gap-3
                 border-t
-                border-[var(--color-border)]
+                border-white/20
                 pt-7
                 sm:max-w-lg
                 sm:gap-5
               "
             >
-
               {/* Fresh */}
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <span
                   className="
                     flex
@@ -366,28 +332,22 @@ export default function Hero() {
                     items-center
                     justify-center
                     rounded-full
-                    bg-white
-                    text-[var(--color-primary)]
+                    bg-white/15
+                    text-white
                     shadow-sm
+                    backdrop-blur-md
                   "
                 >
-                  <Leaf size={19} />
+                  <Leaf size={18} />
                 </span>
-
                 <div>
-                  <p className="text-xs font-bold text-[var(--color-text-primary)]">
-                    Fresh
-                  </p>
-
-                  <p className="hidden text-[10px] text-[var(--color-text-muted)] sm:block">
-                    Ingredients
-                  </p>
+                  <p className="text-xs font-bold text-white">Fresh</p>
+                  <p className="hidden text-[10px] text-white/70 sm:block">Ingredients</p>
                 </div>
               </div>
 
               {/* Fast */}
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <span
                   className="
                     flex
@@ -397,28 +357,22 @@ export default function Hero() {
                     items-center
                     justify-center
                     rounded-full
-                    bg-white
-                    text-[var(--color-primary)]
+                    bg-white/15
+                    text-white
                     shadow-sm
+                    backdrop-blur-md
                   "
                 >
-                  <Truck size={19} />
+                  <Truck size={18} />
                 </span>
-
                 <div>
-                  <p className="text-xs font-bold text-[var(--color-text-primary)]">
-                    Fast
-                  </p>
-
-                  <p className="hidden text-[10px] text-[var(--color-text-muted)] sm:block">
-                    Delivery
-                  </p>
+                  <p className="text-xs font-bold text-white">Fast</p>
+                  <p className="hidden text-[10px] text-white/70 sm:block">Delivery</p>
                 </div>
               </div>
 
               {/* Loved */}
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <span
                   className="
                     flex
@@ -428,202 +382,135 @@ export default function Hero() {
                     items-center
                     justify-center
                     rounded-full
-                    bg-white
+                    bg-white/15
                     text-[var(--color-secondary)]
                     shadow-sm
+                    backdrop-blur-md
                   "
                 >
-                  <Heart size={19} />
+                  <Heart size={18} fill="currentColor" />
                 </span>
-
                 <div>
-                  <p className="text-xs font-bold text-[var(--color-text-primary)]">
-                    Loved
-                  </p>
-
-                  <p className="hidden text-[10px] text-[var(--color-text-muted)] sm:block">
-                    By Everyone
-                  </p>
+                  <p className="text-xs font-bold text-white">Loved</p>
+                  <p className="hidden text-[10px] text-white/70 sm:block">By Everyone</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* =================================================
-              RIGHT FOOD IMAGE
+              RIGHT FLOATING CARDS & HIGHLIGHTS
           ================================================= */}
-
-          <div
-            className="
-              absolute
-              right-[-80px]
-              top-1/2
-              hidden
-              h-[650px]
-              w-[650px]
-              -translate-y-1/2
-              lg:block
-            "
-          >
-
-            {/* Green circle */}
-
-            <div
-              className="
-                absolute
-                inset-8
-                rounded-full
-                bg-[var(--color-primary)]
-                opacity-10
-              "
-            />
-
-            <div
-              className="
-                absolute
-                inset-16
-                rounded-full
-                border
-                border-[var(--color-primary)]/20
-              "
-            />
-
-            {/* Food Image */}
-
-            <div
-              key={`image-${index}`}
-              className="
-                animate-fade-up
-                absolute
-                inset-20
-                overflow-hidden
-                rounded-full
-                border-[12px]
-                border-white
-                shadow-[0_30px_80px_rgba(45,27,15,0.20)]
-              "
-            >
-              <img
-                src={currentSlide.img}
-                alt={currentSlide.highlight}
-                className="h-full w-full object-cover"
-              />
-
-              <div
-                className="
-                  absolute
-                  inset-0
-                  bg-gradient-to-tr
-                  from-black/10
-                  via-transparent
-                  to-white/10
-                "
-              />
-            </div>
-
-            {/* =================================================
-                NATURAL BADGE
-            ================================================= */}
-
-            <div
-              className="
-                absolute
-                left-8
-                top-24
-                flex
-                h-28
-                w-28
-                rotate-[-10deg]
-                flex-col
-                items-center
-                justify-center
-                rounded-full
-                border-2
-                border-[var(--color-primary)]
-                bg-[var(--color-cream)]
-                text-center
-                shadow-lg
-              "
-            >
-              <Leaf
-                size={22}
-                className="mb-1 text-[var(--color-primary)]"
-              />
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--color-primary)]">
-                Fresh
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--color-primary)]">
-                Ingredients
-              </span>
-            </div>
-
+          <div className="relative hidden lg:flex flex-col items-end gap-4 z-20 mr-2">
             {/* Rating badge */}
-
             <div
               className="
-                absolute
-                bottom-24
-                right-2
                 flex
                 items-center
-                gap-2
+                gap-3
                 rounded-2xl
                 border
-                border-white
-                bg-white/95
-                px-4
-                py-3
-                shadow-xl
-                backdrop-blur
+                border-white/20
+                bg-black/35
+                px-5
+                py-4
+                shadow-2xl
+                backdrop-blur-md
+                transition-transform
+                duration-300
+                hover:scale-105
               "
             >
               <div
                 className="
                   flex
-                  h-9
-                  w-9
+                  h-10
+                  w-10
                   items-center
                   justify-center
                   rounded-full
-                  bg-[var(--color-secondary)]/15
+                  bg-[var(--color-secondary)]/20
                   text-[var(--color-secondary)]
                 "
               >
-                <Star size={18} fill="currentColor" />
+                <Star size={20} fill="currentColor" />
               </div>
-
               <div>
-                <p className="text-sm font-black text-[var(--color-text-primary)]">
-                  4.9 / 5
+                <p className="text-sm font-black text-white">
+                  4.9 / 5.0
                 </p>
-
-                <p className="text-[10px] text-[var(--color-text-muted)]">
+                <p className="text-[10px] text-white/70">
                   Customer Rating
                 </p>
               </div>
             </div>
 
-            {/* Small floating flame */}
-
+            {/* Fresh natural badge */}
             <div
               className="
-                absolute
-                right-16
-                top-20
                 flex
-                h-12
-                w-12
                 items-center
-                justify-center
-                rounded-full
-                bg-white
-                text-[var(--color-secondary)]
-                shadow-lg
+                gap-3
+                rounded-2xl
+                border
+                border-white/20
+                bg-black/35
+                p-4
+                shadow-2xl
+                backdrop-blur-md
+                transition-transform
+                duration-300
+                hover:scale-105
               "
             >
-              <Flame size={21} />
+              <div
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[var(--color-primary)]
+                  text-white
+                  shadow-md
+                "
+              >
+                <Leaf size={20} />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-white">
+                  100% Fresh
+                </p>
+                <p className="text-[10px] text-white/70">
+                  Handcrafted With Care
+                </p>
+              </div>
+            </div>
+
+            {/* Trending badge */}
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-white/20
+                bg-[var(--color-secondary)]/90
+                px-4
+                py-2
+                text-xs
+                font-black
+                uppercase
+                tracking-wider
+                text-white
+                shadow-xl
+                backdrop-blur-md
+              "
+            >
+              <Flame size={15} fill="currentColor" />
+              Popular Picks
             </div>
           </div>
         </div>
@@ -631,7 +518,6 @@ export default function Hero() {
         {/* =====================================================
             SLIDER CONTROLS
         ===================================================== */}
-
         <button
           type="button"
           aria-label="Previous slide"
@@ -642,26 +528,28 @@ export default function Hero() {
             top-1/2
             z-30
             hidden
-            h-10
-            w-10
+            h-11
+            w-11
             -translate-y-1/2
             items-center
             justify-center
             rounded-full
             border
-            border-[var(--color-border)]
-            bg-white/80
-            text-[var(--color-text-primary)]
-            shadow-md
-            backdrop-blur
-            transition
-            hover:scale-105
+            border-white/25
+            bg-black/40
+            text-white
+            shadow-lg
+            backdrop-blur-md
+            transition-all
+            duration-200
+            hover:scale-110
             hover:bg-white
+            hover:text-black
             md:flex
             lg:left-6
           "
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={22} />
         </button>
 
         <button
@@ -674,36 +562,37 @@ export default function Hero() {
             top-1/2
             z-30
             hidden
-            h-10
-            w-10
+            h-11
+            w-11
             -translate-y-1/2
             items-center
             justify-center
             rounded-full
             border
-            border-[var(--color-border)]
-            bg-white/80
-            text-[var(--color-text-primary)]
-            shadow-md
-            backdrop-blur
-            transition
-            hover:scale-105
+            border-white/25
+            bg-black/40
+            text-white
+            shadow-lg
+            backdrop-blur-md
+            transition-all
+            duration-200
+            hover:scale-110
             hover:bg-white
+            hover:text-black
             md:flex
             lg:right-6
           "
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={22} />
         </button>
 
         {/* =====================================================
             SLIDE DOTS
         ===================================================== */}
-
         <div
           className="
             absolute
-            bottom-8
+            bottom-6
             left-1/2
             z-30
             flex
@@ -724,8 +613,8 @@ export default function Hero() {
                 transition-all
                 duration-300
                 ${i === index
-                  ? "w-8 bg-[var(--color-primary)]"
-                  : "w-2 bg-[var(--color-primary)]/25"
+                  ? "w-8 bg-white"
+                  : "w-2.5 bg-white/40 hover:bg-white/70"
                 }
               `}
             />

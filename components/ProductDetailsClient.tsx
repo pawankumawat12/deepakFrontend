@@ -872,9 +872,93 @@ export default function ProductDetailsClient({
 
               </div>
 
-              {/* Add button */}
+              {/* Cart action: Quantity control when in cart, Add button when not */}
 
-              {!inCartQty && (
+              {inCartQty ? (
+                <div
+                  className="
+                    mt-4
+                    flex
+                    h-14
+                    w-full
+                    items-center
+                    justify-between
+                    gap-3
+                    rounded-2xl
+                    bg-[var(--color-primary-50)]
+                    px-4
+                    py-2
+                    ring-2
+                    ring-[var(--color-primary)]/20
+                  "
+                >
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    onClick={() => changeQty(Math.max(0, inCartQty - 1))}
+                    className="
+                      flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-white
+                      text-[var(--color-primary)]
+                      shadow-sm
+                      transition
+                      hover:bg-[var(--color-primary)]
+                      hover:text-white
+                      active:scale-90
+                    "
+                  >
+                    <Minus size={18} strokeWidth={3} />
+                  </button>
+
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm font-black text-[var(--color-primary)]">
+                      {inCartQty} in Cart
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--color-text-muted)]">
+                      Adjust quantity
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    title={
+                      product.availability_type !== "MADE_TO_ORDER" &&
+                      inCartQty >= Number(product.stock)
+                        ? `Only ${product.stock} items available in stock`
+                        : "Increase quantity"
+                    }
+                    disabled={
+                      product.availability_type !== "MADE_TO_ORDER" &&
+                      inCartQty >= Number(product.stock)
+                    }
+                    onClick={() => changeQty(inCartQty + 1)}
+                    className="
+                      flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-[var(--color-primary)]
+                      text-white
+                      shadow-sm
+                      transition
+                      hover:bg-[var(--color-primary-dark)]
+                      disabled:cursor-not-allowed
+                      disabled:opacity-40
+                      active:scale-90
+                    "
+                  >
+                    <Plus size={18} strokeWidth={3} />
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
                   disabled={isOutOfStock}
@@ -906,7 +990,6 @@ export default function ProductDetailsClient({
                     }
                   `}
                 >
-
                   {added ? (
                     <>
                       <Check size={19} strokeWidth={3} />
@@ -922,36 +1005,10 @@ export default function ProductDetailsClient({
                         strokeWidth={2.5}
                       />
 
-                      Add {qty} to Cart
+                      Add {qty > 1 ? `${qty} ` : ""}to Cart
                     </>
                   )}
-
                 </button>
-              )}
-
-              {/* Already in cart */}
-
-              {inCartQty && (
-                <div
-                  className="
-                    mt-4
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-2xl
-                    bg-[var(--color-primary-50)]
-                    py-3
-                    text-xs
-                    font-black
-                    text-[var(--color-primary)]
-                  "
-                >
-                  <Check size={15} strokeWidth={3} />
-
-                  {inCartQty} item
-                  {inCartQty !== 1 ? "s" : ""} already in your cart
-                </div>
               )}
 
             </div>

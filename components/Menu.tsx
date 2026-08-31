@@ -943,7 +943,8 @@ export default function Menu() {
                                 handleChangeQty(
                                   p.id,
                                   inCartQty - 1,
-                                  Number(p.stock)
+                                  Number(p.stock),
+                                  isMadeToOrder
                                 )
                               }
                               className="

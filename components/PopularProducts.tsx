@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   Star,
   Plus,
+  Minus,
   Check,
 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -20,7 +21,11 @@ import {
   useGetWishlistQuery,
   useToggleWishlistMutation,
 } from "../redux/services/wishlistApi";
-import { useAddCartItemMutation } from "../redux/services/cartApi";
+import {
+  useGetCartQuery,
+  useAddCartItemMutation,
+  useUpdateCartItemMutation,
+} from "../redux/services/cartApi";
 
 export default function PopularProducts() {
   const router = useRouter();
@@ -36,8 +41,23 @@ export default function PopularProducts() {
   const { data: wishlistData } = useGetWishlistQuery(undefined, {
     skip: !user,
   });
+  const { data: cartResponse } = useGetCartQuery(undefined, {
+    skip: !user,
+  });
   const [toggleWishlist] = useToggleWishlistMutation();
   const [addCartItem] = useAddCartItemMutation();
+  const [updateCartItem] = useUpdateCartItemMutation();
+
+  const cartItemsMap = React.useMemo(
+    () =>
+      new Map(
+        (cartResponse?.data?.items || []).map((it) => [
+          Number(it.id),
+          it.quantity,
+        ])
+      ),
+    [cartResponse]
+  );
 
   const wishlistedIds = React.useMemo(
     () =>
@@ -95,6 +115,31 @@ export default function PopularProducts() {
       }, 1200);
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to add product to cart");
+    }
+  };
+
+  const handleChangeQty = async (
+    productId: number,
+    nextQty: number,
+    maxStock: number,
+    isMadeToOrder?: boolean
+  ) => {
+    if (!user) {
+      toast.error("Please sign in to modify cart");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (!isMadeToOrder && nextQty > maxStock) {
+      toast.error(`Only ${maxStock} items available in stock`);
+      return;
+    }
+    try {
+      await updateCartItem({ productId, quantity: nextQty }).unwrap();
+      if (nextQty === 0) {
+        toast.success("Removed from cart");
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update quantity");
     }
   };
 
@@ -239,6 +284,7 @@ export default function PopularProducts() {
             const isMadeToOrder = product.isMadeToOrder ||
               String(product.availability_type || "").toUpperCase() === "MADE_TO_ORDER";
             const outOfStock = !isMadeToOrder && Number(product.stock) <= 0;
+            const inCartQty = cartItemsMap.get(Number(product.id)) || 0;
 
             const isAdded = addedProduct === product.id;
 
@@ -486,51 +532,149 @@ export default function PopularProducts() {
                     </div>
 
 
-                    <button
-                      type="button"
-                      disabled={outOfStock}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (outOfStock) return;
-                        handleAddToCart(product);
-                      }}
-                      className={`
-                        flex
-                        h-10
-                        items-center
-                        justify-center
-                        gap-2
-                        rounded-xl
-                        px-4
-                        text-xs
-                        font-bold
-                        text-white
-                        shadow-sm
-                        transition-all
-                        duration-200
-                        ${
-                          isAdded
-                            ? "bg-[var(--color-success)]"
-                            : outOfStock
-                              ? "cursor-not-allowed bg-[var(--color-text-muted)]"
-                              : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] hover:-translate-y-0.5"
-                        }
-                      `}
-                    >
-                      {outOfStock ? (
-                        "Out of stock"
-                      ) : isAdded ? (
-                        <>
-                          <Check size={15} />
-                          Added
-                        </>
-                      ) : (
-                        <>
-                          <Plus size={16} />
-                          Add
-                        </>
-                      )}
-                    </button>
+                    {inCartQty > 0 ? (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="
+                          flex
+                          h-10
+                          items-center
+                          gap-1
+                          rounded-xl
+                          bg-[var(--color-primary-50)]
+                          p-1
+                          ring-1
+                          ring-[var(--color-primary)]/15
+                        "
+                      >
+                        <button
+                          type="button"
+                          aria-label="Decrease quantity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleChangeQty(
+                              Number(product.id),
+                              inCartQty - 1,
+                              Number(product.stock || 999),
+                              isMadeToOrder
+                            );
+                          }}
+                          className="
+                            flex
+                            h-8
+                            w-8
+                            items-center
+                            justify-center
+                            rounded-lg
+                            bg-white
+                            text-[var(--color-primary)]
+                            shadow-xs
+                            transition
+                            hover:bg-[var(--color-primary)]
+                            hover:text-white
+                            active:scale-90
+                          "
+                        >
+                          <Minus size={14} strokeWidth={3} />
+                        </button>
+
+                        <span
+                          className="
+                            min-w-[26px]
+                            text-center
+                            text-xs
+                            font-black
+                            text-[var(--color-primary)]
+                          "
+                        >
+                          {inCartQty}
+                        </span>
+
+                        <button
+                          type="button"
+                          aria-label="Increase quantity"
+                          title={
+                            !isMadeToOrder && inCartQty >= Number(product.stock)
+                              ? `Only ${product.stock} items available in stock`
+                              : "Increase quantity"
+                          }
+                          disabled={!isMadeToOrder && inCartQty >= Number(product.stock)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleChangeQty(
+                              Number(product.id),
+                              inCartQty + 1,
+                              Number(product.stock || 999),
+                              isMadeToOrder
+                            );
+                          }}
+                          className="
+                            flex
+                            h-8
+                            w-8
+                            items-center
+                            justify-center
+                            rounded-lg
+                            bg-[var(--color-primary)]
+                            text-white
+                            shadow-xs
+                            transition
+                            hover:bg-[var(--color-primary-dark)]
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40
+                            active:scale-90
+                          "
+                        >
+                          <Plus size={14} strokeWidth={3} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={outOfStock}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (outOfStock) return;
+                          handleAddToCart(product);
+                        }}
+                        className={`
+                          flex
+                          h-10
+                          items-center
+                          justify-center
+                          gap-2
+                          rounded-xl
+                          px-4
+                          text-xs
+                          font-bold
+                          text-white
+                          shadow-sm
+                          transition-all
+                          duration-200
+                          ${
+                            isAdded
+                              ? "bg-[var(--color-success)]"
+                              : outOfStock
+                                ? "cursor-not-allowed bg-[var(--color-text-muted)]"
+                                : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] hover:-translate-y-0.5"
+                          }
+                        `}
+                      >
+                        {outOfStock ? (
+                          "Out of stock"
+                        ) : isAdded ? (
+                          <>
+                            <Check size={15} />
+                            Added
+                          </>
+                        ) : (
+                          <>
+                            <Plus size={16} />
+                            Add to Cart
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </article>
