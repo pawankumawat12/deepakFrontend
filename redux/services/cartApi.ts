@@ -68,6 +68,16 @@ export interface CartSummary {
   isBelowMinimumOrder: boolean;
   minimumOrderShortfall: number;
 
+  appliedOffer?: {
+    id: number | null;
+    code: string;
+    title: string;
+    badge?: string;
+    type?: string;
+    discount: number;
+  } | null;
+  offerEvaluation?: any;
+
   grandTotal: number;
   hasOutOfStockItems: boolean;
   outOfStockCount: number;
@@ -227,6 +237,9 @@ const transformCartResponse = (response: any): CartResponse => {
     isBelowMinimumOrder,
     minimumOrderShortfall,
 
+    appliedOffer: rawSummary.appliedOffer || rawPricing.applied_offer || null,
+    offerEvaluation: rawSummary.offerEvaluation || rawPricing.offer_evaluation || null,
+
     grandTotal,
     hasOutOfStockItems: items.some((it) => it.isOutOfStock || it.exceedsStock),
     outOfStockCount: items.filter((it) => it.isOutOfStock || it.exceedsStock).length,
@@ -254,13 +267,14 @@ export const cartApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getCart: build.query<
       CartResponse,
-      { addressId?: number; paymentMethod?: string } | void
+      { addressId?: number; paymentMethod?: string; offerCode?: string } | void
     >({
       query: (params) => {
         if (!params) return "/cart";
         const query = new URLSearchParams();
         if (params.addressId) query.append("addressId", String(params.addressId));
         if (params.paymentMethod) query.append("paymentMethod", params.paymentMethod);
+        if (params.offerCode) query.append("offerCode", params.offerCode);
         const qStr = query.toString();
         return `/cart${qStr ? `?${qStr}` : ""}`;
       },

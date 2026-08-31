@@ -55,6 +55,8 @@ export interface CreateOrderPayload {
   deliveryAddressJson?: any;
   paymentMethod?: string;
   notes?: string;
+  offerCode?: string;
+  couponCode?: string;
 }
 
 export interface OrderResponse<T = Order> {

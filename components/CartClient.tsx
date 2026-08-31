@@ -27,6 +27,11 @@ import {
   Phone,
   User,
   Banknote,
+  Tag,
+  Percent,
+  Gift,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -47,6 +52,11 @@ import {
   useDeleteAddressMutation,
   Address,
 } from "../redux/services/addressApi";
+import {
+  useGetOffersQuery,
+  useValidateOfferMutation,
+  OfferItem,
+} from "../redux/services/offerApi";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 
@@ -86,6 +96,14 @@ export default function CartClient() {
     is_default: false,
   });
 
+  // Dynamic Offers & Promo Code State
+  const [appliedOfferCode, setAppliedOfferCode] = useState<string>("");
+  const [couponInput, setCouponInput] = useState<string>("");
+  const [showCoupons, setShowCoupons] = useState<boolean>(false);
+
+  const { data: availableOffers = [] } = useGetOffersQuery();
+  const [validateOffer, { isLoading: isValidatingOffer }] = useValidateOfferMutation();
+
   const {
     data: cartResponse,
     isLoading,
@@ -93,6 +111,7 @@ export default function CartClient() {
   } = useGetCartQuery(
     {
       addressId: selectedAddressId || undefined,
+      offerCode: appliedOfferCode || undefined,
     },
     {
       skip: !user,
@@ -296,6 +315,36 @@ export default function CartClient() {
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) || null;
 
+  const handleApplyCoupon = async (codeToApply?: string) => {
+    const code = (codeToApply || couponInput).trim().toUpperCase();
+    if (!code) {
+      toast.error("Please enter a promo code");
+      return;
+    }
+    try {
+      const res = await validateOffer({
+        code,
+        items: items.map((it) => ({
+          product_id: it.product_id,
+          price: it.price,
+          quantity: it.quantity,
+          category_id: it.category_id,
+        })),
+      }).unwrap();
+
+      setAppliedOfferCode(code);
+      setCouponInput("");
+      toast.success(res?.message || `Promo code "${code}" applied successfully!`);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Invalid promo code or not applicable to your cart");
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedOfferCode("");
+    toast.success("Promo code removed");
+  };
+
   const handleCheckout = async () => {
     if (!user) {
       setAuthOpen(true);
@@ -334,6 +383,7 @@ export default function CartClient() {
         shippingAddress,
         deliveryAddressJson: selectedAddress,
         paymentMethod: "Cash on Delivery",
+        offerCode: appliedOfferCode || summary.appliedOffer?.code || undefined,
       }).unwrap();
 
       toast.success("🎉 Order placed successfully! Fresh food is being prepared.");
@@ -1141,6 +1191,158 @@ export default function CartClient() {
 
           {/* FLIPKART-STYLE PRICE DETAILS SIDEBAR */}
           <aside className="lg:sticky lg:top-24">
+            {/* COUPONS & OFFERS CARD */}
+            <div className="mb-4 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-sm">
+              <div className="border-b border-[var(--color-border)] p-4 bg-stone-50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Tag size={16} className="text-[var(--color-primary)]" />
+                  <span className="text-xs font-black uppercase tracking-[0.14em] text-[var(--color-text-primary)]">
+                    Coupons & Offers
+                  </span>
+                </div>
+                {summary.appliedOffer && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">
+                    Saved ₹{formatRupee(summary.discount)}
+                  </span>
+                )}
+              </div>
+
+              <div className="p-4">
+                {/* Applied Offer Banner */}
+                {summary.appliedOffer ? (
+                  <div className="mb-3 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white font-bold">
+                        <Check size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-mono text-xs font-black uppercase text-emerald-900">
+                          {summary.appliedOffer.code}
+                        </p>
+                        <p className="text-[11px] font-semibold text-emerald-700 truncate">
+                          {summary.appliedOffer.title} (-₹{formatRupee(summary.discount)})
+                        </p>
+                      </div>
+                    </div>
+
+                    {appliedOfferCode ? (
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-200/60 transition"
+                        title="Remove coupon"
+                      >
+                        <X size={16} />
+                      </button>
+                    ) : (
+                      <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-white px-2 py-1 rounded-md shadow-xs">
+                        Auto
+                      </span>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* Promo Code Input */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApplyCoupon();
+                      }
+                    }}
+                    placeholder="Enter Promo Code"
+                    className="flex-1 rounded-xl border border-[var(--color-border)] bg-stone-50 px-3.5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-[var(--color-text-primary)] placeholder:font-sans placeholder:tracking-normal focus:border-[var(--color-primary)] focus:bg-white focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyCoupon()}
+                    disabled={isValidatingOffer || !couponInput.trim()}
+                    className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
+                  >
+                    {isValidatingOffer ? (
+                      <LoaderCircle size={14} className="animate-spin" />
+                    ) : (
+                      "Apply"
+                    )}
+                  </button>
+                </div>
+
+                {/* Available Offers Quick Toggle */}
+                {availableOffers && availableOffers.length > 0 && (
+                  <div className="mt-3 border-t border-[var(--color-border)] pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowCoupons((prev) => !prev)}
+                      className="flex w-full items-center justify-between text-[11px] font-bold text-[var(--color-primary)] hover:underline"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Gift size={13} />
+                        View {availableOffers.length} available offers
+                      </span>
+                      {showCoupons ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+
+                    {showCoupons && (
+                      <div className="mt-2.5 space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {availableOffers.map((off) => {
+                          const isCurrentlyApplied =
+                            (appliedOfferCode && appliedOfferCode === off.code) ||
+                            (!appliedOfferCode && summary.appliedOffer?.code === off.code);
+
+                          return (
+                            <div
+                              key={off.id}
+                              className={`rounded-xl border p-2.5 text-left transition flex items-center justify-between gap-2 ${
+                                isCurrentlyApplied
+                                  ? "border-emerald-300 bg-emerald-50/50"
+                                  : "border-[var(--color-border)] bg-white hover:border-[var(--color-primary)]/40"
+                              }`}
+                            >
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-xs font-black uppercase text-[var(--color-text-primary)]">
+                                    {off.code}
+                                  </span>
+                                  <span className="rounded bg-[var(--color-secondary)]/10 px-1.5 py-0.5 text-[9px] font-black text-[var(--color-secondary)]">
+                                    {off.type === "PERCENTAGE"
+                                      ? `${off.discount_value}% OFF`
+                                      : off.type === "FLAT"
+                                      ? `₹${off.discount_value} OFF`
+                                      : "BOGO"}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-[var(--color-text-muted)] truncate mt-0.5">
+                                  {off.title} {off.min_order_amount > 0 ? `• Min ₹${off.min_order_amount}` : ""}
+                                </p>
+                              </div>
+
+                              {isCurrentlyApplied ? (
+                                <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                  <Check size={12} /> Applied
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApplyCoupon(off.code)}
+                                  className="text-[11px] font-bold text-[var(--color-primary)] hover:underline shrink-0"
+                                >
+                                  Apply
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-sm">
               {/* Header */}
               <div className="border-b border-[var(--color-border)] p-5">
@@ -1166,11 +1368,15 @@ export default function CartClient() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[var(--color-text-secondary)] flex items-center gap-1.5">
                       <span>Discount</span>
-                      {summary.discountPercent > 0 && (
+                      {summary.appliedOffer ? (
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-mono font-black text-emerald-800">
+                          {summary.appliedOffer.code}
+                        </span>
+                      ) : summary.discountPercent > 0 ? (
                         <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">
                           {summary.discountPercent}% OFF
                         </span>
-                      )}
+                      ) : null}
                     </span>
                     <span className="font-bold text-emerald-600">
                       - ₹{formatRupee(summary.discount)}
