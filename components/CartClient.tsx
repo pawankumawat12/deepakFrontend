@@ -26,11 +26,7 @@ import {
   X,
   Phone,
   User,
-  QrCode,
   Banknote,
-  Copy,
-  ExternalLink,
-  CreditCard,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -51,7 +47,6 @@ import {
   useDeleteAddressMutation,
   Address,
 } from "../redux/services/addressApi";
-import { useGetPaymentQrQuery } from "../redux/services/settingsApi";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 
@@ -91,16 +86,6 @@ export default function CartClient() {
     is_default: false,
   });
 
-  // Payment Method State
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
-    "Cash on Delivery" | "Online Payment"
-  >("Cash on Delivery");
-  const [selectedUpiApp, setSelectedUpiApp] = useState<string>("Google Pay");
-  const [transactionIdInput, setTransactionIdInput] = useState<string>("");
-
-  const { data: paymentQrResponse } = useGetPaymentQrQuery();
-  const paymentQr = paymentQrResponse?.data;
-
   const {
     data: cartResponse,
     isLoading,
@@ -108,7 +93,6 @@ export default function CartClient() {
   } = useGetCartQuery(
     {
       addressId: selectedAddressId || undefined,
-      paymentMethod: selectedPaymentMethod,
     },
     {
       skip: !user,
@@ -340,36 +324,20 @@ export default function CartClient() {
     ].filter(Boolean);
 
     const shippingAddress = addressParts.join(", ");
-    const isOnline = selectedPaymentMethod === "Online Payment";
 
     try {
-      const orderResult = await createOrder({
+      await createOrder({
         addressId: selectedAddress.id,
         customerName: selectedAddress.receiver_name || user.name || "Customer",
         customerEmail: user.email || "",
         customerPhone: selectedAddress.phone_number || user.phone || "",
         shippingAddress,
         deliveryAddressJson: selectedAddress,
-        paymentMethod: isOnline ? "Online Payment" : "Cash on Delivery",
-        paymentStatus: "Pending",
-        paymentDetailsJson: isOnline
-          ? {
-              payment_app: selectedUpiApp,
-              upi_id: paymentQr?.upi_id,
-              merchant_name: paymentQr?.merchant_name,
-            }
-          : undefined,
+        paymentMethod: "Cash on Delivery",
       }).unwrap();
 
-      const newOrderId = orderResult?.data?.id;
-
-      if (isOnline) {
-        toast.success("🎉 Order placed! Complete payment via UPI with 1-click.");
-        router.push(`/orders?payOrderId=${newOrderId || ""}`);
-      } else {
-        toast.success("🎉 Order placed successfully! Fresh food is being prepared.");
-        router.push("/orders");
-      }
+      toast.success("🎉 Order placed successfully! Fresh food is being prepared.");
+      router.push("/orders");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to place order. Please try again.");
     }
@@ -1127,13 +1095,13 @@ export default function CartClient() {
               </div>
             </div>
 
-            {/* PAYMENT METHOD SELECTION CARD */}
-            <div className="mt-5 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white p-5 shadow-sm">
+            {/* 3. PAYMENT METHOD (COD ONLY) */}
+            <div className="rounded-3xl border border-[var(--color-border)] bg-white p-5 sm:p-6 shadow-sm mt-5">
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
                 <div className="flex items-center gap-2">
-                  <CreditCard size={18} className="text-[var(--color-primary)]" />
+                  <Banknote size={18} className="text-[var(--color-primary)]" />
                   <h2 className="text-sm font-black text-[var(--color-text-primary)]">
-                    Select Payment Method
+                    Payment Method
                   </h2>
                 </div>
                 <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
@@ -1141,204 +1109,34 @@ export default function CartClient() {
                 </span>
               </div>
 
-              {/* Payment Method Options Grid */}
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {/* Cash on Delivery Option */}
-                <div
-                  onClick={() => setSelectedPaymentMethod("Cash on Delivery")}
-                  className={`
-                    relative flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all
-                    ${
-                      selectedPaymentMethod === "Cash on Delivery"
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 shadow-sm ring-1 ring-[var(--color-primary)]"
-                        : "border-[var(--color-border)] bg-white hover:border-stone-300"
-                    }
-                  `}
-                >
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                    <Banknote size={18} />
+              {/* Cash on Delivery Card */}
+              <div className="mt-4 rounded-2xl border border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 p-4 shadow-sm ring-1 ring-[var(--color-primary)]">
+                <div className="flex items-start gap-3.5">
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm">
+                    <Banknote size={20} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-black text-[var(--color-text-primary)]">
-                        Cash on Delivery
+                      <p className="text-sm font-black text-[var(--color-text-primary)]">
+                        Cash on Delivery (COD)
                       </p>
-                      <input
-                        type="radio"
-                        name="payment_method_choice"
-                        checked={selectedPaymentMethod === "Cash on Delivery"}
-                        onChange={() => setSelectedPaymentMethod("Cash on Delivery")}
-                        className="h-4 w-4 accent-[var(--color-primary)]"
-                      />
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                        <CheckCircle2 size={12} /> Active
+                      </span>
                     </div>
-                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-                      Pay cash or scan on delivery at doorstep
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                      Pay via cash or UPI scan directly to the delivery partner at your doorstep upon receiving your fresh order.
                     </p>
-                    {summary.codFee > 0 && selectedPaymentMethod === "Cash on Delivery" && (
-                      <span className="mt-2 inline-block rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                        + ₹{formatRupee(summary.codFee)} COD fee applies
+                    {summary.codFee > 0 && (
+                      <span className="mt-2.5 inline-block rounded-lg bg-amber-100/70 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-900">
+                        📦 Includes ₹{formatRupee(summary.codFee)} Cash on Delivery fee
                       </span>
                     )}
                   </div>
                 </div>
-
-                {/* Online Payment Option */}
-                <div
-                  onClick={() => setSelectedPaymentMethod("Online Payment")}
-                  className={`
-                    relative flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all
-                    ${
-                      selectedPaymentMethod === "Online Payment"
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 shadow-sm ring-1 ring-[var(--color-primary)]"
-                        : "border-[var(--color-border)] bg-white hover:border-stone-300"
-                    }
-                  `}
-                >
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-                    <QrCode size={18} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-black text-[var(--color-text-primary)]">
-                          Online UPI / QR
-                        </p>
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.2 text-[9px] font-black text-emerald-800">
-                          ₹0 COD FEE
-                        </span>
-                      </div>
-                      <input
-                        type="radio"
-                        name="payment_method_choice"
-                        checked={selectedPaymentMethod === "Online Payment"}
-                        onChange={() => setSelectedPaymentMethod("Online Payment")}
-                        className="h-4 w-4 accent-[var(--color-primary)]"
-                      />
-                    </div>
-                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-                      Instant payment via GPay, PhonePe, Paytm, QR
-                    </p>
-                  </div>
-                </div>
               </div>
-
-              {/* Online Payment QR & UPI Details (Shown when Online Payment is selected) */}
-              {selectedPaymentMethod === "Online Payment" && (
-                <div className="mt-5 rounded-2xl border border-purple-200 bg-purple-50/40 p-4 sm:p-5">
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                    {/* QR Code Scanner Display */}
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-purple-200 bg-white p-4 text-center shadow-sm sm:w-56 shrink-0">
-                      <div className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-xl bg-white p-2 border border-stone-200">
-                        {paymentQr?.qr_code_url ? (
-                          <img
-                            src={`${API_ORIGIN}${paymentQr.qr_code_url}`}
-                            alt="Scan & Pay QR Code"
-                            className="h-full w-full object-contain"
-                          />
-                        ) : (
-                          <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                              `upi://pay?pa=${paymentQr?.upi_id || "sfccafe@upi"}&pn=${encodeURIComponent(
-                                paymentQr?.merchant_name || "SFC Cafe"
-                              )}&am=${summary.grandTotal}&cu=INR&tn=Order%20Payment`
-                            )}`}
-                            alt="Scan & Pay QR Code"
-                            className="h-full w-full object-contain"
-                          />
-                        )}
-                      </div>
-                      <p className="mt-2 text-[11px] font-black text-purple-900">
-                        Scan with Any UPI App
-                      </p>
-                      <p className="text-[10px] text-stone-500">
-                        {paymentQr?.merchant_name || "SFC Cafe"}
-                      </p>
-                    </div>
-
-                    {/* Payable Details & Quick UPI Apps */}
-                    <div className="flex-1 min-w-0">
-                      {/* Amount Banner */}
-                      <div className="rounded-xl bg-white p-3 border border-purple-200 shadow-sm flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                            Payable Amount
-                          </p>
-                          <p className="text-xl font-black text-[var(--color-text-primary)]">
-                            ₹{formatRupee(summary.grandTotal)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[10px] font-semibold text-emerald-600">
-                            ✓ COD Fee Waived (₹0)
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* UPI ID with Copy Button */}
-                      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 border border-stone-200">
-                        <div className="min-w-0">
-                          <p className="text-[9px] font-bold text-stone-400 uppercase">UPI VPA</p>
-                          <p className="text-xs font-bold text-stone-800 truncate font-mono">
-                            {paymentQr?.upi_id || "sfccafe@upi"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(paymentQr?.upi_id || "sfccafe@upi");
-                            toast.success("UPI ID copied to clipboard!");
-                          }}
-                          className="inline-flex items-center gap-1 rounded-lg bg-stone-100 px-2.5 py-1 text-[10px] font-bold text-stone-700 hover:bg-stone-200 transition"
-                        >
-                          <Copy size={11} /> Copy
-                        </button>
-                      </div>
-
-                      {/* Quick UPI App Launch Buttons */}
-                      <div className="mt-3">
-                        <p className="text-[10px] font-bold text-stone-600 mb-1.5">
-                          Tap to pay with your preferred app:
-                        </p>
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                          {[
-                            { name: "Google Pay", color: "bg-blue-50 text-blue-700 border-blue-200" },
-                            { name: "PhonePe", color: "bg-purple-50 text-purple-700 border-purple-200" },
-                            { name: "Paytm", color: "bg-sky-50 text-sky-700 border-sky-200" },
-                            { name: "BHIM / Other", color: "bg-stone-50 text-stone-700 border-stone-200" },
-                          ].map((app) => {
-                            const upiUrl = `upi://pay?pa=${paymentQr?.upi_id || "sfccafe@upi"}&pn=${encodeURIComponent(
-                              paymentQr?.merchant_name || "SFC Cafe"
-                            )}&am=${summary.grandTotal}&cu=INR&tn=Order%20Payment`;
-                            return (
-                              <a
-                                key={app.name}
-                                href={upiUrl}
-                                onClick={() => setSelectedUpiApp(app.name)}
-                                className={`flex items-center justify-center gap-1 rounded-xl border p-2 text-[10px] font-bold shadow-sm transition hover:scale-105 active:scale-95 text-center ${app.color}`}
-                              >
-                                <span>{app.name}</span>
-                                <ExternalLink size={10} />
-                              </a>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* 1-Click Pay Guidance Note */}
-                      <div className="mt-3.5 rounded-xl bg-purple-100/60 p-2.5 text-[11px] font-semibold text-purple-900 border border-purple-200">
-                        ⚡ <b>1-Click UPI Payment:</b> Once you click "Place Order", your chosen UPI app will open directly with the exact order amount (<b>₹{formatRupee(summary.grandTotal)}</b>) pre-filled.
-                      </div>
-                    </div>
-                  </div>
-
-                  {paymentQr?.instructions && (
-                    <p className="mt-3 border-t border-purple-200/60 pt-2 text-[10px] text-purple-900 leading-relaxed">
-                      ℹ️ <b>Instructions:</b> {paymentQr.instructions}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
+
           </section>
 
           {/* FLIPKART-STYLE PRICE DETAILS SIDEBAR */}
@@ -1614,8 +1412,6 @@ export default function CartClient() {
                       ? "Out of Delivery Range"
                       : !selectedAddress
                       ? "Select Delivery Address"
-                      : selectedPaymentMethod === "Online Payment"
-                      ? "Place Order & Pay Online"
                       : "Place Order (Cash on Delivery)"}
                   </span>
                   {isPlacingOrder ? (

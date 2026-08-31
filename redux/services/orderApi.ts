@@ -54,17 +54,7 @@ export interface CreateOrderPayload {
   shippingAddress?: string;
   deliveryAddressJson?: any;
   paymentMethod?: string;
-  paymentStatus?: string;
-  transactionId?: string;
-  paymentDetailsJson?: any;
   notes?: string;
-}
-
-export interface ConfirmPaymentPayload {
-  orderId: number;
-  transactionId?: string;
-  paymentApp?: string;
-  paymentDetails?: any;
 }
 
 export interface OrderResponse<T = Order> {
@@ -91,14 +81,6 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Order", "Cart", "Product"],
     }),
-    confirmPayment: build.mutation<OrderResponse<Order>, ConfirmPaymentPayload>({
-      query: ({ orderId, ...body }) => ({
-        url: `/orders/${orderId}/payment-confirm`,
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["Order"],
-    }),
     cancelOrder: build.mutation<
       OrderResponse<Order>,
       { orderId: number; cancelReason: string }
@@ -117,7 +99,6 @@ export const {
   useGetOrdersQuery,
   useGetOrderDetailsQuery,
   useCreateOrderMutation,
-  useConfirmPaymentMutation,
   useCancelOrderMutation,
 } = orderApi;
 
