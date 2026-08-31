@@ -165,8 +165,15 @@ export default function PopularProducts() {
   };
 
 
-  const getRating = (product: any) => {
-    return product.rating ?? 4.8;
+  const getRatingInfo = (product: any) => {
+    const totalReviews = Number(product.total_reviews || product.reviews_count || 0);
+    const avgRating = Number(product.rating || product.average_rating || 0);
+    return {
+      totalReviews,
+      avgRating,
+      hasReviews: totalReviews > 0 && avgRating > 0,
+      displayRating: totalReviews > 0 && avgRating > 0 ? avgRating.toFixed(1) : "New",
+    };
   };
 
   return (
@@ -267,7 +274,7 @@ export default function PopularProducts() {
         >
           {popularProducts.map((product: any, index: number) => {
             const discount = getDiscount(product);
-            const rating = getRating(product);
+            const ratingInfo = getRatingInfo(product);
 
             const image =
               product.img ||
@@ -436,6 +443,7 @@ export default function PopularProducts() {
                     </span>
                   )}
 
+                  {/* Dynamic Rating Pill */}
                   <div
                     className="
                       absolute
@@ -456,12 +464,18 @@ export default function PopularProducts() {
                     "
                   >
                     <Star
-                      size={13}
+                      size={12}
                       fill="currentColor"
-                      className="text-[var(--color-secondary)]"
+                      className="text-[var(--color-star)] shrink-0"
                     />
 
-                    {rating}
+                    <span className="font-black text-[var(--color-text-primary)]">
+                      {ratingInfo.displayRating}
+                    </span>
+
+                    <span className="text-[10px] font-medium text-[var(--color-text-muted)]">
+                      ({ratingInfo.totalReviews})
+                    </span>
                   </div>
                 </div>
 

@@ -27,6 +27,8 @@ export type WishlistItem = {
   category_name?: string;
   category?: string;
   categoryName?: string;
+  rating?: number;
+  total_reviews?: number;
 };
 
 export type WishlistResponse = {

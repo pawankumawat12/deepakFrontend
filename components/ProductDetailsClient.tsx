@@ -15,6 +15,17 @@ import {
   Star,
   Truck,
   Utensils,
+  Edit2,
+  Trash2,
+  MessageSquare,
+  Sparkles,
+  AlertCircle,
+  X,
+  Loader2,
+  User,
+  ThumbsUp,
+  ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
@@ -29,6 +40,13 @@ import {
   useAddCartItemMutation,
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
+import {
+  useGetProductReviewsQuery,
+  useCreateProductReviewMutation,
+  useUpdateReviewMutation,
+  useDeleteReviewMutation,
+  ReviewItem,
+} from "../redux/services/reviewApi";
 
 export default function ProductDetailsClient({
   product,
@@ -82,6 +100,236 @@ export default function ProductDetailsClient({
 
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState<number>(1);
+
+  // Reviews Queries & Mutations with Infinite Pagination
+  const [reviewPage, setReviewPage] = useState(1);
+  const [allReviews, setAllReviews] = useState<ReviewItem[]>([]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const {
+    data: reviewsResponse,
+    isLoading: isReviewsLoading,
+    isFetching: isReviewsFetching,
+  } = useGetProductReviewsQuery({
+    productId: product.id,
+    page: reviewPage,
+    limit: 6,
+  });
+
+  const [createProductReview, { isLoading: isCreatingReview }] =
+    useCreateProductReviewMutation();
+  const [updateReview, { isLoading: isUpdatingReview }] =
+    useUpdateReviewMutation();
+  const [deleteReview, { isLoading: isDeletingReview }] =
+    useDeleteReviewMutation();
+
+  // Accumulate reviews as new pages load
+  useEffect(() => {
+    if (reviewsResponse?.data?.reviews) {
+      const incoming = reviewsResponse.data.reviews;
+      if (reviewPage === 1) {
+        setAllReviews(incoming);
+      } else {
+        setAllReviews((prev) => {
+          const existingIds = new Set(prev.map((r) => r.id));
+          const uniqueNew = incoming.filter((r) => !existingIds.has(r.id));
+          return [...prev, ...uniqueNew];
+        });
+      }
+    }
+  }, [reviewsResponse, reviewPage]);
+
+  const reviewSummary = reviewsResponse?.data?.summary || {
+    totalReviews: 0,
+    averageRating: 0,
+    ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+  };
+  const totalReviews = Number(reviewSummary.totalReviews || 0);
+  const averageRating = Number(reviewSummary.averageRating || 0);
+  const ratingDistribution = reviewSummary.ratingDistribution || {
+    5: 0,
+    4: 0,
+    3: 0,
+    2: 0,
+    1: 0,
+  };
+  const pagination = reviewsResponse?.data?.pagination || {
+    page: 1,
+    totalPages: 1,
+    total: 0,
+    hasMore: false,
+  };
+  const hasMore = Boolean(
+    pagination.hasMore || reviewPage < pagination.totalPages
+  );
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore || isReviewsFetching) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isReviewsFetching) {
+          setReviewPage((prev) => prev + 1);
+        }
+      },
+      { rootMargin: "150px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isReviewsFetching]);
+
+  // Form State
+  const [isWritingReview, setIsWritingReview] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+  const [rating, setRating] = useState<number>(5);
+  const [hoveredRating, setHoveredRating] = useState<number>(0);
+  const [title, setTitle] = useState<string>("");
+  const [comment, setComment] = useState<string>("");
+  const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
+
+  // User's own review
+  const userOwnReview = user
+    ? allReviews.find((r) => Number(r.user_id) === Number(user.id))
+    : null;
+
+  const handleOpenWriteReview = () => {
+    if (!user) {
+      toast.error("Please sign in to write a review");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (userOwnReview) {
+      setEditingReviewId(userOwnReview.id);
+      setRating(userOwnReview.rating);
+      setTitle(userOwnReview.title || "");
+      setComment(userOwnReview.comment);
+    } else {
+      setEditingReviewId(null);
+      setRating(5);
+      setTitle("");
+      setComment("");
+    }
+    setIsWritingReview(true);
+    setTimeout(() => {
+      const el = document.getElementById("review-form");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
+
+  const handleEditReview = (rev: ReviewItem) => {
+    setEditingReviewId(rev.id);
+    setRating(rev.rating);
+    setTitle(rev.title || "");
+    setComment(rev.comment);
+    setIsWritingReview(true);
+    setTimeout(() => {
+      const el = document.getElementById("review-form");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
+
+  const handleCancelReviewForm = () => {
+    setIsWritingReview(false);
+    setEditingReviewId(null);
+    setTitle("");
+    setComment("");
+    setRating(5);
+    setHoveredRating(0);
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please sign in to submit a review");
+      window.dispatchEvent(new CustomEvent("sfc_open_login"));
+      return;
+    }
+    if (!comment.trim()) {
+      toast.error("Please enter your review comment");
+      return;
+    }
+    if (rating < 1 || rating > 5) {
+      toast.error("Please select a rating between 1 and 5 stars");
+      return;
+    }
+
+    try {
+      if (editingReviewId) {
+        await updateReview({
+          id: editingReviewId,
+          rating,
+          title: title.trim() || undefined,
+          comment: comment.trim(),
+        }).unwrap();
+        toast.success("Review updated successfully! ✨");
+      } else {
+        await createProductReview({
+          productId: Number(product.id),
+          rating,
+          title: title.trim() || undefined,
+          comment: comment.trim(),
+        }).unwrap();
+        toast.success("Review submitted! Thank you for your feedback ❤️");
+      }
+      setReviewPage(1);
+      handleCancelReviewForm();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to submit review");
+    }
+  };
+
+  const handleDeleteReview = async (id: number) => {
+    try {
+      await deleteReview(id).unwrap();
+      toast.success("Review deleted successfully");
+      setDeletingReviewId(null);
+      setReviewPage(1);
+      if (editingReviewId === id) {
+        handleCancelReviewForm();
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete review");
+    }
+  };
+
+  const ratingLabelMap: { [key: number]: string } = {
+    5: "⭐⭐⭐⭐⭐ Excellent! Loved it",
+    4: "⭐⭐⭐⭐ Very Good, enjoyed it",
+    3: "⭐⭐⭐ Good, satisfied",
+    2: "⭐⭐ Fair, could be better",
+    1: "⭐ Poor, not as expected",
+  };
+
+  const getFlipkartRatingStyle = (r: number) => {
+    if (r >= 4) return "bg-[#388e3c] text-white"; // Flipkart green
+    if (r >= 3) return "bg-[#f5a623] text-white"; // Amber
+    return "bg-[#e53935] text-white"; // Red
+  };
+
+  const getRatingSentiment = (avg: number) => {
+    if (avg >= 4.5) return "Exceptional";
+    if (avg >= 4.0) return "Very Good";
+    if (avg >= 3.0) return "Good";
+    if (avg >= 2.0) return "Fair";
+    return "Poor";
+  };
+
+  function formatReviewDate(dateStr: string) {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return "";
+    }
+  }
 
   useEffect(() => {
     const el = imgRef.current;
@@ -451,34 +699,55 @@ export default function ProductDetailsClient({
               {product.name}
             </h1>
 
-            {/* Rating */}
+            {/* Dynamic Rating & Review Count (Flipkart Style) */}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
 
-              <div
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("reviews-section");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
                 className="
+                  group
                   flex
                   items-center
-                  gap-1.5
-                  rounded-full
-                  bg-[var(--color-star)]/10
-                  px-3
-                  py-1.5
+                  gap-2.5
+                  transition
+                  active:scale-95
+                  text-left
                 "
               >
-                <Star
-                  size={14}
-                  fill="currentColor"
-                  className="text-[var(--color-star)]"
-                />
+                <div
+                  className={`
+                    flex
+                    items-center
+                    gap-1
+                    rounded-md
+                    px-2.5
+                    py-1
+                    text-xs
+                    font-black
+                    shadow-xs
+                    ${totalReviews > 0 ? getFlipkartRatingStyle(averageRating) : "bg-stone-500 text-white"}
+                  `}
+                >
+                  <span>{totalReviews > 0 ? averageRating.toFixed(1) : "New"}</span>
+                  <Star size={11} fill="white" className="text-white shrink-0" />
+                </div>
 
-                <span className="text-xs font-black text-[var(--color-text-primary)]">
-                  4.8
+                <span className="text-xs font-bold text-[var(--color-primary)] group-hover:underline">
+                  {totalReviews > 0
+                    ? `${totalReviews.toLocaleString("en-IN")} Ratings & Reviews`
+                    : "0 Ratings & Reviews"}
                 </span>
-              </div>
+              </button>
 
               <span className="text-xs text-[var(--color-text-muted)]">
-                Excellent choice by our customers
+                {totalReviews > 0
+                  ? `· ${getRatingSentiment(averageRating)} choice by cafe guests`
+                  : "· Be the first to review this dish"}
               </span>
 
             </div>
@@ -1186,6 +1455,417 @@ export default function ProductDetailsClient({
 
         </div>
 
+      </section>
+
+      {/* =========================================================
+          REVIEWS & RATINGS SECTION (FLIPKART STYLE)
+      ========================================================= */}
+
+      <section
+        id="reviews-section"
+        className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12"
+      >
+        <div className="rounded-3xl border border-[var(--color-border)] bg-white p-6 shadow-sm md:p-10">
+          
+          {/* Section Header & Rate Action */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--color-border)] pb-6">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <Star size={16} fill="currentColor" />
+                </span>
+                <h2 className="text-xl font-black text-[var(--color-text-primary)] md:text-2xl">
+                  Ratings & Reviews
+                </h2>
+              </div>
+              <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                Real customer feedback from guests who ordered {product.name}
+              </p>
+            </div>
+
+            {!isWritingReview && (
+              <button
+                type="button"
+                onClick={handleOpenWriteReview}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--color-primary)] px-6 py-3 text-xs font-black text-white shadow-md transition hover:bg-[var(--color-primary-dark)] active:scale-95 shrink-0"
+              >
+                <Edit2 size={15} />
+                <span>{userOwnReview ? "Edit Your Review" : "Rate Product"}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Flipkart-Style Rating Summary Breakdown */}
+          <div className="mt-6 grid grid-cols-1 gap-6 rounded-2xl bg-[var(--bg-body)] p-5 md:grid-cols-[260px_1fr] md:p-6">
+            {/* Left: Big Score & Sentiment */}
+            <div className="flex flex-col items-center justify-center border-b border-[var(--color-border)] pb-5 md:border-b-0 md:border-r md:pb-0 md:pr-6 text-center">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`
+                    flex items-center gap-1.5 rounded-xl px-4 py-2 text-2xl font-black shadow-sm
+                    ${totalReviews > 0 ? getFlipkartRatingStyle(averageRating) : "bg-stone-500 text-white"}
+                  `}
+                >
+                  <span>{totalReviews > 0 ? averageRating.toFixed(1) : "0.0"}</span>
+                  <Star size={20} fill="white" className="text-white" />
+                </div>
+              </div>
+
+              <div className="mt-3 text-sm font-black text-[var(--color-text-primary)]">
+                {totalReviews > 0 ? `${getRatingSentiment(averageRating)} Taste` : "No Ratings Yet"}
+              </div>
+
+              <p className="mt-1 text-xs font-bold text-[var(--color-text-secondary)]">
+                {totalReviews > 0
+                  ? `${totalReviews.toLocaleString("en-IN")} Ratings & ${totalReviews.toLocaleString("en-IN")} Reviews`
+                  : "Be the first to review"}
+              </p>
+
+              <div className="mt-3 flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[10px] font-bold text-emerald-700 shadow-xs border border-emerald-100">
+                <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
+                <span>100% Verified Customer Feedback</span>
+              </div>
+            </div>
+
+            {/* Right: Color-Coded 5 to 1 Star Progress Bars */}
+            <div className="flex flex-col justify-center gap-2.5">
+              {[
+                { star: 5, color: "bg-[#388e3c]" },
+                { star: 4, color: "bg-[#4caf50]" },
+                { star: 3, color: "bg-[#fbc02d]" },
+                { star: 2, color: "bg-[#ff9800]" },
+                { star: 1, color: "bg-[#f44336]" },
+              ].map(({ star, color }) => {
+                const count = ratingDistribution[star as keyof typeof ratingDistribution] || 0;
+                const percentage = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+
+                return (
+                  <div key={star} className="flex items-center gap-3 text-xs">
+                    <span className="flex w-9 items-center justify-end gap-1 font-bold text-[var(--color-text-primary)]">
+                      {star} <Star size={11} className="fill-stone-400 text-stone-400" />
+                    </span>
+
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-stone-200">
+                      <div
+                        className={`h-full rounded-full ${color} transition-all duration-500`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+
+                    <span className="w-16 text-right text-[11px] font-semibold text-[var(--color-text-muted)]">
+                      {count} ({percentage}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Interactive Write / Edit Review Form */}
+          {isWritingReview && (
+            <div
+              id="review-form"
+              className="mt-6 rounded-2xl border-2 border-[var(--color-primary)]/30 bg-white p-5 shadow-md md:p-7 transition-all"
+            >
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
+                <div>
+                  <h3 className="text-base font-black text-[var(--color-text-primary)]">
+                    {editingReviewId ? "Edit Your Review" : "Write a Customer Review"}
+                  </h3>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Share your experience and thoughts on {product.name}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelReviewForm}
+                  className="rounded-full p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitReview} className="mt-5 space-y-4">
+                {/* Star Rating Picker */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] mb-1.5">
+                    Select Your Rating *
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((starVal) => {
+                        const isFilled = (hoveredRating || rating) >= starVal;
+                        return (
+                          <button
+                            key={starVal}
+                            type="button"
+                            onClick={() => setRating(starVal)}
+                            onMouseEnter={() => setHoveredRating(starVal)}
+                            onMouseLeave={() => setHoveredRating(0)}
+                            className="p-1 transition-transform hover:scale-125 focus:outline-none"
+                            aria-label={`Rate ${starVal} stars`}
+                          >
+                            <Star
+                              size={28}
+                              className={
+                                isFilled
+                                  ? "fill-[var(--color-star)] text-[var(--color-star)] drop-shadow-sm"
+                                  : "text-stone-300 fill-stone-100"
+                              }
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="text-xs font-bold text-[var(--color-text-primary)] ml-2">
+                      {ratingLabelMap[hoveredRating || rating]}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Review Headline / Title (Optional) */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] mb-1.5">
+                    Review Title / Headline (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Delicious, crispy, and cooked to perfection!"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-white p-3 text-sm text-[var(--color-text-primary)] placeholder:text-stone-400 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/10"
+                  />
+                </div>
+
+                {/* Comment Textarea */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                      Your Feedback & Experience *
+                    </label>
+                    <span className="text-[11px] text-[var(--color-text-muted)]">
+                      {comment.length} characters
+                    </span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Describe what you enjoyed about this dish (taste, freshness, aroma, portion size, packaging)..."
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-white p-3.5 text-sm text-[var(--color-text-primary)] placeholder:text-stone-400 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/10"
+                    required
+                  />
+                </div>
+
+                {/* Form Action Buttons */}
+                <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelReviewForm}
+                    className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-xs font-bold text-[var(--color-text-secondary)] hover:bg-stone-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingReview || isUpdatingReview || !comment.trim()}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-2.5 text-xs font-black text-white shadow transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                  >
+                    {isCreatingReview || isUpdatingReview ? (
+                      <>
+                        <Loader2 size={15} className="animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={15} />
+                        {editingReviewId ? "Save Changes" : "Submit Review"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Flipkart-Style Customer Reviews List */}
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                Customer Reviews ({allReviews.length}{totalReviews > allReviews.length ? ` of ${totalReviews}` : ""})
+              </h3>
+            </div>
+
+            {isReviewsLoading && allReviews.length === 0 ? (
+              <div className="flex items-center justify-center py-12 text-sm text-[var(--color-text-muted)] gap-2">
+                <Loader2 size={18} className="animate-spin text-[var(--color-primary)]" />
+                Loading customer reviews...
+              </div>
+            ) : allReviews.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--bg-body)]/50 py-10 px-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <MessageSquare size={22} />
+                </div>
+                <h4 className="mt-3 text-sm font-black text-[var(--color-text-primary)]">
+                  No Reviews Yet
+                </h4>
+                <p className="mt-1 max-w-sm text-xs text-[var(--color-text-muted)]">
+                  Be the first to share your thoughts on {product.name}! Your feedback helps other guests make great choices.
+                </p>
+                {!isWritingReview && (
+                  <button
+                    type="button"
+                    onClick={handleOpenWriteReview}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[var(--color-primary-dark)] transition"
+                  >
+                    <Edit2 size={13} />
+                    Write the First Review
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {allReviews.map((rev) => {
+                  const isOwnReview = user && Number(rev.user_id) === Number(user.id);
+                  const isConfirmingDelete = deletingReviewId === rev.id;
+
+                  return (
+                    <div
+                      key={rev.id}
+                      className={`
+                        relative rounded-2xl border bg-white p-5 transition-shadow hover:shadow-sm
+                        ${
+                          isOwnReview
+                            ? "border-[var(--color-primary)]/30 ring-1 ring-[var(--color-primary)]/10"
+                            : "border-[var(--color-border)]"
+                        }
+                      `}
+                    >
+                      {/* Top Header: Rating Pill + Headline + Author Actions */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          {/* Flipkart-Style Rating Badge */}
+                          <div
+                            className={`
+                              inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-black
+                              ${getFlipkartRatingStyle(rev.rating)}
+                            `}
+                          >
+                            <span>{rev.rating}</span>
+                            <Star size={10} fill="white" className="text-white" />
+                          </div>
+
+                          {/* Headline / Title */}
+                          <h4 className="text-sm font-black text-[var(--color-text-primary)]">
+                            {rev.title || (rev.rating >= 4 ? "Delicious & Fresh" : "Customer Review")}
+                          </h4>
+
+                          {isOwnReview && (
+                            <span className="rounded-full bg-[var(--color-primary-50)] px-2 py-0.5 text-[10px] font-black text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                              Your Review
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Edit & Delete for logged-in author */}
+                        {isOwnReview && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleEditReview(rev)}
+                              title="Edit your review"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-[var(--color-primary)] transition"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setDeletingReviewId(rev.id)}
+                              title="Delete your review"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:bg-red-50 hover:text-red-600 transition"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Delete Confirmation Inline Prompt */}
+                      {isConfirmingDelete && (
+                        <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl bg-red-50 p-3 text-xs border border-red-200">
+                          <div className="flex items-center gap-2 text-red-700 font-semibold">
+                            <AlertCircle size={15} />
+                            <span>Are you sure you want to delete your review?</span>
+                          </div>
+                          <div className="flex items-center gap-2 self-end sm:self-auto">
+                            <button
+                              type="button"
+                              onClick={() => setDeletingReviewId(null)}
+                              className="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-stone-600 border border-stone-200 hover:bg-stone-50 transition"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isDeletingReview}
+                              onClick={() => handleDeleteReview(rev.id)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 transition disabled:opacity-50"
+                            >
+                              {isDeletingReview ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : (
+                                <Trash2 size={12} />
+                              )}
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Review Comment Body */}
+                      <p className="mt-3 text-xs leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-line">
+                        {rev.comment}
+                      </p>
+
+                      {/* Bottom Footer: Author Info & Certified Buyer Badge */}
+                      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--color-border)]/60 pt-3 text-[11px] text-[var(--color-text-muted)]">
+                        <span className="font-bold text-[var(--color-text-primary)]">
+                          {rev.user_name || "Verified Customer"}
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700">
+                          <CheckCircle2 size={12} className="text-emerald-600" />
+                          <span>Certified Buyer</span>
+                        </span>
+
+                        <span>·</span>
+
+                        <span>{formatReviewDate(rev.created_at)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Infinite Scroll Sentinel & Loader */}
+                <div ref={sentinelRef} className="py-4 text-center">
+                  {isReviewsFetching && (
+                    <div className="flex items-center justify-center gap-2 text-xs font-bold text-[var(--color-primary)]">
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Loading more customer reviews...</span>
+                    </div>
+                  )}
+                  {!hasMore && allReviews.length > 0 && (
+                    <p className="text-[11px] font-semibold text-[var(--color-text-muted)]">
+                      ✓ You have viewed all {totalReviews} reviews
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
       </section>
 
       {/* =========================================================

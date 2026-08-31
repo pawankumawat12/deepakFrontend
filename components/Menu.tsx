@@ -870,7 +870,7 @@ export default function Menu() {
                       </p>
                     </Link>
 
-                    {/* Rating */}
+                    {/* Dynamic Rating & Review Count */}
 
                     <div className="mt-3 flex items-center gap-1.5">
 
@@ -881,7 +881,7 @@ export default function Menu() {
                           gap-1
                           rounded-full
                           bg-[var(--color-star)]/10
-                          px-2
+                          px-2.5
                           py-1
                         "
                       >
@@ -892,12 +892,14 @@ export default function Menu() {
                         />
 
                         <span className="text-[10px] font-black text-[var(--color-text-primary)]">
-                          4.8
+                          {Number(p.total_reviews || 0) > 0 && Number(p.rating || 0) > 0
+                            ? Number(p.rating).toFixed(1)
+                            : "New"}
                         </span>
                       </div>
 
-                      <span className="hidden text-[9px] text-[var(--color-text-muted)] sm:block">
-                        Loved by customers
+                      <span className="text-[10px] font-medium text-[var(--color-text-muted)]">
+                        ({Number(p.total_reviews || 0)} {Number(p.total_reviews || 0) === 1 ? "review" : "reviews"})
                       </span>
 
                     </div>

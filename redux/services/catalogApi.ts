@@ -55,6 +55,8 @@ const normalizeProduct = (product: ApiProduct) => {
     isActive: Boolean(product.is_active),
     availability_type: availabilityType,
     isMadeToOrder,
+    rating: Number(product.rating || 0),
+    total_reviews: Number(product.total_reviews || 0),
   };
 };
 

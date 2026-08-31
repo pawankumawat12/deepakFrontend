@@ -499,10 +499,22 @@ export default function FavoritesPage() {
                       </h2>
                     </Link>
 
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-2.5 flex items-center justify-between">
                       <span className="text-lg font-black text-[var(--color-text-primary)]">
                         {formatRupee(product.price)}
                       </span>
+
+                      <div className="flex items-center gap-1 rounded-full bg-[var(--color-star)]/10 px-2 py-0.5 text-xs font-bold text-[var(--color-text-primary)]">
+                        <Star size={11} fill="currentColor" className="text-[var(--color-star)]" />
+                        <span>
+                          {Number(product.total_reviews || 0) > 0 && Number(product.rating || 0) > 0
+                            ? Number(product.rating).toFixed(1)
+                            : "New"}
+                        </span>
+                        <span className="text-[10px] text-[var(--color-text-muted)] font-normal">
+                          ({Number(product.total_reviews || 0)})
+                        </span>
+                      </div>
                     </div>
 
                     {/* ACTIONS */}

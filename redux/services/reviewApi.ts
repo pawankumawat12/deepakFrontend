@@ -40,6 +40,7 @@ export interface ReviewsResponse {
       limit: number;
       total: number;
       totalPages: number;
+      hasMore?: boolean;
     };
   };
 }
@@ -53,6 +54,7 @@ export interface MyReviewsResponse {
       limit: number;
       total: number;
       totalPages: number;
+      hasMore?: boolean;
     };
   };
 }
