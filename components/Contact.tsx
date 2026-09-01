@@ -2,6 +2,7 @@
 
 import React, { FormEvent, useState } from "react";
 import Link from "next/link";
+import { FaInstagram, FaFacebookF, FaTwitter } from "react-icons/fa";
 import {
   ArrowRight,
   Clock3,
@@ -11,11 +12,36 @@ import {
   Send,
   MessageCircle,
 } from "lucide-react";
+import { useGetFooterQuery } from "@/redux/services/settingsApi";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const { data: settings } = useGetFooterQuery();
+  const settingData = settings?.data;
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+
+  const socialLinks = [
+    {
+      name: "Instagram",
+      url: settingData?.instagram,
+      icon: FaInstagram,
+      size: 19,
+    },
+    {
+      name: "Facebook",
+      url: settingData?.facebook,
+      icon: FaFacebookF,
+      size: 17,
+    },
+    {
+      name: "Twitter",
+      url: settingData?.twitter,
+      icon: FaTwitter,
+      size: 17,
+    },
+  ];
+
+  function handleSubmit(e: any) {
     e.preventDefault();
 
     setSubmitted(true);
@@ -72,9 +98,8 @@ export default function ContactPage() {
             </h3>
 
             <p className="mt-2 text-xs leading-6 text-[var(--color-text-secondary)]">
-              123 Main Street,
+              {settingData?.location}
               <br />
-              Jaipur, Rajasthan
             </p>
 
           </div>
@@ -123,7 +148,8 @@ export default function ContactPage() {
               href="tel:+919999999999"
               className="mt-2 block text-xs leading-6 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
             >
-              +91 99999 99999
+              {settingData?.phone_number}
+
             </a>
 
           </div>
@@ -172,7 +198,8 @@ export default function ContactPage() {
               href="mailto:hello@sfccafe.com"
               className="mt-2 block break-all text-xs leading-6 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
             >
-              hello@sfccafe.com
+              {settingData?.email}
+
             </a>
 
           </div>
@@ -218,9 +245,7 @@ export default function ContactPage() {
             </h3>
 
             <p className="mt-2 text-xs leading-6 text-[var(--color-text-secondary)]">
-              Mon - Sun
-              <br />
-              10:00 AM - 11:00 PM
+              {settingData?.working_hours}
             </p>
 
           </div>
@@ -555,14 +580,12 @@ export default function ContactPage() {
 
                   <div>
 
-                    <p className="text-xs font-bold text-white">
+                    <p className="text-xs font-bold ">
                       SFC Cafe
                     </p>
 
-                    <p className="mt-1 text-xs leading-5 text-white/50">
-                      123 Main Street,
-                      <br />
-                      Jaipur, Rajasthan, India
+                    <p className="mt-1 text-xs leading-5">
+                      {settingData?.location}
                     </p>
 
                   </div>
@@ -579,12 +602,9 @@ export default function ContactPage() {
 
       </section>
 
-      {/* =========================================================
-          SOCIAL / QUICK CONTACT
-      ========================================================= */}
+
 
       <section className="px-5 pb-16 sm:px-8">
-
         <div className="mx-auto max-w-5xl text-center">
 
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
@@ -594,53 +614,37 @@ export default function ContactPage() {
           <h2 className="mt-2 text-2xl font-black text-[var(--color-text-primary)]">
             Stay connected with SFC
           </h2>
-
           <div className="mt-6 flex justify-center gap-3">
+            {socialLinks.map((social) => {
+              const Icon = social.icon;
 
-            <a
-              href="#"
-              aria-label="Instagram"
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-full
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
-                transition
-                hover:bg-[var(--color-primary)]
-                hover:text-white
-              "
-            >
-                <i className="ri-instagram-line text-lg" />
-            </a>
-
-            <a
-              href="#"
-              aria-label="WhatsApp"
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-full
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
-                transition
-                hover:bg-[var(--color-primary)]
-                hover:text-white
-              "
-            >
-              <MessageCircle size={19} />
-            </a>
-
+              return (
+                <a
+                  key={social.name}
+                  href={social.url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.name}
+                  className="flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[var(--color-primary-light)]
+                  text-white/70
+                  transition
+                  hover:bg-[var(--color-primary)]
+                  hover:text-white"
+                    
+                >
+                  <Icon size={social.size} />
+                </a>
+              );
+            })}
           </div>
 
         </div>
-
       </section>
 
     </main>

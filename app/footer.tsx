@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import PWAInstallButton from "@/components/PWAInstallButton";
 import { useGetFooterQuery, useGetLogoQuery } from "../redux/services/settingsApi";
+import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 
 const apiUrl =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
@@ -143,63 +144,62 @@ export default function Footer() {
                 target={footerSettings?.facebook ? "_blank" : undefined}
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="
-                  flex
+                className="flex
                   h-10
                   w-10
                   items-center
                   justify-center
                   rounded-xl
-                  bg-white/5
+                  bg-[var(--color-primary-light)]
                   text-white/70
                   transition
                   hover:bg-[var(--color-primary)]
-                  hover:text-white
-                "
+                  hover:text-white"
               >
-                <span className="text-sm font-bold">f</span>
+                <span className="text-sm font-bold">
+                  <FaFacebook />
+                </span>
               </a>
               <a
                 href={footerSettings?.instagram || "#"}
                 target={footerSettings?.instagram ? "_blank" : undefined}
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="
-                  flex
-                  h-10
-                  w-10
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-white/5
-                  text-white/70
-                  transition
-                  hover:bg-[var(--color-primary)]
-                  hover:text-white
-                "
+                className="flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-xl
+                bg-[var(--color-primary-light)]
+                text-white/70
+                transition
+                hover:bg-[var(--color-primary)]
+                hover:text-white"
               >
-                <span className="text-sm font-bold">ig</span>
+                <span className="text-sm font-bold">
+                <FaInstagram />
+                
+                </span>
               </a>
               <a
                 href={footerSettings?.twitter || "#"}
                 target={footerSettings?.twitter ? "_blank" : undefined}
                 rel="noopener noreferrer"
                 aria-label="Twitter"
-                className="
-                  flex
+                className="flex
                   h-10
                   w-10
                   items-center
                   justify-center
                   rounded-xl
-                  bg-white/5
+                  bg-[var(--color-primary-light)]
                   text-white/70
                   transition
                   hover:bg-[var(--color-primary)]
-                  hover:text-white
-                "
+                  hover:text-white"
               >
-                <span className="text-sm font-bold">𝕏</span>
+                <span className="text-sm font-bold"><FaTwitter /></span>
               </a>
             </div>
           </div>

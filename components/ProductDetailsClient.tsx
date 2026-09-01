@@ -99,7 +99,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState<number>(1);
 
-  // Reviews Queries & Mutations with Infinite Pagination
   const [reviewPage, setReviewPage] = useState(1);
   const [allReviews, setAllReviews] = useState<ReviewItem[]>([]);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
