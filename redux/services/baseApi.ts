@@ -6,6 +6,13 @@ import { logout, setCredentials } from "../features/authSlice";
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_URL,
   credentials: "include",
+  prepareHeaders: (headers) => {
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+    return headers;
+  }
 });
 
 const baseQueryWithRefresh = async (args, api, extraOptions) => {
@@ -20,6 +27,11 @@ const baseQueryWithRefresh = async (args, api, extraOptions) => {
     if (refreshResult.data?.user) {
       api.dispatch(setCredentials(refreshResult.data));
       result = await rawBaseQuery(args, api, extraOptions);
+      const newAccessToken = refreshResult.data?.accessToken;
+
+      if (newAccessToken) {
+        localStorage.setItem("accessToken", newAccessToken);
+      }
     } else {
       api.dispatch(logout());
     }

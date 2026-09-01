@@ -76,13 +76,8 @@ export default function PopularPreview() {
   }
 
   return (
-    <section className="relative bg-[var(--bg-body)] px-4 py-10 md:px-8 md:py-14">
-
+    <section className="relative bg-[var(--bg-body)] px-4 md:px-8 md:py-10">
       <div className="mx-auto max-w-7xl">
-
-        {/* =================================================
-            SECTION HEADER
-        ================================================= */}
 
         <div className="mb-7 flex items-end justify-between">
 
@@ -148,6 +143,7 @@ export default function PopularPreview() {
               hover:bg-[var(--color-primary-dark)]
               sm:inline-flex
             "
+            style={{color:"white"}}
           >
             View Full Menu
 
@@ -401,6 +397,7 @@ export default function PopularPreview() {
               transition
               hover:bg-[var(--color-primary-dark)]
             "
+            style={{color:"white"}}
           >
             View Full Menu
 

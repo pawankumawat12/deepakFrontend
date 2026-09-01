@@ -48,11 +48,7 @@ import {
   ReviewItem,
 } from "../redux/services/reviewApi";
 
-export default function ProductDetailsClient({
-  product,
-}: {
-  product: any;
-}) {
+export default function ProductDetailsClient({ product }: { product: any }) {
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
@@ -85,7 +81,9 @@ export default function ProductDetailsClient({
       return;
     }
     try {
-      const res = await toggleWishlist({ productId: Number(product.id) }).unwrap();
+      const res = await toggleWishlist({
+        productId: Number(product.id),
+      }).unwrap();
       if (res.inWishlist) {
         toast.success("Added to favorites ❤️");
       } else {
@@ -339,7 +337,7 @@ export default function ProductDetailsClient({
 
   const isMadeToOrder = Boolean(
     product?.isMadeToOrder ||
-    String(product?.availability_type || "").toUpperCase() === "MADE_TO_ORDER"
+      String(product?.availability_type || "").toUpperCase() === "MADE_TO_ORDER"
   );
   const isOutOfStock = !isMadeToOrder && Number(product?.stock) <= 0;
 
@@ -358,7 +356,10 @@ export default function ProductDetailsClient({
       return;
     }
     try {
-      await addCartItem({ productId: Number(product.id), quantity: qty }).unwrap();
+      await addCartItem({
+        productId: Number(product.id),
+        quantity: qty,
+      }).unwrap();
       setAdded(true);
       toast.success("Added to cart 🛒");
       setTimeout(() => setAdded(false), 900);
@@ -378,7 +379,10 @@ export default function ProductDetailsClient({
       return;
     }
     try {
-      await updateCartItem({ productId: Number(product.id), quantity: newQty }).unwrap();
+      await updateCartItem({
+        productId: Number(product.id),
+        quantity: newQty,
+      }).unwrap();
       if (newQty === 0) {
         toast.success("Removed from cart");
       }
@@ -389,15 +393,12 @@ export default function ProductDetailsClient({
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)] pb-20">
-
       {/* =========================================================
           TOP / BREADCRUMB
       ========================================================= */}
 
       <div className="border-b border-[var(--color-border)] bg-white">
-
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 text-xs md:px-8">
-
           <Link
             href="/menu"
             className="
@@ -411,30 +412,21 @@ export default function ProductDetailsClient({
             "
           >
             <ArrowLeft size={14} />
-
             Menu
           </Link>
 
-          <ChevronRight
-            size={13}
-            className="text-[var(--color-text-muted)]"
-          />
+          <ChevronRight size={13} className="text-[var(--color-text-muted)]" />
 
           <span className="truncate font-bold capitalize text-[var(--color-text-secondary)]">
             {product.categoryName || product.category}
           </span>
 
-          <ChevronRight
-            size={13}
-            className="text-[var(--color-text-muted)]"
-          />
+          <ChevronRight size={13} className="text-[var(--color-text-muted)]" />
 
           <span className="hidden truncate font-semibold text-[var(--color-text-primary)] sm:block">
             {product.name}
           </span>
-
         </div>
-
       </div>
 
       {/* =========================================================
@@ -442,7 +434,6 @@ export default function ProductDetailsClient({
       ========================================================= */}
 
       <section className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
-
         <div
           className="
             grid
@@ -452,13 +443,11 @@ export default function ProductDetailsClient({
             lg:gap-10
           "
         >
-
           {/* =======================================================
               LEFT - IMAGE
           ======================================================= */}
 
           <div>
-
             <div
               className="
                 group
@@ -471,7 +460,6 @@ export default function ProductDetailsClient({
                 shadow-sm
               "
             >
-
               <img
                 ref={imgRef}
                 src={product.img}
@@ -527,7 +515,6 @@ export default function ProductDetailsClient({
                 "
               >
                 <Flame size={13} />
-
                 Popular Choice
               </div>
 
@@ -585,13 +572,11 @@ export default function ProductDetailsClient({
               >
                 {product.categoryName || product.category}
               </div>
-
             </div>
 
             {/* Image info cards */}
 
             <div className="mt-3 grid grid-cols-3 gap-2">
-
               <div
                 className="
                   rounded-2xl
@@ -651,9 +636,7 @@ export default function ProductDetailsClient({
                   Loved
                 </p>
               </div>
-
             </div>
-
           </div>
 
           {/* =======================================================
@@ -661,11 +644,9 @@ export default function ProductDetailsClient({
           ======================================================= */}
 
           <div className="flex flex-col">
-
             {/* Small label */}
 
             <div className="flex items-center gap-2">
-
               <span className="h-2 w-2 rounded-full bg-[var(--color-secondary)]" />
 
               <span
@@ -679,7 +660,6 @@ export default function ProductDetailsClient({
               >
                 Freshly Prepared
               </span>
-
             </div>
 
             {/* Product title */}
@@ -702,7 +682,6 @@ export default function ProductDetailsClient({
             {/* Dynamic Rating & Review Count (Flipkart Style) */}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-
               <button
                 type="button"
                 onClick={() => {
@@ -730,26 +709,39 @@ export default function ProductDetailsClient({
                     text-xs
                     font-black
                     shadow-xs
-                    ${totalReviews > 0 ? getFlipkartRatingStyle(averageRating) : "bg-stone-500 text-white"}
+                    ${
+                      totalReviews > 0
+                        ? getFlipkartRatingStyle(averageRating)
+                        : "bg-stone-500 text-white"
+                    }
                   `}
                 >
-                  <span>{totalReviews > 0 ? averageRating.toFixed(1) : "New"}</span>
-                  <Star size={11} fill="white" className="text-white shrink-0" />
+                  <span>
+                    {totalReviews > 0 ? averageRating.toFixed(1) : "New"}
+                  </span>
+                  <Star
+                    size={11}
+                    fill="white"
+                    className="text-white shrink-0"
+                  />
                 </div>
 
                 <span className="text-xs font-bold text-[var(--color-primary)] group-hover:underline">
                   {totalReviews > 0
-                    ? `${totalReviews.toLocaleString("en-IN")} Ratings & Reviews`
+                    ? `${totalReviews.toLocaleString(
+                        "en-IN"
+                      )} Ratings & Reviews`
                     : "0 Ratings & Reviews"}
                 </span>
               </button>
 
               <span className="text-xs text-[var(--color-text-muted)]">
                 {totalReviews > 0
-                  ? `· ${getRatingSentiment(averageRating)} choice by cafe guests`
+                  ? `· ${getRatingSentiment(
+                      averageRating
+                    )} choice by cafe guests`
                   : "· Be the first to review this dish"}
               </span>
-
             </div>
 
             {/* Price */}
@@ -765,13 +757,11 @@ export default function ProductDetailsClient({
                 shadow-sm
               "
             >
-
               <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
                 Price
               </p>
 
               <div className="mt-1 flex items-end gap-2">
-
                 <span
                   className="
                     text-3xl
@@ -785,15 +775,12 @@ export default function ProductDetailsClient({
                 <span className="pb-1 text-xs text-[var(--color-text-muted)]">
                   / item
                 </span>
-
               </div>
-
             </div>
 
             {/* Description */}
 
             <div className="mt-6">
-
               <h2 className="text-sm font-black text-[var(--color-text-primary)]">
                 About this item
               </h2>
@@ -809,13 +796,11 @@ export default function ProductDetailsClient({
                 {product.description ||
                   "Delicious and freshly prepared at SFC Cafe with quality ingredients for a great taste in every bite."}
               </p>
-
             </div>
 
             {/* Product highlights */}
 
             <div className="mt-6 grid grid-cols-2 gap-2">
-
               <div
                 className="
                   flex
@@ -853,7 +838,6 @@ export default function ProductDetailsClient({
                     Prepared on order
                   </p>
                 </div>
-
               </div>
 
               <div
@@ -893,9 +877,7 @@ export default function ProductDetailsClient({
                     Fresh & ready fast
                   </p>
                 </div>
-
               </div>
-
             </div>
 
             {/* =====================================================
@@ -914,11 +896,8 @@ export default function ProductDetailsClient({
                 sm:p-5
               "
             >
-
               <div className="flex items-center justify-between">
-
                 <div>
-
                   <p className="text-xs font-black text-[var(--color-text-primary)]">
                     Quantity
                   </p>
@@ -926,13 +905,11 @@ export default function ProductDetailsClient({
                   <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                     Choose how many you want
                   </p>
-
                 </div>
 
                 {/* Quantity */}
 
                 {inCartQty ? (
-
                   <div className="flex flex-col items-end gap-1">
                     <div
                       className="
@@ -946,14 +923,9 @@ export default function ProductDetailsClient({
                         ring-[var(--color-primary)]/10
                       "
                     >
-
                       <button
                         type="button"
-                        onClick={() =>
-                          changeQty(
-                            Math.max(0, inCartQty - 1)
-                          )
-                        }
+                        onClick={() => changeQty(Math.max(0, inCartQty - 1))}
                         className="
                           flex
                           h-9
@@ -968,10 +940,7 @@ export default function ProductDetailsClient({
                           active:scale-90
                         "
                       >
-                        <Minus
-                          size={15}
-                          strokeWidth={3}
-                        />
+                        <Minus size={15} strokeWidth={3} />
                       </button>
 
                       <span
@@ -998,9 +967,7 @@ export default function ProductDetailsClient({
                           product.availability_type !== "MADE_TO_ORDER" &&
                           inCartQty >= Number(product.stock)
                         }
-                        onClick={() =>
-                          changeQty(inCartQty + 1)
-                        }
+                        onClick={() => changeQty(inCartQty + 1)}
                         className="
                           flex
                           h-9
@@ -1017,12 +984,8 @@ export default function ProductDetailsClient({
                           active:scale-90
                         "
                       >
-                        <Plus
-                          size={15}
-                          strokeWidth={3}
-                        />
+                        <Plus size={15} strokeWidth={3} />
                       </button>
-
                     </div>
 
                     {product.availability_type === "MADE_TO_ORDER" ? (
@@ -1035,9 +998,7 @@ export default function ProductDetailsClient({
                       </span>
                     ) : null}
                   </div>
-
                 ) : (
-
                   <div className="flex flex-col items-end gap-1">
                     <div
                       className="
@@ -1049,12 +1010,9 @@ export default function ProductDetailsClient({
                         p-1
                       "
                     >
-
                       <button
                         type="button"
-                        onClick={() =>
-                          setQty(Math.max(1, qty - 1))
-                        }
+                        onClick={() => setQty(Math.max(1, qty - 1))}
                         className="
                           flex
                           h-9
@@ -1069,10 +1027,7 @@ export default function ProductDetailsClient({
                           active:scale-90
                         "
                       >
-                        <Minus
-                          size={15}
-                          strokeWidth={3}
-                        />
+                        <Minus size={15} strokeWidth={3} />
                       </button>
 
                       <span
@@ -1099,9 +1054,7 @@ export default function ProductDetailsClient({
                           product.availability_type !== "MADE_TO_ORDER" &&
                           qty >= Number(product.stock)
                         }
-                        onClick={() =>
-                          setQty(qty + 1)
-                        }
+                        onClick={() => setQty(qty + 1)}
                         className="
                           flex
                           h-9
@@ -1118,121 +1071,29 @@ export default function ProductDetailsClient({
                           active:scale-90
                         "
                       >
-                        <Plus
-                          size={15}
-                          strokeWidth={3}
-                        />
+                        <Plus size={15} strokeWidth={3} />
                       </button>
-
                     </div>
 
                     {product.availability_type === "MADE_TO_ORDER" ? (
                       <span className="text-[10px] font-bold text-orange-600">
                         Cooked on demand
                       </span>
-                    ) : Number(product.stock) <= 5 && Number(product.stock) > 0 ? (
+                    ) : Number(product.stock) <= 5 &&
+                      Number(product.stock) > 0 ? (
                       <span className="text-[10px] font-bold text-amber-600">
                         Only {product.stock} left in stock
                       </span>
                     ) : null}
                   </div>
-
                 )}
-
               </div>
 
-              {/* Cart action: Quantity control when in cart, Add button when not */}
-
-              {inCartQty ? (
-                <div
-                  className="
-                    mt-4
-                    flex
-                    h-14
-                    w-full
-                    items-center
-                    justify-between
-                    gap-3
-                    rounded-2xl
-                    bg-[var(--color-primary-50)]
-                    px-4
-                    py-2
-                    ring-2
-                    ring-[var(--color-primary)]/20
-                  "
-                >
-                  <button
-                    type="button"
-                    aria-label="Decrease quantity"
-                    onClick={() => changeQty(Math.max(0, inCartQty - 1))}
-                    className="
-                      flex
-                      h-10
-                      w-10
-                      items-center
-                      justify-center
-                      rounded-xl
-                      bg-white
-                      text-[var(--color-primary)]
-                      shadow-sm
-                      transition
-                      hover:bg-[var(--color-primary)]
-                      hover:text-white
-                      active:scale-90
-                    "
-                  >
-                    <Minus size={18} strokeWidth={3} />
-                  </button>
-
-                  <div className="flex flex-col items-center">
-                    <span className="text-sm font-black text-[var(--color-primary)]">
-                      {inCartQty} in Cart
-                    </span>
-                    <span className="text-[10px] font-bold text-[var(--color-text-muted)]">
-                      Adjust quantity
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    aria-label="Increase quantity"
-                    title={
-                      product.availability_type !== "MADE_TO_ORDER" &&
-                      inCartQty >= Number(product.stock)
-                        ? `Only ${product.stock} items available in stock`
-                        : "Increase quantity"
-                    }
-                    disabled={
-                      product.availability_type !== "MADE_TO_ORDER" &&
-                      inCartQty >= Number(product.stock)
-                    }
-                    onClick={() => changeQty(inCartQty + 1)}
-                    className="
-                      flex
-                      h-10
-                      w-10
-                      items-center
-                      justify-center
-                      rounded-xl
-                      bg-[var(--color-primary)]
-                      text-white
-                      shadow-sm
-                      transition
-                      hover:bg-[var(--color-primary-dark)]
-                      disabled:cursor-not-allowed
-                      disabled:opacity-40
-                      active:scale-90
-                    "
-                  >
-                    <Plus size={18} strokeWidth={3} />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  disabled={isOutOfStock}
-                  onClick={handleAdd}
-                  className={`
+              <button
+                type="button"
+                disabled={isOutOfStock}
+                onClick={handleAdd}
+                className={`
                     mt-4
                     flex
                     h-14
@@ -1251,35 +1112,29 @@ export default function ProductDetailsClient({
                     active:scale-[0.98]
                     disabled:cursor-not-allowed
                     disabled:opacity-50
-                    ${added
-                      ? "bg-[var(--color-success)]"
-                      : isOutOfStock
-                      ? "bg-stone-400"
-                      : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
+                    ${
+                      added
+                        ? "bg-[var(--color-success)]"
+                        : isOutOfStock
+                        ? "bg-stone-400"
+                        : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
                     }
                   `}
-                >
-                  {added ? (
-                    <>
-                      <Check size={19} strokeWidth={3} />
-
-                      Added to Cart
-                    </>
-                  ) : isOutOfStock ? (
-                    <span>Out of Stock</span>
-                  ) : (
-                    <>
-                      <ShoppingBag
-                        size={19}
-                        strokeWidth={2.5}
-                      />
-
-                      Add {qty > 1 ? `${qty} ` : ""}to Cart
-                    </>
-                  )}
-                </button>
-              )}
-
+              >
+                {added ? (
+                  <>
+                    <Check size={19} strokeWidth={3} />
+                    Added to Cart
+                  </>
+                ) : isOutOfStock ? (
+                  <span>Out of Stock</span>
+                ) : (
+                  <>
+                    <ShoppingBag size={19} strokeWidth={2.5} />
+                    Add {qty > 1 ? `${qty} ` : ""}to Cart
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Delivery info */}
@@ -1297,7 +1152,6 @@ export default function ProductDetailsClient({
                 p-4
               "
             >
-
               <div
                 className="
                   flex
@@ -1316,7 +1170,6 @@ export default function ProductDetailsClient({
               </div>
 
               <div>
-
                 <p className="text-xs font-black text-[var(--color-text-primary)]">
                   Freshness you can taste
                 </p>
@@ -1324,15 +1177,10 @@ export default function ProductDetailsClient({
                 <p className="mt-0.5 text-[10px] leading-4 text-[var(--color-text-secondary)]">
                   Your order is prepared fresh and packed carefully.
                 </p>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
       {/* =========================================================
@@ -1340,17 +1188,12 @@ export default function ProductDetailsClient({
       ========================================================= */}
 
       <section className="border-y border-[var(--color-border)] bg-white">
-
         <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
-
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-
             {/* About */}
 
             <div>
-
               <div className="mb-3 flex items-center gap-2">
-
                 <div
                   className="
                     flex
@@ -1369,23 +1212,18 @@ export default function ProductDetailsClient({
                 <h2 className="text-sm font-black text-[var(--color-text-primary)]">
                   Made With Care
                 </h2>
-
               </div>
 
               <p className="text-xs leading-6 text-[var(--color-text-secondary)]">
-                Every item is prepared with attention to taste,
-                freshness and quality so you can enjoy your food
-                just the way it should be.
+                Every item is prepared with attention to taste, freshness and
+                quality so you can enjoy your food just the way it should be.
               </p>
-
             </div>
 
             {/* Quality */}
 
             <div>
-
               <div className="mb-3 flex items-center gap-2">
-
                 <div
                   className="
                     flex
@@ -1398,31 +1236,24 @@ export default function ProductDetailsClient({
                     text-[var(--color-primary)]
                   "
                 >
-                  <Star
-                    size={17}
-                    fill="currentColor"
-                  />
+                  <Star size={17} fill="currentColor" />
                 </div>
 
                 <h2 className="text-sm font-black text-[var(--color-text-primary)]">
                   Customer Favorite
                 </h2>
-
               </div>
 
               <p className="text-xs leading-6 text-[var(--color-text-secondary)]">
-                Loved by customers for its delicious taste,
-                fresh preparation and satisfying experience.
+                Loved by customers for its delicious taste, fresh preparation
+                and satisfying experience.
               </p>
-
             </div>
 
             {/* Fresh */}
 
             <div>
-
               <div className="mb-3 flex items-center gap-2">
-
                 <div
                   className="
                     flex
@@ -1441,20 +1272,15 @@ export default function ProductDetailsClient({
                 <h2 className="text-sm font-black text-[var(--color-text-primary)]">
                   Fresh & Delicious
                 </h2>
-
               </div>
 
               <p className="text-xs leading-6 text-[var(--color-text-secondary)]">
-                Prepared fresh to deliver the best possible
-                flavor and quality with every order.
+                Prepared fresh to deliver the best possible flavor and quality
+                with every order.
               </p>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
       {/* =========================================================
@@ -1466,7 +1292,6 @@ export default function ProductDetailsClient({
         className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12"
       >
         <div className="rounded-3xl border border-[var(--color-border)] bg-white p-6 shadow-sm md:p-10">
-          
           {/* Section Header & Rate Action */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--color-border)] pb-6">
             <div>
@@ -1490,7 +1315,9 @@ export default function ProductDetailsClient({
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--color-primary)] px-6 py-3 text-xs font-black text-white shadow-md transition hover:bg-[var(--color-primary-dark)] active:scale-95 shrink-0"
               >
                 <Edit2 size={15} />
-                <span>{userOwnReview ? "Edit Your Review" : "Rate Product"}</span>
+                <span>
+                  {userOwnReview ? "Edit Your Review" : "Rate Product"}
+                </span>
               </button>
             )}
           </div>
@@ -1503,21 +1330,33 @@ export default function ProductDetailsClient({
                 <div
                   className={`
                     flex items-center gap-1.5 rounded-xl px-4 py-2 text-2xl font-black shadow-sm
-                    ${totalReviews > 0 ? getFlipkartRatingStyle(averageRating) : "bg-stone-500 text-white"}
+                    ${
+                      totalReviews > 0
+                        ? getFlipkartRatingStyle(averageRating)
+                        : "bg-stone-500 text-white"
+                    }
                   `}
                 >
-                  <span>{totalReviews > 0 ? averageRating.toFixed(1) : "0.0"}</span>
+                  <span>
+                    {totalReviews > 0 ? averageRating.toFixed(1) : "0.0"}
+                  </span>
                   <Star size={20} fill="white" className="text-white" />
                 </div>
               </div>
 
               <div className="mt-3 text-sm font-black text-[var(--color-text-primary)]">
-                {totalReviews > 0 ? `${getRatingSentiment(averageRating)} Taste` : "No Ratings Yet"}
+                {totalReviews > 0
+                  ? `${getRatingSentiment(averageRating)} Taste`
+                  : "No Ratings Yet"}
               </div>
 
               <p className="mt-1 text-xs font-bold text-[var(--color-text-secondary)]">
                 {totalReviews > 0
-                  ? `${totalReviews.toLocaleString("en-IN")} Ratings & ${totalReviews.toLocaleString("en-IN")} Reviews`
+                  ? `${totalReviews.toLocaleString(
+                      "en-IN"
+                    )} Ratings & ${totalReviews.toLocaleString(
+                      "en-IN"
+                    )} Reviews`
                   : "Be the first to review"}
               </p>
 
@@ -1536,13 +1375,22 @@ export default function ProductDetailsClient({
                 { star: 2, color: "bg-[#ff9800]" },
                 { star: 1, color: "bg-[#f44336]" },
               ].map(({ star, color }) => {
-                const count = ratingDistribution[star as keyof typeof ratingDistribution] || 0;
-                const percentage = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+                const count =
+                  ratingDistribution[star as keyof typeof ratingDistribution] ||
+                  0;
+                const percentage =
+                  totalReviews > 0
+                    ? Math.round((count / totalReviews) * 100)
+                    : 0;
 
                 return (
                   <div key={star} className="flex items-center gap-3 text-xs">
                     <span className="flex w-9 items-center justify-end gap-1 font-bold text-[var(--color-text-primary)]">
-                      {star} <Star size={11} className="fill-stone-400 text-stone-400" />
+                      {star}{" "}
+                      <Star
+                        size={11}
+                        className="fill-stone-400 text-stone-400"
+                      />
                     </span>
 
                     <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-stone-200">
@@ -1570,7 +1418,9 @@ export default function ProductDetailsClient({
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
                 <div>
                   <h3 className="text-base font-black text-[var(--color-text-primary)]">
-                    {editingReviewId ? "Edit Your Review" : "Write a Customer Review"}
+                    {editingReviewId
+                      ? "Edit Your Review"
+                      : "Write a Customer Review"}
                   </h3>
                   <p className="text-xs text-[var(--color-text-muted)]">
                     Share your experience and thoughts on {product.name}
@@ -1668,7 +1518,9 @@ export default function ProductDetailsClient({
                   </button>
                   <button
                     type="submit"
-                    disabled={isCreatingReview || isUpdatingReview || !comment.trim()}
+                    disabled={
+                      isCreatingReview || isUpdatingReview || !comment.trim()
+                    }
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-2.5 text-xs font-black text-white shadow transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                   >
                     {isCreatingReview || isUpdatingReview ? (
@@ -1692,13 +1544,17 @@ export default function ProductDetailsClient({
           <div className="mt-8 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
-                Customer Reviews ({allReviews.length}{totalReviews > allReviews.length ? ` of ${totalReviews}` : ""})
+                Customer Reviews ({allReviews.length}
+                {totalReviews > allReviews.length ? ` of ${totalReviews}` : ""})
               </h3>
             </div>
 
             {isReviewsLoading && allReviews.length === 0 ? (
               <div className="flex items-center justify-center py-12 text-sm text-[var(--color-text-muted)] gap-2">
-                <Loader2 size={18} className="animate-spin text-[var(--color-primary)]" />
+                <Loader2
+                  size={18}
+                  className="animate-spin text-[var(--color-primary)]"
+                />
                 Loading customer reviews...
               </div>
             ) : allReviews.length === 0 ? (
@@ -1710,7 +1566,8 @@ export default function ProductDetailsClient({
                   No Reviews Yet
                 </h4>
                 <p className="mt-1 max-w-sm text-xs text-[var(--color-text-muted)]">
-                  Be the first to share your thoughts on {product.name}! Your feedback helps other guests make great choices.
+                  Be the first to share your thoughts on {product.name}! Your
+                  feedback helps other guests make great choices.
                 </p>
                 {!isWritingReview && (
                   <button
@@ -1726,7 +1583,8 @@ export default function ProductDetailsClient({
             ) : (
               <div className="grid grid-cols-1 gap-4">
                 {allReviews.map((rev) => {
-                  const isOwnReview = user && Number(rev.user_id) === Number(user.id);
+                  const isOwnReview =
+                    user && Number(rev.user_id) === Number(user.id);
                   const isConfirmingDelete = deletingReviewId === rev.id;
 
                   return (
@@ -1752,12 +1610,19 @@ export default function ProductDetailsClient({
                             `}
                           >
                             <span>{rev.rating}</span>
-                            <Star size={10} fill="white" className="text-white" />
+                            <Star
+                              size={10}
+                              fill="white"
+                              className="text-white"
+                            />
                           </div>
 
                           {/* Headline / Title */}
                           <h4 className="text-sm font-black text-[var(--color-text-primary)]">
-                            {rev.title || (rev.rating >= 4 ? "Delicious & Fresh" : "Customer Review")}
+                            {rev.title ||
+                              (rev.rating >= 4
+                                ? "Delicious & Fresh"
+                                : "Customer Review")}
                           </h4>
 
                           {isOwnReview && (
@@ -1796,7 +1661,9 @@ export default function ProductDetailsClient({
                         <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl bg-red-50 p-3 text-xs border border-red-200">
                           <div className="flex items-center gap-2 text-red-700 font-semibold">
                             <AlertCircle size={15} />
-                            <span>Are you sure you want to delete your review?</span>
+                            <span>
+                              Are you sure you want to delete your review?
+                            </span>
                           </div>
                           <div className="flex items-center gap-2 self-end sm:self-auto">
                             <button
@@ -1835,7 +1702,10 @@ export default function ProductDetailsClient({
                         </span>
 
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700">
-                          <CheckCircle2 size={12} className="text-emerald-600" />
+                          <CheckCircle2
+                            size={12}
+                            className="text-emerald-600"
+                          />
                           <span>Certified Buyer</span>
                         </span>
 
@@ -1864,7 +1734,6 @@ export default function ProductDetailsClient({
               </div>
             )}
           </div>
-
         </div>
       </section>
 
@@ -1873,7 +1742,6 @@ export default function ProductDetailsClient({
       ========================================================= */}
 
       <section className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
-
         <div
           className="
             relative
@@ -1887,13 +1755,10 @@ export default function ProductDetailsClient({
             md:py-10
           "
         >
-
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/5" />
 
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
             <div>
-
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">
                 Still hungry?
               </p>
@@ -1905,7 +1770,6 @@ export default function ProductDetailsClient({
               <p className="mt-2 text-xs text-white/60">
                 Discover more favorites from our menu.
               </p>
-
             </div>
 
             <Link
@@ -1930,16 +1794,11 @@ export default function ProductDetailsClient({
               "
             >
               Explore Menu
-
               <ArrowRight size={16} />
             </Link>
-
           </div>
-
         </div>
-
       </section>
-
     </main>
   );
 }

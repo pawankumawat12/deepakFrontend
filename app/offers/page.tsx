@@ -29,7 +29,12 @@ export default function OffersPage() {
     if (!offers || offers.length === 0) return [];
     if (activeFilter === "All") return offers;
     if (activeFilter === "Percentage Deals") {
-      return offers.filter((o) => o.type === "PERCENTAGE" || o.type === "PRODUCT" || o.type === "CATEGORY");
+      return offers.filter(
+        (o) =>
+          o.type === "PERCENTAGE" ||
+          o.type === "PRODUCT" ||
+          o.type === "CATEGORY"
+      );
     }
     if (activeFilter === "Flat Discounts") {
       return offers.filter((o) => o.type === "FLAT");
@@ -48,7 +53,11 @@ export default function OffersPage() {
   };
 
   const formatDiscountPill = (offer: OfferItem) => {
-    if (offer.type === "PERCENTAGE" || offer.type === "PRODUCT" || offer.type === "CATEGORY") {
+    if (
+      offer.type === "PERCENTAGE" ||
+      offer.type === "PRODUCT" ||
+      offer.type === "CATEGORY"
+    ) {
       return `${offer.discount_value}% OFF`;
     }
     if (offer.type === "FLAT") {
@@ -73,14 +82,11 @@ export default function OffersPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
-      {/* =========================================================
-          HERO
-      ========================================================= */}
       <section className="relative overflow-hidden bg-[var(--color-primary)]">
         <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10" />
         <div className="absolute -bottom-32 left-10 h-80 w-80 rounded-full bg-black/5" />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 md:px-8 md:py-16 mt-[60px]">
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 md:px-8 md:py-16 ">
           <Link
             href="/"
             className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur transition hover:bg-white/20"
@@ -98,11 +104,14 @@ export default function OffersPage() {
             <h1 className="text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
               Big Flavors.
               <br />
-              <span className="text-[var(--color-secondary)]">Better Prices.</span>
+              <span className="text-[var(--color-secondary)]">
+                Better Prices.
+              </span>
             </h1>
 
             <p className="mt-5 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
-              Hungry for a great deal? Explore our latest combos, family offers, and delicious discounts made for your cravings.
+              Hungry for a great deal? Explore our latest combos, family offers,
+              and delicious discounts made for your cravings.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3">
@@ -129,10 +138,22 @@ export default function OffersPage() {
       <section className="border-b border-[var(--color-border)] bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-2 md:grid-cols-4">
           {[
-            { icon: Zap, title: "Instant Auto-Apply", text: "Best savings on checkout" },
+            {
+              icon: Zap,
+              title: "Instant Auto-Apply",
+              text: "Best savings on checkout",
+            },
             { icon: Tag, title: "Great Value", text: "More food, less price" },
-            { icon: CheckCircle2, title: "Fresh Food", text: "Prepared with care" },
-            { icon: Clock3, title: "Limited Time", text: "Grab before it ends" },
+            {
+              icon: CheckCircle2,
+              title: "Fresh Food",
+              text: "Prepared with care",
+            },
+            {
+              icon: Clock3,
+              title: "Limited Time",
+              text: "Grab before it ends",
+            },
           ].map((item) => {
             const Icon = item.icon;
             return (
@@ -175,7 +196,8 @@ export default function OffersPage() {
               All Active Promo Offers
             </h2>
             <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-              Pick your favorite deal, copy the promo code, or enjoy automatic discounts during checkout.
+              Pick your favorite deal, copy the promo code, or enjoy automatic
+              discounts during checkout.
             </p>
           </div>
         </div>
@@ -191,10 +213,9 @@ export default function OffersPage() {
                 onClick={() => setActiveFilter(filter)}
                 className={`
                   shrink-0 rounded-full px-5 py-2.5 text-xs font-bold transition
-                  ${
-                    active
-                      ? "bg-[var(--color-primary)] text-white shadow-md"
-                      : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  ${active
+                    ? "bg-[var(--color-primary)] text-white shadow-md"
+                    : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                   }
                 `}
               >
@@ -208,7 +229,10 @@ export default function OffersPage() {
         {isLoading ? (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse rounded-3xl border border-gray-100 bg-white p-4 h-96" />
+              <div
+                key={i}
+                className="animate-pulse rounded-3xl border border-gray-100 bg-white p-4 h-96"
+              />
             ))}
           </div>
         ) : (
@@ -231,7 +255,8 @@ export default function OffersPage() {
 
                     {/* Badge */}
                     <div className="absolute left-4 top-4 rounded-full bg-[var(--color-secondary)] px-3 py-1.5 text-[10px] font-black text-white shadow-lg">
-                      {offer.badge || (offer.auto_apply ? "AUTO APPLIED" : "SPECIAL DEAL")}
+                      {offer.badge ||
+                        (offer.auto_apply ? "AUTO APPLIED" : "SPECIAL DEAL")}
                     </div>
 
                     {/* Discount Circle */}
@@ -255,20 +280,26 @@ export default function OffersPage() {
                         {offer.min_order_amount > 0 && (
                           <p className="mt-1 text-xs font-semibold text-[var(--color-primary)]">
                             Min. Order: ₹{offer.min_order_amount}
-                            {offer.max_discount_amount ? ` (Up to ₹${offer.max_discount_amount})` : ""}
+                            {offer.max_discount_amount
+                              ? ` (Up to ₹${offer.max_discount_amount})`
+                              : ""}
                           </p>
                         )}
                       </div>
                     </div>
 
                     <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">
-                      {offer.description || `Use promo code ${offer.code} at checkout to claim this special offer.`}
+                      {offer.description ||
+                        `Use promo code ${offer.code} at checkout to claim this special offer.`}
                     </p>
 
                     {/* Coupon Box */}
                     <div className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-[var(--color-primary)]/40 bg-[var(--color-primary-50)]/50 p-3">
                       <div className="flex items-center gap-2">
-                        <Tag size={16} className="text-[var(--color-primary)]" />
+                        <Tag
+                          size={16}
+                          className="text-[var(--color-primary)]"
+                        />
                         <span className="font-mono text-sm font-black uppercase tracking-wider text-[var(--color-text-primary)]">
                           {offer.code}
                         </span>
@@ -341,7 +372,8 @@ export default function OffersPage() {
               Still hungry?
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/80">
-              Check out the complete SFC Cafe menu and find your next favorite meal.
+              Check out the complete SFC Cafe menu and find your next favorite
+              meal.
             </p>
             <Link
               href="/menu"

@@ -119,7 +119,7 @@ export default function CustomerReviews() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[var(--bg-body)] px-4 py-14 md:px-8 md:py-20">
+    <section className="relative overflow-hidden bg-[var(--bg-body)] px-4 py-14 md:px-8 md:py-10">
 
       {/* =====================================================
           BACKGROUND DECORATION

@@ -177,7 +177,7 @@ export default function PopularProducts() {
   };
 
   return (
-    <section className="bg-[var(--bg-body)] px-4 py-12 md:px-8 md:py-16">
+    <section className="bg-[var(--bg-body)] px-4  md:px-8 md:py-10">
       <div className="mx-auto max-w-7xl">
 
         <div className="mb-8 flex items-end justify-between">
@@ -256,6 +256,7 @@ export default function PopularProducts() {
               hover:bg-[var(--color-primary-dark)]
               sm:inline-flex
             "
+            style={{color:"white"}}
           >
             View All
 
@@ -310,7 +311,7 @@ export default function PopularProducts() {
                 className={`
                   group
                   cursor-pointer
-                  ${outOfStock ? "opacity-55 grayscale" : ""}
+               
                   overflow-hidden
                   rounded-2xl
                   border
@@ -380,14 +381,14 @@ export default function PopularProducts() {
 
                     Best Seller
                   </div>
-
+{/* 
                   {outOfStock && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
                       <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[var(--color-text-primary)]">
                         Out of stock
                       </span>
                     </div>
-                  )}
+                  )} */}
 
                   {/* Wishlist Button */}
                   <button
@@ -714,6 +715,7 @@ export default function PopularProducts() {
               transition
               hover:bg-[var(--color-primary-dark)]
             "
+           
           >
             View Full Menu
             <ArrowRight size={16} />

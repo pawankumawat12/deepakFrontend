@@ -53,11 +53,7 @@ const features = [
 
 export default function WhyChooseUs() {
   return (
-    <section className="relative overflow-hidden bg-[var(--color-cream)] px-4 py-14 md:px-8 md:py-20">
-      
-      {/* =====================================================
-          DECORATIVE BACKGROUND
-      ===================================================== */}
+    <section className="relative overflow-hidden bg-[var(--color-cream)]  md:px-8 md:py-10">
 
       <div
         className="
@@ -421,17 +417,17 @@ export default function WhyChooseUs() {
               py-3.5
               text-sm
               font-bold
-              text-white
               shadow-[0_10px_25px_rgba(79,125,22,0.20)]
               transition-all
               duration-300
               hover:-translate-y-1
               hover:bg-[var(--color-primary-dark)]
             "
+            style={{color:"white"}}
           >
             Taste The Difference
 
-            <ArrowRight size={17} />
+            <ArrowRight size={17} className="text-white"/>
           </Link>
         </div>
       </div>

@@ -50,7 +50,6 @@ export default function LoginModal({
 }: LoginModalProps) {
   const [step, setStep] = useState<Step>("welcome");
   const [rememberMe, setRememberMe] = useState(true);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
   const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
@@ -86,10 +85,7 @@ export default function LoginModal({
   }, [resendTimer]);
 
   const onSubmit = async (data: { email: string; password: string }) => {
-    if (!acceptedTerms) {
-      setError("Please accept the Terms & Conditions to continue.");
-      return;
-    }
+   
 
     const cleanEmail = data.email.trim().toLowerCase();
 
@@ -99,6 +95,7 @@ export default function LoginModal({
         email: cleanEmail,
         password: data.password,
       }).unwrap();
+    localStorage.setItem("accessToken", res?.user?.token);
 
       dispatch(setCredentials(await getMe().unwrap()));
       reset();
@@ -283,9 +280,9 @@ export default function LoginModal({
 
             <div>
               <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
-                {step === "welcome" && "Welcome to SFC Cafe"}
-                {step === "phone" && "Continue with Phone"}
-                {step === "email" && "Sign In with Email"}
+                {step === "welcome" && "Welcome To SFC Cafe"}
+                {step === "phone" && "Continue With Phone"}
+                {step === "email" && "Sign In With Email"}
                 {step === "verifyOtp" && "Verify Your Email"}
               </h2>
 
@@ -594,55 +591,11 @@ export default function LoginModal({
                 />
 
                 <span className="text-sm text-[var(--color-text-secondary)]">
-                  Remember me on this device
+                  Remember me 
                 </span>
               </label>
 
-              {/* TERMS */}
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-primary)]"
-                />
-
-                <span className="text-xs leading-5 text-[var(--color-text-secondary)]">
-                  I agree to the{" "}
-                  <Link
-                    href="/terms"
-                    onClick={onClose}
-                    className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
-                  >
-                    Terms & Conditions
-                  </Link>
-                  ,{" "}
-                  <Link
-                    href="/privacy-policy"
-                    onClick={onClose}
-                    className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
-                  >
-                    Privacy Policy
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/refund-policy"
-                    onClick={onClose}
-                    className="font-semibold text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
-                  >
-                    Refund Policy
-                  </Link>
-                  .
-                </span>
-              </label>
-
-              {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-                  {error}
-                </div>
-              )}
-
-              <button
+             <button
                 type="submit"
                 disabled={isLoading}
                 className="

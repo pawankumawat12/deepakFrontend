@@ -415,7 +415,7 @@ export default function CartClient() {
             </div>
 
             <p className="mt-6 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
-              Flipkart-Style Cart
+              Cart
             </p>
 
             <h1 className="mt-2 text-2xl font-black tracking-tight text-[var(--color-text-primary)] sm:text-3xl">
@@ -629,9 +629,8 @@ export default function CartClient() {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
-      {/* HEADER BAR */}
-      <section className="bg-[var(--color-primary-dark)]">
-        <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-9">
+      <section className="">
+        <div className="mx-auto max-w-7xl px-4 py-6 ">
           <Link
             href="/menu"
             className="
@@ -644,33 +643,12 @@ export default function CartClient() {
               transition
               hover:text-white
             "
+
           >
             <ArrowLeft size={14} />
             Back to Menu
           </Link>
 
-          <div className="mt-4 flex items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <ShoppingBag size={16} className="text-[var(--color-primary-light)]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
-                  Flipkart-Style Cart
-                </span>
-              </div>
-              <h1 className="mt-1.5 text-2xl font-black text-white sm:text-3xl md:text-4xl">
-                My Cart ({summary.totalItems})
-              </h1>
-            </div>
-
-            <div className="hidden rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-right backdrop-blur-md sm:block">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-white/50">
-                Cart Total
-              </p>
-              <p className="mt-0.5 text-xl font-black text-white">
-                ₹{formatRupee(summary.grandTotal)}
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -679,215 +657,26 @@ export default function CartClient() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_390px] lg:items-start">
           {/* ITEMS & ADDRESS SECTION */}
           <section>
-            {/* =====================================================
-                DELIVERY ADDRESS SELECTION SECTION (FLIPKART STYLE)
-            ===================================================== */}
-            <div className="mb-6 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white p-5 shadow-sm sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
-                    <MapPin size={18} />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-black text-[var(--color-text-primary)] sm:text-base">
-                      Delivery Address
-                    </h2>
-                    <p className="text-[11px] text-[var(--color-text-muted)]">
-                      {addresses.length === 0
-                        ? "Please add an address where you want your food delivered"
-                        : `${addresses.length} saved address${addresses.length === 1 ? "" : "es"} available`}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setAddressModalOpen(true)}
-                  className="
-                    inline-flex
-                    items-center
-                    gap-1.5
-                    rounded-xl
-                    bg-[var(--color-primary-50)]
-                    px-3.5
-                    py-2
-                    text-xs
-                    font-bold
-                    text-[var(--color-primary)]
-                    transition
-                    hover:bg-[var(--color-primary)]
-                    hover:text-white
-                  "
-                >
-                  <Plus size={15} />
-                  <span>Add New Address</span>
-                </button>
-              </div>
-
-              {/* ADDRESSES LIST */}
-              {isAddressesLoading ? (
-                <div className="flex items-center justify-center py-6 text-xs text-[var(--color-text-muted)]">
-                  <LoaderCircle size={16} className="mr-2 animate-spin text-[var(--color-primary)]" />
-                  Loading saved addresses...
-                </div>
-              ) : addresses.length === 0 ? (
-                <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 p-5 text-center">
-                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                    <MapPin size={22} />
-                  </div>
-                  <h3 className="mt-2.5 text-xs font-black text-amber-900 sm:text-sm">
-                    No Delivery Address Selected
-                  </h3>
-                  <p className="mx-auto mt-1 max-w-sm text-[11px] leading-5 text-amber-800">
-                    You must add a delivery address before placing your order.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setAddressModalOpen(true)}
-                    className="
-                      mt-3.5
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      rounded-xl
-                      bg-amber-600
-                      px-4
-                      py-2.5
-                      text-xs
-                      font-black
-                      text-white
-                      shadow-sm
-                      transition
-                      hover:bg-amber-700
-                    "
-                  >
-                    <Plus size={15} />
-                    Add Address Now
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {addresses.map((addr) => {
-                    const isSelected = selectedAddressId === addr.id;
-                    return (
-                      <div
-                        key={addr.id}
-                        onClick={() => setSelectedAddressId(addr.id)}
-                        className={`
-                          group
-                          relative
-                          cursor-pointer
-                          rounded-2xl
-                          border-2
-                          p-4
-                          transition-all
-                          duration-200
-                          ${
-                            isSelected
-                              ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 shadow-sm"
-                              : "border-[var(--color-border)] bg-white hover:border-stone-300"
-                          }
-                        `}
-                      >
-                        {/* Header: Label & Radio */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`
-                                inline-flex
-                                items-center
-                                gap-1
-                                rounded-lg
-                                px-2
-                                py-0.5
-                                text-[10px]
-                                font-black
-                                uppercase
-                                tracking-wider
-                                ${
-                                  addr.label === "Work"
-                                    ? "bg-blue-50 text-blue-700"
-                                    : addr.label === "Home"
-                                    ? "bg-green-50 text-green-700"
-                                    : "bg-purple-50 text-purple-700"
-                                }
-                              `}
-                            >
-                              {addr.label === "Work" ? (
-                                <Briefcase size={11} />
-                              ) : addr.label === "Home" ? (
-                                <Home size={11} />
-                              ) : (
-                                <Building size={11} />
-                              )}
-                              {addr.label}
-                            </span>
-                            {addr.is_default && (
-                              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold text-stone-600">
-                                Default
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={(e) => handleDeleteAddress(addr.id, e)}
-                              aria-label="Delete address"
-                              className="text-stone-400 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-
-                            <div
-                              className={`
-                                flex
-                                h-5
-                                w-5
-                                items-center
-                                justify-center
-                                rounded-full
-                                border-2
-                                transition
-                                ${
-                                  isSelected
-                                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                                    : "border-stone-300 bg-white"
-                                }
-                              `}
-                            >
-                              {isSelected && <Check size={11} strokeWidth={3.5} />}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Receiver details */}
-                        <div className="mt-2.5">
-                          <p className="text-xs font-black text-[var(--color-text-primary)]">
-                            {addr.receiver_name}
-                          </p>
-                          <p className="text-[11px] font-bold text-[var(--color-text-secondary)]">
-                            {addr.phone_number}
-                          </p>
-                        </div>
-
-                        {/* Full address string */}
-                        <p className="mt-1 text-[11px] leading-4.5 text-[var(--color-text-muted)] line-clamp-2">
-                          {addr.house_number}
-                          {addr.building_name ? `, ${addr.building_name}` : ""}
-                          {addr.landmark ? `, Near ${addr.landmark}` : ""}
-                          {`, ${addr.formatted_address || `${addr.city}, ${addr.state} - ${addr.pincode}`}`}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+           
 
             {/* CART ITEMS HEADER */}
-            <div className="mb-4 flex items-center justify-between">
-              <div>
+            <div
+            
+            
+            className="
+
+            mb-4 flex items-center justify-between
+                      overflow-hidden
+                      rounded-2xl
+                      border
+                      border-[var(--color-border)]
+                      bg-white
+                      p-4
+                      shadow-sm
+                      transition-all
+                      duration-200
+                      hover:shadow-md">
+              <div >
                 <h2 className="text-base font-black text-[var(--color-text-primary)] sm:text-lg">
                   Cart Items ({items.length})
                 </h2>
@@ -911,7 +700,7 @@ export default function CartClient() {
                   font-bold
                   text-[var(--color-error)]
                   transition
-                  hover:bg-red-50
+                  hover:bg-red-100
                   disabled:opacity-50
                 "
               >
@@ -1129,7 +918,7 @@ export default function CartClient() {
             </div>
 
             {/* BENEFITS CARD */}
-            <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-primary-50)] p-4">
+            <div className="my-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-primary-50)] p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--color-primary)] shadow-sm">
                   <Sparkles size={18} />
@@ -1144,6 +933,188 @@ export default function CartClient() {
                 </div>
               </div>
             </div>
+
+              {/* //addresses */}
+            <div className="mb-6 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                    <MapPin size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-[var(--color-text-primary)] sm:text-base">
+                      Delivery Address
+                    </h2>
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      {addresses.length === 0
+                        ? "Please add an address where you want your food delivered"
+                        : `${addresses.length} saved address${addresses.length === 1 ? "" : "es"} available`}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAddressModalOpen(true)}
+                  className="
+                    inline-flex
+                    items-center
+                    gap-1.5
+                    rounded-xl
+                    bg-[var(--color-primary-50)]
+                    px-3.5
+                    py-2
+                    text-xs
+                    font-bold
+                    text-[var(--color-primary)]
+                    transition
+                    hover:bg-[var(--color-primary)]
+                    hover:text-white
+                  "
+                >
+                  <Plus size={15} />
+                  <span>Add New Address</span>
+                </button>
+              </div>
+
+              {/* ADDRESSES LIST */}
+              {isAddressesLoading ? (
+                <div className="flex items-center justify-center py-6 text-xs text-[var(--color-text-muted)]">
+                  <LoaderCircle size={16} className="mr-2 animate-spin text-[var(--color-primary)]" />
+                  Loading saved addresses...
+                </div>
+              ) : addresses.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 p-5 text-center">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                    <MapPin size={22} />
+                  </div>
+                  <h3 className="mt-2.5 text-xs font-black text-amber-900 sm:text-sm">
+                    Address Not Found
+                  </h3>
+                  <p className="mx-auto mt-1 max-w-sm text-[11px] leading-5 text-amber-800">
+                    You must add a delivery address before placing your order.
+                  </p>
+                 </div>
+              ) : (
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {addresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr.id;
+                    return (
+                      <div
+                        key={addr.id}
+                        onClick={() => setSelectedAddressId(addr.id)}
+                        className={`
+                          group
+                          relative
+                          cursor-pointer
+                          rounded-2xl
+                          border-2
+                          p-4
+                          transition-all
+                          duration-200
+                          ${
+                            isSelected
+                              ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 shadow-sm"
+                              : "border-[var(--color-border)] bg-white hover:border-stone-300"
+                          }
+                        `}
+                      >
+                        {/* Header: Label & Radio */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`
+                                inline-flex
+                                items-center
+                                gap-1
+                                rounded-lg
+                                px-2
+                                py-0.5
+                                text-[10px]
+                                font-black
+                                uppercase
+                                tracking-wider
+                                ${
+                                  addr.label === "Work"
+                                    ? "bg-blue-50 text-blue-700"
+                                    : addr.label === "Home"
+                                    ? "bg-green-50 text-green-700"
+                                    : "bg-purple-50 text-purple-700"
+                                }
+                              `}
+                            >
+                              {addr.label === "Work" ? (
+                                <Briefcase size={11} />
+                              ) : addr.label === "Home" ? (
+                                <Home size={11} />
+                              ) : (
+                                <Building size={11} />
+                              )}
+                              {addr.label}
+                            </span>
+                            {addr.is_default && (
+                              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold text-stone-600">
+                                Default
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteAddress(addr.id, e)}
+                              aria-label="Delete address"
+                              className="text-stone-400 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+
+                            <div
+                              className={`
+                                flex
+                                h-5
+                                w-5
+                                items-center
+                                justify-center
+                                rounded-full
+                                border-2
+                                transition
+                                ${
+                                  isSelected
+                                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                    : "border-stone-300 bg-white"
+                                }
+                              `}
+                            >
+                              {isSelected && <Check size={11} strokeWidth={3.5} />}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Receiver details */}
+                        <div className="mt-2.5">
+                          <p className="text-xs font-black text-[var(--color-text-primary)]">
+                            {addr.receiver_name}
+                          </p>
+                          <p className="text-[11px] font-bold text-[var(--color-text-secondary)]">
+                            {addr.phone_number}
+                          </p>
+                        </div>
+
+                        {/* Full address string */}
+                        <p className="mt-1 text-[11px] leading-4.5 text-[var(--color-text-muted)] line-clamp-2">
+                          {addr.house_number}
+                          {addr.building_name ? `, ${addr.building_name}` : ""}
+                          {addr.landmark ? `, Near ${addr.landmark}` : ""}
+                          {`, ${addr.formatted_address || `${addr.city}, ${addr.state} - ${addr.pincode}`}`}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
 
             {/* 3. PAYMENT METHOD (COD ONLY) */}
             <div className="rounded-3xl border border-[var(--color-border)] bg-white p-5 sm:p-6 shadow-sm mt-5">
@@ -1616,8 +1587,6 @@ export default function CartClient() {
                       ? `Min Order ₹${summary.minimumOrderAmount}`
                       : summary.isOutOfRange
                       ? "Out of Delivery Range"
-                      : !selectedAddress
-                      ? "Select Delivery Address"
                       : "Place Order (Cash on Delivery)"}
                   </span>
                   {isPlacingOrder ? (

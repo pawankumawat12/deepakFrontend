@@ -79,7 +79,7 @@ export default function SpecialOffers() {
   const offer = finalOffers[currentActive] || finalOffers[0];
 
   return (
-    <section className="bg-[var(--bg-body)] px-4 py-12 md:px-8 md:py-16">
+    <section className="bg-[var(--bg-body)] px-4 md:px-8 md:py-10">
       <div className="mx-auto max-w-7xl">
         {/* =====================================================
             HEADER

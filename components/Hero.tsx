@@ -125,7 +125,7 @@ export default function Hero() {
     <main className="w-full overflow-hidden bg-[var(--bg-body)]">
 
 
-      <section className="relative min-h-[640px] md:min-h-[700px] lg:min-h-[760px] overflow-hidden bg-stone-900 flex items-center">
+      <section className="relative min-h-[400px] md:min-h-[600px] lg:min-h-[650px] overflow-hidden bg-stone-900 flex items-center">
 
         {/* Full Background Slider Image */}
         <div className="absolute inset-0 z-0 overflow-hidden">
@@ -162,11 +162,7 @@ export default function Hero() {
             lg:px-10
           "
         >
-          {/* =================================================
-              LEFT CONTENT
-          ================================================= */}
           <div className="relative z-20 w-full max-w-xl pt-4 lg:w-[58%] lg:pt-0">
-            {/* Small Tag */}
             <div
               className="
                 mb-5
@@ -270,11 +266,13 @@ export default function Hero() {
                   hover:-translate-y-1
                   hover:bg-[var(--color-primary-dark)]
                 "
+                style={{color:"white"}}
               >
                 {currentSlide.cta}
                 <ArrowRight
                   size={18}
                   className="transition-transform duration-300 group-hover:translate-x-1"
+                  style={{color:"white"}}
                 />
               </Link>
 
@@ -300,6 +298,7 @@ export default function Hero() {
                   hover:bg-white
                   hover:text-[var(--color-primary)]
                 "
+                style={{color: "white"}}
               >
                 {currentSlide.secondaryCta}
               </Link>

@@ -408,7 +408,7 @@ export default function Footer() {
                   Mobile App Experience
                 </p>
                 <h3 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
-                  Install SFC Cafe App
+                  Install SFCInstall on supported browser Cafe App
                 </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
                   Add SFC Cafe to your home screen for faster ordering, quick
