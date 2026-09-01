@@ -18,6 +18,7 @@ import {
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
+import Pagination from "./Pagination";
 import {
   useGetWishlistQuery,
   useRemoveWishlistItemMutation,
@@ -38,14 +39,19 @@ export default function FavoritesPage() {
     (state: { auth: { user: any | null } }) => state.auth.user
   );
 
+  const [page, setPage] = useState(1);
+
   const {
     data: wishlistResponse,
     isLoading,
     isFetching,
     error,
-  } = useGetWishlistQuery(undefined, {
-    skip: !user,
-  });
+  } = useGetWishlistQuery(
+    { page, limit: 12 },
+    {
+      skip: !user,
+    }
+  );
 
   const { data: cartResponse } = useGetCartQuery(undefined, {
     skip: !user,
@@ -686,6 +692,15 @@ export default function FavoritesPage() {
             })}
           </div>
         )}
+
+        <Pagination
+          page={wishlistResponse?.pagination?.page || page}
+          totalPages={wishlistResponse?.pagination?.totalPages || 1}
+          total={wishlistResponse?.pagination?.total || 0}
+          limit={12}
+          onPageChange={(p) => setPage(p)}
+          itemLabel="saved items"
+        />
       </section>
     </main>
   );

@@ -35,12 +35,24 @@ export type WishlistResponse = {
   message: string;
   data: WishlistItem[];
   inWishlist?: boolean;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 export const wishlistApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getWishlist: build.query<WishlistResponse, void>({
-      query: () => "/wishlist",
+    getWishlist: build.query<
+      WishlistResponse,
+      { page?: number; limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/wishlist",
+        params: params || {},
+      }),
       transformResponse: (response: WishlistResponse) => ({
         ...response,
         data: (response.data || []).map((item) => {

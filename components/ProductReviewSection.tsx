@@ -63,6 +63,7 @@ export default function ProductReviewSection({
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [formError, setFormError] = useState("");
+  const [expandedReviews, setExpandedReviews] = useState<Record<number, boolean>>({});
 
   const reviews = data?.data?.reviews || [];
   const summary = data?.data?.summary || {
@@ -390,13 +391,50 @@ export default function ProductReviewSection({
                 {/* REVIEW BODY */}
                 <div className="mt-3.5">
                   {rev.title && (
-                    <h5 className="font-black text-[var(--color-text-primary)]">
+                    <h5
+                      className="font-black text-[var(--color-text-primary)] break-words"
+                      title={rev.title}
+                    >
                       {rev.title}
                     </h5>
                   )}
-                  <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                    {rev.comment}
-                  </p>
+                  <div className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)] break-words">
+                    {rev.comment.length > 250 && !expandedReviews[rev.id] ? (
+                      <>
+                        <span>{rev.comment.slice(0, 250)}...</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedReviews((prev) => ({
+                              ...prev,
+                              [rev.id]: true,
+                            }))
+                          }
+                          className="ml-1.5 text-xs font-bold text-[#4f7d16] hover:underline"
+                        >
+                          Read more
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span>{rev.comment}</span>
+                        {rev.comment.length > 250 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedReviews((prev) => ({
+                                ...prev,
+                                [rev.id]: false,
+                              }))
+                            }
+                            className="ml-1.5 text-xs font-bold text-[#4f7d16] hover:underline"
+                          >
+                            Show less
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             );

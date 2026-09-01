@@ -32,6 +32,7 @@ import {
   Gift,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -48,8 +49,6 @@ import {
 import { useCreateOrderMutation } from "../redux/services/orderApi";
 import {
   useGetAddressesQuery,
-  useCreateAddressMutation,
-  useDeleteAddressMutation,
   Address,
 } from "../redux/services/addressApi";
 import {
@@ -59,6 +58,8 @@ import {
 } from "../redux/services/offerApi";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
+import AddressModal from "./AddressModal";
+import DeleteAddressDialog from "./DeleteAddressDialog";
 
 const API_ORIGIN = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"
@@ -82,24 +83,16 @@ export default function CartClient() {
   // Address State
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
-  const [addressForm, setAddressForm] = useState({
-    label: "Home",
-    receiver_name: "",
-    phone_number: "",
-    house_number: "",
-    building_name: "",
-    landmark: "",
-    formatted_address: "",
-    city: "Jaipur",
-    state: "Rajasthan",
-    pincode: "",
-    is_default: false,
-  });
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [deletingAddress, setDeletingAddress] = useState<Address | null>(null);
 
   // Dynamic Offers & Promo Code State
   const [appliedOfferCode, setAppliedOfferCode] = useState<string>("");
   const [couponInput, setCouponInput] = useState<string>("");
   const [showCoupons, setShowCoupons] = useState<boolean>(false);
+
+  // Clear Cart Confirmation Modal State
+  const [clearCartModalOpen, setClearCartModalOpen] = useState<boolean>(false);
 
   const { data: availableOffers = [] } = useGetOffersQuery();
   const [validateOffer, { isLoading: isValidatingOffer }] = useValidateOfferMutation();
@@ -124,9 +117,6 @@ export default function CartClient() {
   );
   const addresses: Address[] = addressResponse?.data || [];
 
-  const [createAddress, { isLoading: isSavingAddress }] = useCreateAddressMutation();
-  const [deleteAddress] = useDeleteAddressMutation();
-
   // Auto-select default or first address
   useEffect(() => {
     if (addresses.length > 0) {
@@ -138,17 +128,6 @@ export default function CartClient() {
       setSelectedAddressId(null);
     }
   }, [addresses, selectedAddressId]);
-
-  // Pre-populate address form with user details when opening modal
-  useEffect(() => {
-    if (user && addressModalOpen) {
-      setAddressForm((prev) => ({
-        ...prev,
-        receiver_name: prev.receiver_name || user.name || "",
-        phone_number: prev.phone_number || user.phone || "",
-      }));
-    }
-  }, [user, addressModalOpen]);
 
   const [updateCartItem] = useUpdateCartItemMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
@@ -226,91 +205,30 @@ export default function CartClient() {
     }
   };
 
-  const handleClearCart = async () => {
-    if (!window.confirm("Are you sure you want to clear your cart?")) return;
+  const handleConfirmClearCart = async () => {
     try {
       await clearCart().unwrap();
       toast.success("Cart cleared successfully");
+      setClearCartModalOpen(false);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to clear cart");
     }
   };
 
-  const handleSaveAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!addressForm.receiver_name.trim()) {
-      toast.error("Please enter receiver name");
-      return;
-    }
-    if (!addressForm.phone_number.trim() || addressForm.phone_number.trim().length < 10) {
-      toast.error("Please enter a valid 10-digit phone number");
-      return;
-    }
-    if (!addressForm.house_number.trim()) {
-      toast.error("Please enter house / flat / room number");
-      return;
-    }
-    if (!addressForm.formatted_address.trim()) {
-      toast.error("Please enter street, area or locality");
-      return;
-    }
-    if (!addressForm.pincode.trim()) {
-      toast.error("Please enter postal pincode");
-      return;
-    }
-
-    try {
-      const res = await createAddress({
-        label: addressForm.label,
-        receiver_name: addressForm.receiver_name.trim(),
-        phone_number: addressForm.phone_number.trim(),
-        house_number: addressForm.house_number.trim(),
-        building_name: addressForm.building_name.trim() || undefined,
-        landmark: addressForm.landmark.trim() || undefined,
-        formatted_address: addressForm.formatted_address.trim(),
-        city: addressForm.city.trim() || "Jaipur",
-        state: addressForm.state.trim() || "Rajasthan",
-        pincode: addressForm.pincode.trim(),
-        is_default: addressForm.is_default || addresses.length === 0,
-      }).unwrap();
-
-      const newAddrId = res?.data?.id;
-      if (newAddrId) {
-        setSelectedAddressId(newAddrId);
-      }
-      toast.success("Delivery address saved successfully! 📍");
-      setAddressModalOpen(false);
-      setAddressForm({
-        label: "Home",
-        receiver_name: user?.name || "",
-        phone_number: user?.phone || "",
-        house_number: "",
-        building_name: "",
-        landmark: "",
-        formatted_address: "",
-        city: "Jaipur",
-        state: "Rajasthan",
-        pincode: "",
-        is_default: false,
-      });
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to save address");
-    }
+  const handleOpenAddAddress = () => {
+    setEditingAddress(null);
+    setAddressModalOpen(true);
   };
 
-  const handleDeleteAddress = async (id: number, e: React.MouseEvent) => {
+  const handleOpenEditAddress = (addr: Address, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("Delete this delivery address?")) return;
-    try {
-      await deleteAddress(id).unwrap();
-      toast.success("Address removed");
-      if (selectedAddressId === id) {
-        const remaining = addresses.filter((a) => a.id !== id);
-        setSelectedAddressId(remaining.length > 0 ? remaining[0].id : null);
-      }
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to delete address");
-    }
+    setEditingAddress(addr);
+    setAddressModalOpen(true);
+  };
+
+  const handleOpenDeleteAddress = (addr: Address, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletingAddress(addr);
   };
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) || null;
@@ -688,8 +606,8 @@ export default function CartClient() {
 
               <button
                 type="button"
-                onClick={handleClearCart}
-                disabled={isClearing}
+                onClick={() => setClearCartModalOpen(true)}
+                disabled={isClearing || items.length === 0}
                 className="
                   flex
                   items-center
@@ -706,7 +624,7 @@ export default function CartClient() {
                 "
               >
                 <Trash2 size={13} />
-                {isClearing ? "Clearing..." : "Clear Cart"}
+                <span>Clear Cart</span>
               </button>
             </div>
 
@@ -956,7 +874,7 @@ export default function CartClient() {
 
                 <button
                   type="button"
-                  onClick={() => setAddressModalOpen(true)}
+                  onClick={handleOpenAddAddress}
                   className="
                     inline-flex
                     items-center
@@ -995,6 +913,14 @@ export default function CartClient() {
                   <p className="mx-auto mt-1 max-w-sm text-[11px] leading-5 text-amber-800">
                     You must add a delivery address before placing your order.
                   </p>
+                  <button
+                    type="button"
+                    onClick={handleOpenAddAddress}
+                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)]"
+                  >
+                    <Plus size={14} />
+                    Add Address Now
+                  </button>
                  </div>
               ) : (
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1020,7 +946,7 @@ export default function CartClient() {
                           }
                         `}
                       >
-                        {/* Header: Label & Radio */}
+                        {/* Header: Label & Actions & Radio */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <span
@@ -1060,18 +986,30 @@ export default function CartClient() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <button
                               type="button"
-                              onClick={(e) => handleDeleteAddress(addr.id, e)}
-                              aria-label="Delete address"
-                              className="text-stone-400 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                              onClick={(e) => handleOpenEditAddress(addr, e)}
+                              title="Edit address"
+                              aria-label="Edit address"
+                              className="flex h-7 w-7 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-500 opacity-80 transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary)] hover:opacity-100"
                             >
-                              <Trash2 size={13} />
+                              <Pencil size={12} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenDeleteAddress(addr, e)}
+                              title="Delete address"
+                              aria-label="Delete address"
+                              className="flex h-7 w-7 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-500 opacity-80 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 hover:opacity-100"
+                            >
+                              <Trash2 size={12} />
                             </button>
 
                             <div
                               className={`
+                                ml-1
                                 flex
                                 h-5
                                 w-5
@@ -1494,7 +1432,7 @@ export default function CartClient() {
                     {selectedAddress ? (
                       <button
                         type="button"
-                        onClick={() => setAddressModalOpen(true)}
+                        onClick={handleOpenAddAddress}
                         className="text-[11px] font-bold text-[var(--color-primary)] hover:underline"
                       >
                         + Add New
@@ -1526,7 +1464,7 @@ export default function CartClient() {
                       </p>
                       <button
                         type="button"
-                        onClick={() => setAddressModalOpen(true)}
+                        onClick={handleOpenAddAddress}
                         className="mt-2 inline-flex items-center gap-1 rounded-xl bg-[var(--color-primary)] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)]"
                       >
                         <Plus size={13} />
@@ -1654,257 +1592,87 @@ export default function CartClient() {
       </div>
 
       {/* =========================================================
-          ADD NEW ADDRESS MODAL
+          ADD / EDIT ADDRESS MODAL
       ========================================================= */}
-      {addressModalOpen && (
+      <AddressModal
+        open={addressModalOpen}
+        onClose={() => setAddressModalOpen(false)}
+        initialData={editingAddress}
+        defaultUserName={user?.name || ""}
+        defaultUserPhone={user?.phone || ""}
+        onSuccess={(saved) => {
+          setSelectedAddressId(saved.id);
+        }}
+      />
+
+      {/* =========================================================
+          DELETE ADDRESS CONFIRMATION DIALOG
+      ========================================================= */}
+      <DeleteAddressDialog
+        open={Boolean(deletingAddress)}
+        onClose={() => setDeletingAddress(null)}
+        address={deletingAddress}
+        onDeleted={(delId) => {
+          if (selectedAddressId === delId) {
+            const remaining = addresses.filter((a) => a.id !== delId);
+            setSelectedAddressId(remaining.length > 0 ? remaining[0].id : null);
+          }
+        }}
+      />
+
+      {clearCartModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
-          onClick={() => setAddressModalOpen(false)}
+          onClick={() => setClearCartModalOpen(false)}
         >
           <div
-            className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-white shadow-2xl"
+            className="w-full max-w-sm overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-5">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
-                  <MapPin size={18} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-[var(--color-text-primary)] sm:text-base">
-                    Add Delivery Address
-                  </h3>
-                  <p className="text-[11px] text-[var(--color-text-muted)]">
-                    Enter complete details for doorstep delivery
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setAddressModalOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
-              >
-                <X size={16} />
-              </button>
+            {/* Modal Icon */}
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600 shadow-inner">
+              <Trash2 size={26} />
             </div>
 
-            {/* Modal Form */}
-            <form onSubmit={handleSaveAddress} className="max-h-[75vh] overflow-y-auto p-6 space-y-4">
-              {/* Address Label Selector */}
-              <div>
-                <label className="text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] block mb-1.5">
-                  Address Type / Label *
-                </label>
-                <div className="flex gap-2">
-                  {[
-                    { label: "Home", icon: Home },
-                    { label: "Work", icon: Briefcase },
-                    { label: "Other", icon: Building },
-                  ].map((t) => {
-                    const Icon = t.icon;
-                    const isSelected = addressForm.label === t.label;
-                    return (
-                      <button
-                        key={t.label}
-                        type="button"
-                        onClick={() => setAddressForm({ ...addressForm, label: t.label })}
-                        className={`
-                          flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 py-2.5 text-xs font-bold transition
-                          ${
-                            isSelected
-                              ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] text-[var(--color-primary)]"
-                              : "border-[var(--color-border)] bg-stone-50 text-[var(--color-text-secondary)] hover:border-stone-300"
-                          }
-                        `}
-                      >
-                        <Icon size={14} />
-                        <span>{t.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            {/* Modal Heading & Description */}
+            <div className="mt-4 text-center">
+              <h3 className="text-base font-black text-[var(--color-text-primary)]">
+                Clear your cart?
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                Are you sure you want to remove all {items.length} item{items.length === 1 ? "" : "s"} from your cart? You will need to re-add them to order.
+              </p>
+            </div>
 
-              {/* Receiver Details */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                    Receiver's Name *
-                  </label>
-                  <div className="relative">
-                    <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. John Doe"
-                      value={addressForm.receiver_name}
-                      onChange={(e) => setAddressForm({ ...addressForm, receiver_name: e.target.value })}
-                      className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 py-2.5 pl-10 pr-3.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                    10-Digit Phone Number *
-                  </label>
-                  <div className="relative">
-                    <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-                    <input
-                      type="tel"
-                      required
-                      maxLength={10}
-                      placeholder="e.g. 9876543210"
-                      value={addressForm.phone_number}
-                      onChange={(e) => setAddressForm({ ...addressForm, phone_number: e.target.value.replace(/\D/g, "") })}
-                      className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 py-2.5 pl-10 pr-3.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Flat / House No */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                    Flat / House No. / Room No. *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Flat 302 / House 12"
-                    value={addressForm.house_number}
-                    onChange={(e) => setAddressForm({ ...addressForm, house_number: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                    Building / Apartment Name (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Green Heights"
-                    value={addressForm.building_name}
-                    onChange={(e) => setAddressForm({ ...addressForm, building_name: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
-                  />
-                </div>
-              </div>
-
-              {/* Area / Street & Landmark */}
-              <div>
-                <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                  Street / Area / Sector / Locality *
-                </label>
-                <textarea
-                  required
-                  rows={2}
-                  placeholder="e.g. Malviya Nagar, Sector 4, Near Apex Mall"
-                  value={addressForm.formatted_address}
-                  onChange={(e) => setAddressForm({ ...addressForm, formatted_address: e.target.value })}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
-                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                    Landmark (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Near Water Tank"
-                    value={addressForm.landmark}
-                    onChange={(e) => setAddressForm({ ...addressForm, landmark: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                    City *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Jaipur"
-                    value={addressForm.city}
-                    onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] block mb-1">
-                    Pincode *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    placeholder="e.g. 302017"
-                    value={addressForm.pincode}
-                    onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, "") })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/50 p-2.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
-                  />
-                </div>
-              </div>
-
-              {/* Make Default Checkbox */}
-              <label className="flex items-center gap-2 pt-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={addressForm.is_default}
-                  onChange={(e) => setAddressForm({ ...addressForm, is_default: e.target.checked })}
-                  className="h-4 w-4 rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                />
-                <span className="text-xs font-bold text-[var(--color-text-secondary)]">
-                  Set as default delivery address
-                </span>
-              </label>
-
-              {/* Submit Button */}
-              <div className="pt-3">
-                <button
-                  type="submit"
-                  disabled={isSavingAddress}
-                  className="
-                    flex
-                    h-12
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-2xl
-                    bg-[var(--color-primary)]
-                    text-xs
-                    font-black
-                    text-white
-                    shadow-lg
-                    shadow-[var(--color-primary)]/25
-                    transition
-                    hover:bg-[var(--color-primary-dark)]
-                    disabled:opacity-50
-                  "
-                >
-                  {isSavingAddress ? (
-                    <>
-                      <LoaderCircle size={16} className="animate-spin" />
-                      <span>Saving Address...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check size={16} />
-                      <span>Save & Deliver Here</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            {/* Modal Buttons */}
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setClearCartModalOpen(false)}
+                disabled={isClearing}
+                className="flex-1 rounded-xl border border-[var(--color-border)] bg-stone-50 py-3 text-xs font-bold text-[var(--color-text-primary)] transition hover:bg-stone-100 active:scale-[0.98] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmClearCart}
+                disabled={isClearing}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-600 py-3 text-xs font-bold text-white shadow-md shadow-red-500/20 transition hover:bg-red-700 active:scale-[0.98] disabled:opacity-50"
+              >
+                {isClearing ? (
+                  <>
+                    <LoaderCircle size={14} className="animate-spin" />
+                    <span>Clearing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} />
+                    <span>Clear Cart</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

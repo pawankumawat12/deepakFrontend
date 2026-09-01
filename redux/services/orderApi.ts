@@ -63,12 +63,24 @@ export interface OrderResponse<T = Order> {
   success: boolean;
   message?: string;
   data: T;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export const orderApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getOrders: build.query<OrderResponse<Order[]>, void>({
-      query: () => "/orders",
+    getOrders: build.query<
+      OrderResponse<Order[]>,
+      { page?: number; limit?: number; status?: string } | void
+    >({
+      query: (params) => ({
+        url: "/orders",
+        params: params || {},
+      }),
       providesTags: ["Order"],
     }),
     getOrderDetails: build.query<OrderResponse<Order>, string | number>({

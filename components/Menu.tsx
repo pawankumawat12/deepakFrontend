@@ -804,7 +804,9 @@ export default function Menu() {
                           transition-colors
                           group-hover:text-[var(--color-primary)]
                           sm:text-base
+                          break-words
                         "
+                        title={p.name}
                       >
                         {p.name}
                       </h3>
@@ -818,9 +820,11 @@ export default function Menu() {
                           leading-4
                           text-[var(--color-text-muted)]
                           sm:text-xs
+                          break-words
                         "
+                        title={p.description || `Handcrafted — ${p.categoryName}`}
                       >
-                        Handcrafted — {p.categoryName}
+                        {p.description || `Handcrafted — ${p.categoryName}`}
                       </p>
                     </Link>
 

@@ -23,9 +23,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 
-import { useUpdateProfileMutation } from "@/redux/services/authApi";
+import {
+  useUpdateProfileMutation,
+  useRequestEmailChangeMutation,
+} from "@/redux/services/authApi";
 import { setCredentials } from "@/redux/features/authSlice";
 import { updateProfileSchema } from "@/schemas/authSchema";
+import ProfileAddresses from "./ProfileAddresses";
+import EmailChangeOtpModal from "./EmailChangeOtpModal";
 
 type ProfileFormValues = z.infer<typeof updateProfileSchema>;
 
@@ -43,8 +48,13 @@ export default function Profile() {
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [editing, setEditing] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [emailOtpModalOpen, setEmailOtpModalOpen] = useState(false);
+  const [pendingNewEmail, setPendingNewEmail] = useState("");
+
   const user = useSelector((state: { auth: { user: any | null } }) => state.auth.user);
-  const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation();
+  const [updateProfile, { isLoading: isSavingProfile }] = useUpdateProfileMutation();
+  const [requestEmailChange, { isLoading: isRequestingOtp }] = useRequestEmailChangeMutation();
+  const isSaving = isSavingProfile || isRequestingOtp;
 
   const {
     register,
@@ -109,18 +119,39 @@ export default function Profile() {
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
+    const trimmedEmail = data.email?.trim().toLowerCase() || "";
+    const currentEmail = (user?.email || "").toLowerCase();
+    const isEmailChanged = trimmedEmail !== "" && trimmedEmail !== currentEmail;
+
     try {
+      // 1. Update basic profile info (Name, Phone)
       const response = await updateProfile({
         name: data.name.trim(),
-        email: data.email?.trim() || null,
+        email: isEmailChanged ? user?.email : data.email?.trim() || null,
         phone: data.phone?.trim() || null,
       }).unwrap();
 
       if (response?.user) {
         dispatch(setCredentials(response));
       }
-      toast.success(response?.message || "Profile updated successfully!");
-      setEditing(false);
+
+      // 2. If email changed, trigger email change OTP flow
+      if (isEmailChanged) {
+        try {
+          const otpRes = await requestEmailChange({ newEmail: trimmedEmail }).unwrap();
+          setPendingNewEmail(trimmedEmail);
+          setEmailOtpModalOpen(true);
+          toast.success(otpRes?.message || `Verification code sent to ${trimmedEmail}`);
+        } catch (otpErr: any) {
+          const msg =
+            otpErr?.data?.message ||
+            "Failed to send email verification code. Please check email address.";
+          toast.error(typeof msg === "string" ? msg : "Failed to send verification code");
+        }
+      } else {
+        toast.success(response?.message || "Profile updated successfully!");
+        setEditing(false);
+      }
     } catch (err: any) {
       const msg =
         err?.data?.message ||
@@ -459,18 +490,24 @@ export default function Profile() {
                 </div>
 
                 {/* Email */}
-
                 <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label
+                      htmlFor="email"
+                      className="block text-xs font-bold text-[var(--color-text-primary)]"
+                    >
+                      Email Address
+                    </label>
 
-                  <label
-                    htmlFor="email"
-                    className="mb-2 block text-xs font-bold text-[var(--color-text-primary)]"
-                  >
-                    Email Address
-                  </label>
+                    {user?.email && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                        <ShieldCheck size={13} className="text-emerald-500" />
+                        Verified
+                      </span>
+                    )}
+                  </div>
 
                   <div className="relative">
-
                     <Mail
                       size={17}
                       className="
@@ -508,14 +545,19 @@ export default function Profile() {
                         focus:ring-[var(--color-primary)]/10
                       "
                     />
-
                   </div>
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-red-500 font-medium">
-                      {errors.email.message}
+
+                  {editing && (
+                    <p className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-[var(--color-text-muted)]">
+                      <span>Changing email will send a 4-digit verification code to the new email.</span>
                     </p>
                   )}
 
+                  {errors.email && (
+                    <p className="mt-1 text-xs font-medium text-red-500">
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Phone */}
@@ -827,86 +869,35 @@ export default function Profile() {
 
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 pb-8 sm:px-8">
-
-        <div
-          className="
-            rounded-[2rem]
-            border
-            border-[var(--color-border)]
-            bg-white
-            p-6
-            shadow-sm
-            sm:p-8
-          "
-        >
-
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-            <div className="flex items-center gap-4">
-
-              <div
-                className="
-                  flex
-                  h-12
-                  w-12
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-2xl
-                  bg-[var(--color-primary-50)]
-                  text-[var(--color-primary)]
-                "
-              >
-                <MapPin size={21} />
-              </div>
-
-              <div>
-
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                  Delivery Address
-                </p>
-
-                <h3 className="mt-1 text-sm font-black text-[var(--color-text-primary)]">
-                  Home
-                </h3>
-
-                <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-                  Jaipur, Rajasthan, India
-                </p>
-
-              </div>
-
-            </div>
-
-            <button
-              type="button"
-              className="
-                inline-flex
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                border
-                border-[var(--color-border)]
-                px-4
-                py-2.5
-                text-xs
-                font-bold
-                text-[var(--color-primary)]
-                transition
-                hover:bg-[var(--color-primary-50)]
-              "
-            >
-              <Pencil size={14} />
-              Manage Address
-            </button>
-
-          </div>
-
-        </div>
-
+      <section className="mx-auto max-w-6xl px-5 pb-12 sm:px-8">
+        <ProfileAddresses user={user} />
       </section>
-</div>
+
+      {/* EMAIL CHANGE OTP VERIFICATION MODAL */}
+      <EmailChangeOtpModal
+        open={emailOtpModalOpen}
+        onClose={() => {
+          setEmailOtpModalOpen(false);
+          // Restore email input to current active user email
+          reset({
+            name: user?.name || "",
+            email: user?.email || "",
+            phone: user?.phone || "",
+          });
+        }}
+        pendingEmail={pendingNewEmail}
+        onSuccess={(updatedUser) => {
+          reset({
+            name: updatedUser.name || "",
+            email: updatedUser.email || "",
+            phone: updatedUser.phone || "",
+          });
+          setEditing(false);
+        }}
+        onEditEmail={() => {
+          setEditing(true);
+        }}
+      />
+    </div>
   );
 }

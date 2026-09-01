@@ -1,7 +1,8 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 import { FaInstagram, FaFacebookF, FaTwitter } from "react-icons/fa";
 import {
   ArrowRight,
@@ -11,13 +12,90 @@ import {
   Phone,
   Send,
   MessageCircle,
+  LoaderCircle,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useGetFooterQuery } from "@/redux/services/settingsApi";
+import { useSubmitContactQueryMutation } from "@/redux/services/contactApi";
 
 export default function ContactPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const user = useSelector((state: any) => state.auth?.user);
   const { data: settings } = useGetFooterQuery();
   const settingData = settings?.data;
+
+  const [submitQuery, { isLoading }] = useSubmitContactQueryMutation();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Pre-fill with authenticated user details
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || user.name || "",
+        email: prev.email || user.email || "",
+        phone: prev.phone || user.phone || "",
+      }));
+    }
+  }, [user]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errorMessage) setErrorMessage("");
+  };
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setErrorMessage("");
+
+    if (!formData.name.trim()) {
+      setErrorMessage("Please enter your name");
+      return;
+    }
+    if (!formData.email.trim()) {
+      setErrorMessage("Please enter your email address");
+      return;
+    }
+    if (!formData.subject.trim()) {
+      setErrorMessage("Please enter a subject");
+      return;
+    }
+    if (!formData.message.trim()) {
+      setErrorMessage("Please enter your message");
+      return;
+    }
+
+    try {
+      const response = await submitQuery(formData).unwrap();
+      toast.success(response.message || "Message sent successfully!");
+      setSubmitted(true);
+      setFormData({
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+        subject: "",
+        message: "",
+      });
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || "Failed to send message. Please try again.";
+      setErrorMessage(msg);
+      toast.error(msg);
+    }
+  }
 
 
   const socialLinks = [
@@ -283,195 +361,260 @@ export default function ContactPage() {
 
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-
-              {/* Name */}
-
-              <div>
-
-                <label
-                  htmlFor="name"
-                  className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+            {submitted ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+                  <CheckCircle2 size={28} />
+                </div>
+                <h3 className="mt-4 text-lg font-black text-emerald-950">
+                  Message Sent Successfully!
+                </h3>
+                <p className="mt-2 text-xs leading-relaxed text-emerald-700">
+                  Thank you for reaching out to SFC Cafe. Our team has received your inquiry and will respond to you shortly via email or phone.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSubmitted(false)}
+                  className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
                 >
-                  Your Name
-                </label>
-
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  placeholder="Enter your name"
-                  className="
-                    w-full
-                    rounded-xl
-                    border
-                    border-[var(--color-border)]
-                    bg-[var(--bg-body)]
-                    px-4
-                    py-3
-                    text-sm
-                    outline-none
-                    transition
-                    placeholder:text-[var(--color-text-muted)]
-                    focus:border-[var(--color-primary)]
-                    focus:ring-2
-                    focus:ring-[var(--color-primary)]/10
-                  "
-                />
-
+                  Send Another Message
+                </button>
               </div>
-
-              {/* Email */}
-
-              <div>
-
-                <label
-                  htmlFor="email"
-                  className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                >
-                  Email Address
-                </label>
-
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="you@example.com"
-                  className="
-                    w-full
-                    rounded-xl
-                    border
-                    border-[var(--color-border)]
-                    bg-[var(--bg-body)]
-                    px-4
-                    py-3
-                    text-sm
-                    outline-none
-                    transition
-                    placeholder:text-[var(--color-text-muted)]
-                    focus:border-[var(--color-primary)]
-                    focus:ring-2
-                    focus:ring-[var(--color-primary)]/10
-                  "
-                />
-
-              </div>
-
-              {/* Phone */}
-
-              <div>
-
-                <label
-                  htmlFor="phone"
-                  className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                >
-                  Phone Number
-                </label>
-
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="+91 99999 99999"
-                  className="
-                    w-full
-                    rounded-xl
-                    border
-                    border-[var(--color-border)]
-                    bg-[var(--bg-body)]
-                    px-4
-                    py-3
-                    text-sm
-                    outline-none
-                    transition
-                    placeholder:text-[var(--color-text-muted)]
-                    focus:border-[var(--color-primary)]
-                    focus:ring-2
-                    focus:ring-[var(--color-primary)]/10
-                  "
-                />
-
-              </div>
-
-              {/* Message */}
-
-              <div>
-
-                <label
-                  htmlFor="message"
-                  className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                >
-                  Message
-                </label>
-
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={4}
-                  required
-                  placeholder="Tell us what's on your mind..."
-                  className="
-                    w-full
-                    resize-none
-                    rounded-xl
-                    border
-                    border-[var(--color-border)]
-                    bg-[var(--bg-body)]
-                    px-4
-                    py-3
-                    text-sm
-                    outline-none
-                    transition
-                    placeholder:text-[var(--color-text-muted)]
-                    focus:border-[var(--color-primary)]
-                    focus:ring-2
-                    focus:ring-[var(--color-primary)]/10
-                  "
-                />
-
-              </div>
-
-              {/* Submit */}
-
-              <button
-                type="submit"
-                className="
-                  inline-flex
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[var(--color-primary)]
-                  px-5
-                  py-3.5
-                  text-sm
-                  font-bold
-                  text-white
-                  shadow-md
-                  transition
-                  hover:bg-[var(--color-primary-dark)]
-                  hover:-translate-y-0.5
-                  active:scale-[0.99]
-                "
-              >
-
-                {submitted ? (
-                  <>
-                    Message Sent ✓
-                  </>
-                ) : (
-                  <>
-                    Send Message
-                    <Send size={16} />
-                  </>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {errorMessage && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-600">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
                 )}
 
-              </button>
+                {/* Name */}
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                  >
+                    Your Name *
+                  </label>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                    disabled={isLoading}
+                    className="
+                      w-full
+                      rounded-xl
+                      border
+                      border-[var(--color-border)]
+                      bg-[var(--bg-body)]
+                      px-4
+                      py-3
+                      text-sm
+                      outline-none
+                      transition
+                      placeholder:text-[var(--color-text-muted)]
+                      focus:border-[var(--color-primary)]
+                      focus:ring-2
+                      focus:ring-[var(--color-primary)]/10
+                      disabled:opacity-60
+                    "
+                  />
+                </div>
 
-            </form>
+                {/* Email & Phone Grid */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                    >
+                      Email Address *
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="you@example.com"
+                      disabled={isLoading}
+                      className="
+                        w-full
+                        rounded-xl
+                        border
+                        border-[var(--color-border)]
+                        bg-[var(--bg-body)]
+                        px-4
+                        py-3
+                        text-sm
+                        outline-none
+                        transition
+                        placeholder:text-[var(--color-text-muted)]
+                        focus:border-[var(--color-primary)]
+                        focus:ring-2
+                        focus:ring-[var(--color-primary)]/10
+                        disabled:opacity-60
+                      "
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="phone"
+                      className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                    >
+                      Phone Number
+                    </label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+91 98765 43210"
+                      disabled={isLoading}
+                      className="
+                        w-full
+                        rounded-xl
+                        border
+                        border-[var(--color-border)]
+                        bg-[var(--bg-body)]
+                        px-4
+                        py-3
+                        text-sm
+                        outline-none
+                        transition
+                        placeholder:text-[var(--color-text-muted)]
+                        focus:border-[var(--color-primary)]
+                        focus:ring-2
+                        focus:ring-[var(--color-primary)]/10
+                        disabled:opacity-60
+                      "
+                    />
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label
+                    htmlFor="subject"
+                    className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                  >
+                    Subject *
+                  </label>
+                  <input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    required
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="e.g. Catering inquiry, feedback, order assistance"
+                    disabled={isLoading}
+                    className="
+                      w-full
+                      rounded-xl
+                      border
+                      border-[var(--color-border)]
+                      bg-[var(--bg-body)]
+                      px-4
+                      py-3
+                      text-sm
+                      outline-none
+                      transition
+                      placeholder:text-[var(--color-text-muted)]
+                      focus:border-[var(--color-primary)]
+                      focus:ring-2
+                      focus:ring-[var(--color-primary)]/10
+                      disabled:opacity-60
+                    "
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                  >
+                    Message *
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows={4}
+                    required
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Tell us what's on your mind or how we can assist you..."
+                    disabled={isLoading}
+                    className="
+                      w-full
+                      resize-none
+                      rounded-xl
+                      border
+                      border-[var(--color-border)]
+                      bg-[var(--bg-body)]
+                      px-4
+                      py-3
+                      text-sm
+                      outline-none
+                      transition
+                      placeholder:text-[var(--color-text-muted)]
+                      focus:border-[var(--color-primary)]
+                      focus:ring-2
+                      focus:ring-[var(--color-primary)]/10
+                      disabled:opacity-60
+                    "
+                  />
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="
+                    inline-flex
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    bg-[var(--color-primary)]
+                    px-5
+                    py-3.5
+                    text-sm
+                    font-bold
+                    text-white
+                    shadow-md
+                    transition
+                    hover:bg-[var(--color-primary-dark)]
+                    hover:-translate-y-0.5
+                    active:scale-[0.99]
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
+                  "
+                >
+                  {isLoading ? (
+                    <>
+                      <LoaderCircle size={16} className="animate-spin" />
+                      <span>Sending Message...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Message</span>
+                      <Send size={16} />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
 
           </div>
           <div className="relative min-h-[520px]">

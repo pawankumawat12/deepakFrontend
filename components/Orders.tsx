@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import OrderChat from "./OrderChat";
+import Pagination from "./Pagination";
 import {
   useGetOrdersQuery,
 } from "../redux/services/orderApi";
@@ -80,12 +81,20 @@ export default function Orders() {
   );
 
   const [activeFilter, setActiveFilter] = useState("All");
+  const [page, setPage] = useState(1);
   const [selectedChatOrder, setSelectedChatOrder] = useState<any | null>(null);
 
-  const { data: orderResponse, isLoading, refetch } = useGetOrdersQuery(undefined, {
-    pollingInterval: 20000,
-    refetchOnFocus: true,
-  });
+  const { data: orderResponse, isLoading, refetch } = useGetOrdersQuery(
+    {
+      page,
+      limit: 6,
+      status: activeFilter !== "All" ? activeFilter : undefined,
+    },
+    {
+      pollingInterval: 20000,
+      refetchOnFocus: true,
+    }
+  );
 
   // Socket.IO real-time event listeners for customer
   useEffect(() => {
@@ -349,7 +358,10 @@ export default function Orders() {
               <button
                 key={filter}
                 type="button"
-                onClick={() => setActiveFilter(filter)}
+                onClick={() => {
+                  setActiveFilter(filter);
+                  setPage(1);
+                }}
                 className={`
                   shrink-0
                   rounded-full
@@ -669,6 +681,15 @@ export default function Orders() {
             ))}
           </div>
         )}
+
+        <Pagination
+          page={orderResponse?.pagination?.page || page}
+          totalPages={orderResponse?.pagination?.totalPages || 1}
+          total={orderResponse?.pagination?.total || orders.length}
+          limit={6}
+          onPageChange={(p) => setPage(p)}
+          itemLabel="orders"
+        />
       </section>
 
       {selectedChatOrder && (

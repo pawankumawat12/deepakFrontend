@@ -78,6 +78,43 @@ export const authApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    requestEmailChange: builder.mutation<
+      { success: boolean; message: string; pendingEmail: string; retryAfter?: number },
+      { newEmail: string }
+    >({
+      query: (body) => ({
+        url: "/auth/request-email-change",
+        method: "POST",
+        body,
+      }),
+    }),
+    resendEmailChangeOtp: builder.mutation<
+      { success: boolean; message: string; pendingEmail?: string; retryAfter?: number },
+      { newEmail?: string } | void
+    >({
+      query: (body) => ({
+        url: "/auth/resend-email-change-otp",
+        method: "POST",
+        body: body || {},
+      }),
+    }),
+    verifyEmailChange: builder.mutation<
+      AuthResponse & { success?: boolean; token?: string; accessToken?: string },
+      { otp: string; newEmail?: string }
+    >({
+      query: (body) => ({
+        url: "/auth/verify-email-change",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User"],
+    }),
+    cancelEmailChange: builder.mutation<{ success: boolean; message: string }, void>({
+      query: () => ({
+        url: "/auth/cancel-email-change",
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -95,4 +132,8 @@ export const {
   useVerifyResetPasswordTokenMutation,
   useResetPasswordMutation,
   useSubmitBlockedSupportRequestMutation,
+  useRequestEmailChangeMutation,
+  useResendEmailChangeOtpMutation,
+  useVerifyEmailChangeMutation,
+  useCancelEmailChangeMutation,
 } = authApi;
