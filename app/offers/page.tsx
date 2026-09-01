@@ -64,7 +64,7 @@ export default function OffersPage() {
       return `₹${offer.discount_value} OFF`;
     }
     if (offer.type === "BOGO") {
-      return `BUY ${offer.buy_qty || 1} GET ${offer.get_qty || 1}`;
+      return `BUY ${offer.buy_qty || 1} GET ${offer.get_qty || 1} FREE`;
     }
     return "DEAL";
   };

@@ -31,6 +31,8 @@ import { logout } from "../redux/features/authSlice";
 import { useLogoutMutation } from "../redux/services/authApi";
 import { useGetWishlistQuery } from "../redux/services/wishlistApi";
 import { useGetLogoQuery } from "../redux/services/settingsApi";
+import { useGetUnreadNotificationCountQuery } from "../redux/services/notificationApi";
+import { getSocket } from "../lib/socket";
 import LogoutModal from "@/models/LogoutModel";
 const apiUrl =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
@@ -46,7 +48,7 @@ const Navbar = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector(
-    (state: { auth: { user: { name?: string; image?: string | null } | null } }) => state.auth.user
+    (state: { auth: { user: any | null } }) => state.auth.user
   );
 
   const { data: wishlistData } = useGetWishlistQuery(undefined, {
@@ -62,6 +64,11 @@ const Navbar = () => {
   const { data: logoData } = useGetLogoQuery();
   const logoUrl = logoData?.data?.logo_url ? toAssetUrl(logoData.data.logo_url) : "/images/sfcLogo.png";
 
+  const { data: unreadNotifData, refetch: refetchUnreadNotifs } = useGetUnreadNotificationCountQuery(undefined, {
+    skip: !user,
+  });
+  const unreadNotifCount = user ? (unreadNotifData?.data?.unreadCount || 0) : 0;
+
   const [logoutRequest] = useLogoutMutation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
@@ -69,6 +76,24 @@ const Navbar = () => {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Live Socket.IO listener for notifications
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const socket = getSocket(user.id);
+    const handleNotification = () => {
+      refetchUnreadNotifs();
+    };
+
+    socket.on("notification:new", handleNotification);
+    socket.on("notification:unread_count", handleNotification);
+
+    return () => {
+      socket.off("notification:new", handleNotification);
+      socket.off("notification:unread_count", handleNotification);
+    };
+  }, [user?.id, refetchUnreadNotifs]);
 
   const handleLogout = async () => {
     try {
@@ -226,7 +251,8 @@ const Navbar = () => {
             <div className="flex items-center gap-2">
               <Link
                 href="/notifications"
-                aria-label="Cart"
+                aria-label="Notifications"
+                title="Notifications"
                 className="
                   relative
                   flex h-10 w-10 items-center justify-center
@@ -239,26 +265,28 @@ const Navbar = () => {
               >
                 <Bell size={20} />
 
-                <span
-                  className="
-                      absolute
-                      -right-0.5
-                      -top-0.5
-                      flex
-                      h-5
-                      min-w-5
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-[var(--color-primary)]
-                      px-1
-                      text-[10px]
-                      font-bold
-                      text-white
-                    "
-                >
-                  0
-                </span>
+                {unreadNotifCount > 0 && (
+                  <span
+                    className="
+                        absolute
+                        -right-0.5
+                        -top-0.5
+                        flex
+                        h-5
+                        min-w-5
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-[var(--color-primary)]
+                        px-1
+                        text-[10px]
+                        font-bold
+                        text-white
+                      "
+                  >
+                    {unreadNotifCount > 99 ? "99+" : unreadNotifCount}
+                  </span>
+                )}
               </Link>
 
               {/* Wishlist Link */}

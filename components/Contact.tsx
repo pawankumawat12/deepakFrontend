@@ -119,16 +119,6 @@ export default function ContactPage() {
     },
   ];
 
-  function handleSubmit(e: any) {
-    e.preventDefault();
-
-    setSubmitted(true);
-
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 3000);
-  }
-
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
       <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 md:py-16">

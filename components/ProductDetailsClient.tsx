@@ -47,6 +47,8 @@ import {
   useDeleteReviewMutation,
   ReviewItem,
 } from "../redux/services/reviewApi";
+import { useGetOffersQuery } from "../redux/services/offerApi";
+import { Gift } from "lucide-react";
 
 export default function ProductDetailsClient({ product }: { product: any }) {
   const user = useSelector(
@@ -72,6 +74,14 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     (wishlistData?.data || []).some(
       (w) => Number(w.id || w.product_id) === Number(product.id)
     )
+  );
+
+  const { data: availableOffers = [] } = useGetOffersQuery();
+  const bogoOffer = (availableOffers || []).find(
+    (o) =>
+      o.is_active &&
+      o.type === "BOGO" &&
+      (o.target_product_ids || []).map(Number).includes(Number(product.id))
   );
 
   const handleToggleWishlist = async () => {
@@ -758,6 +768,27 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 </span>
               </div>
             </div>
+
+            {/* BOGO Deal Banner */}
+            {bogoOffer && (
+              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-3.5 text-amber-900 shadow-xs">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
+                  <Gift size={20} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black uppercase tracking-wide text-amber-800">
+                    🔥 Buy {bogoOffer.buy_qty || 1} Get {bogoOffer.get_qty || 1} Free Offer!
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-amber-700">
+                    Add at least {(bogoOffer.buy_qty || 1) + (bogoOffer.get_qty || 1)} items to your cart and apply promo code{" "}
+                    <strong className="rounded bg-amber-200/80 px-1.5 py-0.5 font-black text-amber-950">
+                      {bogoOffer.code}
+                    </strong>{" "}
+                    at checkout to get {bogoOffer.get_qty || 1} free.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Description */}
 

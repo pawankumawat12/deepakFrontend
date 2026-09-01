@@ -734,6 +734,46 @@ export default function CartClient() {
                               Only {it.stock} left in stock — order soon!
                             </div>
                           ) : null}
+
+                          {/* BOGO Offer Eligibility & Progress Callout */}
+                          {(() => {
+                            const itemBogo = (availableOffers || []).find(
+                              (o) =>
+                                o.is_active &&
+                                o.type === "BOGO" &&
+                                (o.target_product_ids || []).map(Number).includes(Number(it.id))
+                            );
+                            if (!itemBogo) return null;
+
+                            const buyQty = itemBogo.buy_qty || 1;
+                            const getQty = itemBogo.get_qty || 1;
+                            const step = buyQty + getQty;
+                            const freeBatches = Math.floor(it.quantity / step);
+                            const freeCount = freeBatches * getQty;
+
+                            if (freeCount > 0) {
+                              return (
+                                <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+                                  <Gift size={13} className="text-emerald-600 shrink-0" />
+                                  <span>
+                                    🎉 Buy {buyQty} Get {getQty} Free Applied: {freeCount} item(s) free with code{" "}
+                                    <strong className="underline">{itemBogo.code}</strong>!
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            const needed = step - (it.quantity % step);
+                            return (
+                              <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[11px] font-bold text-amber-800">
+                                <Gift size={13} className="text-amber-600 shrink-0" />
+                                <span>
+                                  🎁 Buy {buyQty} Get {getQty} Free: Add {needed} more to get {getQty} FREE with code{" "}
+                                  <strong className="underline">{itemBogo.code}</strong>!
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Controls: Stepper & Remove */}

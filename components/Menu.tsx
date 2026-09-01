@@ -14,6 +14,7 @@ import {
   Sparkles,
   Star,
   Utensils,
+  Gift,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -31,6 +32,7 @@ import {
   useAddCartItemMutation,
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
+import { useGetOffersQuery } from "../redux/services/offerApi";
 
 function formatRupee(v: number) {
   return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
@@ -73,6 +75,19 @@ export default function Menu() {
     totalItems: 0,
     grandTotal: 0,
   };
+
+  const { data: offersData = [] } = useGetOffersQuery();
+  const bogoOffersMap = useMemo(() => {
+    const map = new Map<number, any>();
+    for (const offer of offersData || []) {
+      if (offer.is_active && offer.type === "BOGO" && Array.isArray(offer.target_product_ids)) {
+        for (const pId of offer.target_product_ids) {
+          map.set(Number(pId), offer);
+        }
+      }
+    }
+    return map;
+  }, [offersData]);
 
   const wishlistedIds = useMemo(
     () =>
@@ -724,6 +739,14 @@ export default function Menu() {
                         <Flame size={11} />
 
                         Popular
+                      </div>
+                    )}
+
+                    {/* BOGO Offer Badge */}
+                    {bogoOffersMap.has(p.id) && (
+                      <div className="absolute left-2 bottom-2 z-10 flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[8.5px] font-black uppercase tracking-wide text-white shadow-md backdrop-blur-xs">
+                        <Gift size={10} />
+                        BUY {bogoOffersMap.get(p.id)?.buy_qty || 1} GET {bogoOffersMap.get(p.id)?.get_qty || 1} FREE
                       </div>
                     )}
 
