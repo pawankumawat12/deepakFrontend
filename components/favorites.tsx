@@ -380,8 +380,10 @@ export default function FavoritesPage() {
                 transition
                 hover:bg-[var(--color-primary-dark)]
               "
+              style={{color:"white"}}
             >
-              <ShoppingCart size={15} />
+              <ShoppingCart size={15}              style={{color:"white"}}
+ />
               Browse Menu
             </Link>
           </div>

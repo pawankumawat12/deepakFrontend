@@ -53,7 +53,7 @@ const features = [
 
 export default function WhyChooseUs() {
   return (
-    <section className="relative overflow-hidden bg-[var(--color-cream)]  md:px-8 md:py-10">
+    <section className="relative overflow-hidden bg-[var(--color-cream)]  px-4 py-6 md:px-8 md:py-10">
 
       <div
         className="

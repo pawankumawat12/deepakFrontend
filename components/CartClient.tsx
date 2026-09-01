@@ -475,8 +475,10 @@ export default function CartClient() {
                   hover:bg-[var(--color-primary-50)]
                   hover:text-[var(--color-primary)]
                 "
+                style={{color: "white"}}
               >
-                <Utensils size={15} />
+                <Utensils size={15}                style={{color: "white"}}
+ />
                 Explore Menu
               </Link>
             </div>
@@ -595,8 +597,10 @@ export default function CartClient() {
                 hover:bg-[var(--color-primary-dark)]
                 active:scale-95
               "
+              style={{color: "white"}}
             >
-              <Utensils size={16} />
+              <Utensils size={16}                style={{color: "white"}}
+ />
               Explore Menu
               <ArrowRight size={15} />
             </Link>

@@ -109,6 +109,10 @@ export default function LoginModal({
           email?: string;
         };
       };
+if(apiError){
+  toast.error(apiError?.data?.message as string)
+}
+      console.log(apiError, "Checkalsdfasklfjalskdfjalskdjkl")
 
       if (apiError.data?.requiresVerification) {
         setPendingEmail(apiError.data.email || cleanEmail);
@@ -125,6 +129,8 @@ export default function LoginModal({
       }
     }
   };
+
+
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;

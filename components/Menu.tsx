@@ -252,31 +252,17 @@ export default function Menu() {
 
   const selectedCategoryName =
     selected === "all"
-      ? "All Food"
+      ? "All Items"
       : categories.find((c) => c.id === selected)?.name || "Menu";
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)] pb-32">
-
-      {/* =========================================================
-          HERO / MENU HEADER
-      ========================================================= */}
-
       <section className="relative overflow-hidden bg-[var(--color-primary-dark)]">
-
-        {/* Decorative background */}
-
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/5" />
-
         <div className="pointer-events-none absolute -bottom-28 -left-24 h-80 w-80 rounded-full bg-[var(--color-secondary)]/10" />
-
         <div className="pointer-events-none absolute right-[20%] top-1/2 h-20 w-20 rounded-full bg-white/[0.03]" />
-
         <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
-
           <div className="max-w-3xl">
-
-            {/* Small badge */}
 
             <div
               className="
@@ -360,11 +346,6 @@ export default function Menu() {
 
         </div>
       </section>
-
-      {/* =========================================================
-          CATEGORY NAVIGATION
-      ========================================================= */}
-
       <section
         className="
           sticky
@@ -472,18 +453,11 @@ export default function Menu() {
         </div>
       </section>
 
-      {/* =========================================================
-          CONTENT
-      ========================================================= */}
-
       <div
         ref={gridRef}
         className="mx-auto max-w-7xl scroll-mt-20 px-4 md:px-8"
       >
 
-        {/* =======================================================
-            QUICK BENEFITS
-        ======================================================= */}
 
         <section className="py-7 md:py-9">
 
@@ -564,10 +538,6 @@ export default function Menu() {
 
         </section>
 
-        {/* =======================================================
-            SECTION TITLE
-        ======================================================= */}
-
         <section className="pb-5">
 
           <div className="flex items-end justify-between gap-4">
@@ -640,11 +610,6 @@ export default function Menu() {
           </div>
 
         </section>
-
-        {/* =======================================================
-            PRODUCT GRID
-        ======================================================= */}
-
         <section>
 
           <div
@@ -671,7 +636,7 @@ export default function Menu() {
               return (
                 <article
                   key={p.id}
-                  className={`
+                  className="
                     product-card
                     group
                     overflow-hidden
@@ -684,13 +649,8 @@ export default function Menu() {
                     duration-300
                     hover:-translate-y-1
                     hover:shadow-xl
-                    ${outOfStock ? "cursor-not-allowed opacity-55 grayscale" : ""}
-                  `}
+                  "
                 >
-
-                  {/* =================================================
-                      IMAGE
-                  ================================================= */}
 
                   <div className="relative overflow-hidden">
 
@@ -713,13 +673,7 @@ export default function Menu() {
                       />
                     </Link>
 
-                    {outOfStock && (
-                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
-                        <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[var(--color-text-primary)]">
-                          Out of stock
-                        </span>
-                      </div>
-                    )}
+                
 
                     {isMadeToOrder && (
                       <div className="absolute right-2 top-2 z-10">

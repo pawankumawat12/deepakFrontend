@@ -229,31 +229,6 @@ export default function Profile() {
                   <p className="text-xs text-white/80">
                     Welcome back to SFC Cafe 👋
                   </p>
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadingImage}
-                    className="
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      rounded-lg
-                      bg-white/20
-                      px-2.5
-                      py-1
-                      text-[10px]
-                      font-bold
-                      text-white
-                      backdrop-blur-sm
-                      transition
-                      hover:bg-white/30
-                      active:scale-95
-                    "
-                  >
-                    <Camera size={12} />
-                    {isUploadingImage ? "Uploading..." : user?.image ? "Change Photo" : "Upload Photo"}
-                  </button>
                 </div>
 
               </div>
@@ -932,81 +907,6 @@ export default function Profile() {
         </div>
 
       </section>
-
-      <section className="mx-auto max-w-6xl px-5 pb-14 sm:px-8">
-
-        <div
-          className="
-            flex
-            flex-col
-            gap-4
-            rounded-[2rem]
-            border
-            border-red-100
-            bg-red-50/50
-            p-6
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-          "
-        >
-
-          <div className="flex items-center gap-3">
-
-            <div
-              className="
-                flex
-                h-10
-                w-10
-                items-center
-                justify-center
-                rounded-xl
-                bg-red-100
-                text-red-500
-              "
-            >
-              <LogOut size={18} />
-            </div>
-
-            <div>
-
-              <p className="text-xs font-black text-[var(--color-text-primary)]">
-                Sign out of your account
-              </p>
-
-              <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
-                You can sign back in anytime.
-              </p>
-
-            </div>
-
-          </div>
-
-          <Link
-            href="/logout"
-            className="
-              inline-flex
-              items-center
-              justify-center
-              rounded-xl
-              bg-red-500
-              px-5
-              py-2.5
-              text-xs
-              font-bold
-              text-white
-              transition
-              hover:bg-red-600
-              active:scale-95
-            "
-          >
-            Logout
-          </Link>
-
-        </div>
-
-      </section>
-
-    </div>
+</div>
   );
 }
