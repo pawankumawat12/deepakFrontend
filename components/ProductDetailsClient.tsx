@@ -337,7 +337,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
 
   const isMadeToOrder = Boolean(
     product?.isMadeToOrder ||
-      String(product?.availability_type || "").toUpperCase() === "MADE_TO_ORDER"
+    String(product?.availability_type || "").toUpperCase() === "MADE_TO_ORDER"
   );
   const isOutOfStock = !isMadeToOrder && Number(product?.stock) <= 0;
 
@@ -393,10 +393,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)] pb-20">
-      {/* =========================================================
-          TOP / BREADCRUMB
-      ========================================================= */}
-
       <div className="border-b border-[var(--color-border)] bg-white">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 text-xs md:px-8">
           <Link
@@ -428,11 +424,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
           </span>
         </div>
       </div>
-
-      {/* =========================================================
-          MAIN PRODUCT SECTION
-      ========================================================= */}
-
       <section className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
         <div
           className="
@@ -443,10 +434,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
             lg:gap-10
           "
         >
-          {/* =======================================================
-              LEFT - IMAGE
-          ======================================================= */}
-
           <div>
             <div
               className="
@@ -639,10 +626,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
             </div>
           </div>
 
-          {/* =======================================================
-              RIGHT - PRODUCT INFO
-          ======================================================= */}
-
           <div className="flex flex-col">
             {/* Small label */}
 
@@ -709,10 +692,9 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                     text-xs
                     font-black
                     shadow-xs
-                    ${
-                      totalReviews > 0
-                        ? getFlipkartRatingStyle(averageRating)
-                        : "bg-stone-500 text-white"
+                    ${totalReviews > 0
+                      ? getFlipkartRatingStyle(averageRating)
+                      : "bg-stone-500 text-white"
                     }
                   `}
                 >
@@ -729,8 +711,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 <span className="text-xs font-bold text-[var(--color-primary)] group-hover:underline">
                   {totalReviews > 0
                     ? `${totalReviews.toLocaleString(
-                        "en-IN"
-                      )} Ratings & Reviews`
+                      "en-IN"
+                    )} Ratings & Reviews`
                     : "0 Ratings & Reviews"}
                 </span>
               </button>
@@ -738,8 +720,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
               <span className="text-xs text-[var(--color-text-muted)]">
                 {totalReviews > 0
                   ? `· ${getRatingSentiment(
-                      averageRating
-                    )} choice by cafe guests`
+                    averageRating
+                  )} choice by cafe guests`
                   : "· Be the first to review this dish"}
               </span>
             </div>
@@ -879,11 +861,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 </div>
               </div>
             </div>
-
-            {/* =====================================================
-                CART ACTION
-            ===================================================== */}
-
             <div
               className="
                 mt-7
@@ -959,7 +936,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                         type="button"
                         title={
                           product.availability_type !== "MADE_TO_ORDER" &&
-                          inCartQty >= Number(product.stock)
+                            inCartQty >= Number(product.stock)
                             ? `Only ${product.stock} items available in stock`
                             : "Increase quantity"
                         }
@@ -1046,7 +1023,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                         type="button"
                         title={
                           product.availability_type !== "MADE_TO_ORDER" &&
-                          qty >= Number(product.stock)
+                            qty >= Number(product.stock)
                             ? `Only ${product.stock} items available in stock`
                             : "Increase quantity"
                         }
@@ -1112,13 +1089,12 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                     active:scale-[0.98]
                     disabled:cursor-not-allowed
                     disabled:opacity-50
-                    ${
-                      added
-                        ? "bg-[var(--color-success)]"
-                        : isOutOfStock
-                        ? "bg-stone-400"
-                        : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
-                    }
+                    ${added
+                    ? "bg-[var(--color-success)]"
+                    : isOutOfStock
+                      ? "bg-stone-400"
+                      : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
+                  }
                   `}
               >
                 {added ? (
@@ -1183,16 +1159,20 @@ export default function ProductDetailsClient({ product }: { product: any }) {
         </div>
       </section>
 
-      {/* =========================================================
-          LOWER INFORMATION SECTION
-      ========================================================= */}
-
-      <section className="border-y border-[var(--color-border)] bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <section className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
+        <div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* About */}
 
-            <div>
+            <div className="
+                rounded-3xl
+                border
+                border-[var(--color-border)]
+                bg-white
+                p-4
+                shadow-sm
+                sm:p-5
+              ">
               <div className="mb-3 flex items-center gap-2">
                 <div
                   className="
@@ -1222,7 +1202,15 @@ export default function ProductDetailsClient({ product }: { product: any }) {
 
             {/* Quality */}
 
-            <div>
+            <div className="
+                rounded-3xl
+                border
+                border-[var(--color-border)]
+                bg-white
+                p-4
+                shadow-sm
+                sm:p-5
+              ">
               <div className="mb-3 flex items-center gap-2">
                 <div
                   className="
@@ -1252,7 +1240,15 @@ export default function ProductDetailsClient({ product }: { product: any }) {
 
             {/* Fresh */}
 
-            <div>
+            <div className="
+                rounded-3xl
+                border
+                border-[var(--color-border)]
+                bg-white
+                p-4
+                shadow-sm
+                sm:p-5
+              ">
               <div className="mb-3 flex items-center gap-2">
                 <div
                   className="
@@ -1283,16 +1279,11 @@ export default function ProductDetailsClient({ product }: { product: any }) {
         </div>
       </section>
 
-      {/* =========================================================
-          REVIEWS & RATINGS SECTION (FLIPKART STYLE)
-      ========================================================= */}
-
       <section
         id="reviews-section"
         className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12"
       >
         <div className="rounded-3xl border border-[var(--color-border)] bg-white p-6 shadow-sm md:p-10">
-          {/* Section Header & Rate Action */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--color-border)] pb-6">
             <div>
               <div className="flex items-center gap-2">
@@ -1330,10 +1321,9 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 <div
                   className={`
                     flex items-center gap-1.5 rounded-xl px-4 py-2 text-2xl font-black shadow-sm
-                    ${
-                      totalReviews > 0
-                        ? getFlipkartRatingStyle(averageRating)
-                        : "bg-stone-500 text-white"
+                    ${totalReviews > 0
+                      ? getFlipkartRatingStyle(averageRating)
+                      : "bg-stone-500 text-white"
                     }
                   `}
                 >
@@ -1353,10 +1343,10 @@ export default function ProductDetailsClient({ product }: { product: any }) {
               <p className="mt-1 text-xs font-bold text-[var(--color-text-secondary)]">
                 {totalReviews > 0
                   ? `${totalReviews.toLocaleString(
-                      "en-IN"
-                    )} Ratings & ${totalReviews.toLocaleString(
-                      "en-IN"
-                    )} Reviews`
+                    "en-IN"
+                  )} Ratings & ${totalReviews.toLocaleString(
+                    "en-IN"
+                  )} Reviews`
                   : "Be the first to review"}
               </p>
 
@@ -1581,7 +1571,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allReviews.map((rev) => {
                   const isOwnReview =
                     user && Number(rev.user_id) === Number(user.id);
@@ -1592,10 +1582,9 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                       key={rev.id}
                       className={`
                         relative rounded-2xl border bg-white p-5 transition-shadow hover:shadow-sm
-                        ${
-                          isOwnReview
-                            ? "border-[var(--color-primary)]/30 ring-1 ring-[var(--color-primary)]/10"
-                            : "border-[var(--color-border)]"
+                        ${isOwnReview
+                          ? "border-[var(--color-primary)]/30 ring-1 ring-[var(--color-primary)]/10"
+                          : "border-[var(--color-border)]"
                         }
                       `}
                     >
@@ -1736,10 +1725,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
           </div>
         </div>
       </section>
-
-      {/* =========================================================
-          BOTTOM CTA
-      ========================================================= */}
 
       <section className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
         <div

@@ -394,7 +394,7 @@ export default function CartClient() {
   };
   if (!user) {
     return (
-      <main className="min-h-screen bg-[var(--bg-body)]">
+      <main className="min-h-screen bg-[var(--bg-body)] mt-5">
         <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center px-4">
           <div className="w-full rounded-3xl border border-[var(--color-border)] bg-white p-8 text-center shadow-sm sm:p-12">
             <div
@@ -475,10 +475,8 @@ export default function CartClient() {
                   hover:bg-[var(--color-primary-50)]
                   hover:text-[var(--color-primary)]
                 "
-                style={{color: "white"}}
               >
-                <Utensils size={15}                style={{color: "white"}}
- />
+                <Utensils size={15} />
                 Explore Menu
               </Link>
             </div>
@@ -597,7 +595,6 @@ export default function CartClient() {
                 hover:bg-[var(--color-primary-dark)]
                 active:scale-95
               "
-              style={{color: "white"}}
             >
               <Utensils size={16}                style={{color: "white"}}
  />

@@ -168,7 +168,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
           {step === "register" ? <UserPlus /> : <KeyRound />}
         </div>
         <h1 className="text-2xl font-bold">
-          {step === "register" ? "Create your account" : "Verify your email"}
+          {step === "register" ? "Create Your Account" : "Verify Your Email"}
         </h1>
         <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
           {step === "register" ? (

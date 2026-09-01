@@ -431,6 +431,7 @@ export default function Orders() {
                 font-bold
                 text-white
               "
+              style={{color: "white"}}
             >
               Explore Menu
             </Link>

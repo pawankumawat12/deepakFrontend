@@ -75,6 +75,7 @@ const Navbar = () => {
       await logoutRequest().unwrap();
     } catch { }
     dispatch(logout());
+    localStorage.removeItem("accessToken");
     setDropdownOpen(false);
     setMobileProfileOpen(false);
     router.replace("/");
