@@ -551,6 +551,7 @@ export default function LocationContact() {
                   hover:-translate-y-0.5
                   hover:bg-[var(--color-primary-dark)]
                 "
+                style={{color: "white"}}
               >
                 Order Online
 
@@ -586,9 +587,6 @@ export default function LocationContact() {
           </div>
         </div>
 
-        {/* =====================================================
-            BOTTOM QUICK INFO
-        ===================================================== */}
 
         <div
           className="

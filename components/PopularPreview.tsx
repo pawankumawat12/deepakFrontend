@@ -76,7 +76,7 @@ export default function PopularPreview() {
   }
 
   return (
-    <section className="relative bg-[var(--bg-body)] px-4 md:px-8 md:py-10">
+    <section className="relative bg-[var(--bg-body)] px-4 py-6 md:px-8 md:py-10">
       <div className="mx-auto max-w-7xl">
 
         <div className="mb-7 flex items-end justify-between">
