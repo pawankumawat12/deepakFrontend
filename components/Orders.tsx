@@ -25,6 +25,7 @@ import OrderChat from "./OrderChat";
 import Pagination from "./Pagination";
 import {
   useGetOrdersQuery,
+  useGetOrderDetailsQuery,
 } from "../redux/services/orderApi";
 import { getSocket } from "../lib/socket";
 import toast from "react-hot-toast";
@@ -83,6 +84,35 @@ export default function Orders() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [page, setPage] = useState(1);
   const [selectedChatOrder, setSelectedChatOrder] = useState<any | null>(null);
+
+  // Capture the pending chat order ID set by notifications page before navigating here
+  const [pendingChatOrderId, setPendingChatOrderId] = useState<number | null>(() => {
+    if (typeof window !== "undefined" && (window as any).__sfcPendingChatOrderId) {
+      const id = (window as any).__sfcPendingChatOrderId;
+      (window as any).__sfcPendingChatOrderId = null; // Consume immediately
+      return id;
+    }
+    return null;
+  });
+
+  // Fetch the specific order to auto-open chat when coming from a notification
+  const { data: pendingOrderData } = useGetOrderDetailsQuery(
+    pendingChatOrderId as number,
+    { skip: !pendingChatOrderId }
+  );
+
+  // Once the pending order arrives, build the chat order object and open the modal
+  useEffect(() => {
+    if (pendingOrderData?.data && pendingChatOrderId) {
+      const o = pendingOrderData.data;
+      setSelectedChatOrder({
+        id: o.order_number || `SFC-${o.id}`,
+        dbId: o.id,
+        status: o.status,
+      });
+      setPendingChatOrderId(null);
+    }
+  }, [pendingOrderData, pendingChatOrderId]);
 
   const { data: orderResponse, isLoading, refetch } = useGetOrdersQuery(
     {

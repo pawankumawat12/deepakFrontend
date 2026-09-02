@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -38,6 +39,7 @@ const filters = [
 
 export default function NotificationsPage() {
   const user = useSelector((state: any) => state.auth?.user);
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
 
   const {
@@ -122,6 +124,26 @@ export default function NotificationsPage() {
       return MessageSquare;
     return Info;
   }
+
+  const handleNotificationClick = async (notification: NotificationItem) => {
+    // Mark as read
+    if (!notification.is_read) {
+      try {
+        await markAsRead(notification.id).unwrap();
+      } catch {
+        toast.error("Failed to mark as read");
+      }
+    }
+
+    // For chat notifications: navigate to /orders and signal which order's chat to open
+    if (notification.type === "chat_message" && notification.order_id) {
+      // Store the target orderId for Orders page to pick up
+      if (typeof window !== "undefined") {
+        window.__sfcPendingChatOrderId = notification.order_id;
+      }
+      router.push("/orders");
+    }
+  };
 
   const handleMarkSingleRead = async (id: number) => {
     try {
@@ -307,9 +329,12 @@ export default function NotificationsPage() {
               const Icon = getIcon(notification.type);
               const isUnread = !notification.is_read;
 
+              const isChatNotif = notification.type === "chat_message" && notification.order_id;
+
               return (
                 <article
                   key={notification.id}
+                  onClick={isChatNotif ? () => handleNotificationClick(notification) : undefined}
                   className={`
                     group relative overflow-hidden rounded-2xl border bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
                     ${
@@ -317,6 +342,7 @@ export default function NotificationsPage() {
                         ? "border-[var(--color-primary-light)] bg-gradient-to-r from-emerald-50/30 to-white"
                         : "border-[var(--color-border)]"
                     }
+                    ${isChatNotif ? "cursor-pointer" : ""}
                   `}
                 >
                   {isUnread && (
@@ -360,15 +386,28 @@ export default function NotificationsPage() {
                         </span>
 
                         {notification.order_id && (
-                          <Link
-                            href="/orders"
-                            className="text-[10px] font-bold text-[var(--color-primary)] hover:underline"
-                          >
-                            View Order #{notification.order_id} →
-                          </Link>
+                          isChatNotif ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNotificationClick(notification);
+                              }}
+                              className="text-[10px] font-bold text-[var(--color-primary)] hover:underline"
+                            >
+                              Open Chat →
+                            </button>
+                          ) : (
+                            <Link
+                              href="/orders"
+                              className="text-[10px] font-bold text-[var(--color-primary)] hover:underline"
+                            >
+                              View Order #{notification.order_id} →
+                            </Link>
+                          )
                         )}
 
-                        {isUnread && (
+                        {isUnread && !isChatNotif && (
                           <button
                             type="button"
                             onClick={() => handleMarkSingleRead(notification.id)}
