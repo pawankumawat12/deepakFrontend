@@ -33,6 +33,7 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
+  CreditCard,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -46,7 +47,7 @@ import {
   CartItem,
   CartSummary,
 } from "../redux/services/cartApi";
-import { useCreateOrderMutation } from "../redux/services/orderApi";
+import { useCreateOrderMutation, useVerifyPaymentMutation } from "../redux/services/orderApi";
 import {
   useGetAddressesQuery,
   Address,
@@ -85,6 +86,7 @@ export default function CartClient() {
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [deletingAddress, setDeletingAddress] = useState<Address | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string>("Online Payment")
 
   // Dynamic Offers & Promo Code State
   const [appliedOfferCode, setAppliedOfferCode] = useState<string>("");
@@ -129,10 +131,36 @@ export default function CartClient() {
     }
   }, [addresses, selectedAddressId]);
 
+
+
+
+  // razor pay script run 
+  useEffect(() => {
+    const script = document.createElement("script");
+
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+
+
+
+
+
   const [updateCartItem] = useUpdateCartItemMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
   const [clearCart, { isLoading: isClearing }] = useClearCartMutation();
   const [createOrder, { isLoading: isPlacingOrder }] = useCreateOrderMutation();
+
+  const [verifyPayment, { isLoading: isVerifyingPayment }] =
+    useVerifyPaymentMutation();
+
 
   const items: CartItem[] = cartResponse?.data?.items || [];
   const defaultSummary: CartSummary = {
@@ -262,30 +290,52 @@ export default function CartClient() {
     setAppliedOfferCode("");
     toast.success("Promo code removed");
   };
-
   const handleCheckout = async () => {
     if (!user) {
       setAuthOpen(true);
       return;
     }
+
     if (summary.hasOutOfStockItems) {
-      toast.error("Please remove or adjust out-of-stock items before checkout");
+      toast.error(
+        "Please remove or adjust out-of-stock items before checkout"
+      );
       return;
     }
+
     if (items.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
+
     if (!selectedAddress) {
-      toast.error("Please select or add a delivery address to place your order");
+      toast.error(
+        "Please select or add a delivery address to place your order"
+      );
       setAddressModalOpen(true);
+      return;
+    }
+
+    if (summary.isBelowMinimumOrder) {
+      toast.error(
+        `Minimum order amount is ₹${formatRupee(
+          summary.minimumOrderAmount
+        )}`
+      );
+      return;
+    }
+
+    if (summary.isOutOfRange) {
+      toast.error("This delivery address is outside our service area");
       return;
     }
 
     const addressParts = [
       selectedAddress.house_number,
       selectedAddress.building_name,
-      selectedAddress.landmark ? `Near ${selectedAddress.landmark}` : null,
+      selectedAddress.landmark
+        ? `Near ${selectedAddress.landmark}`
+        : null,
       selectedAddress.formatted_address,
       `${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pincode}`,
     ].filter(Boolean);
@@ -293,23 +343,211 @@ export default function CartClient() {
     const shippingAddress = addressParts.join(", ");
 
     try {
-      await createOrder({
+      // 1. CREATE ORDER
+      const orderResponse = await createOrder({
         addressId: selectedAddress.id,
-        customerName: selectedAddress.receiver_name || user.name || "Customer",
+
+        customerName:
+          selectedAddress.receiver_name ||
+          user.name ||
+          "Customer",
+
         customerEmail: user.email || "",
-        customerPhone: selectedAddress.phone_number || user.phone || "",
+
+        customerPhone:
+          selectedAddress.phone_number ||
+          user.phone ||
+          "",
+
         shippingAddress,
+
         deliveryAddressJson: selectedAddress,
-        paymentMethod: "Cash on Delivery",
-        offerCode: appliedOfferCode || summary.appliedOffer?.code || undefined,
+
+        paymentMethod,
+
+        offerCode:
+          appliedOfferCode ||
+          summary.appliedOffer?.code ||
+          undefined,
       }).unwrap();
 
-      toast.success("🎉 Order placed successfully! Fresh food is being prepared.");
-      router.push("/orders");
+      const orderData = orderResponse?.data;
+
+      if (!orderData) {
+        throw new Error("Order creation failed");
+      }
+
+      // 2. COD
+      if (paymentMethod === "Cash on Delivery") {
+        toast.success(
+          "Order placed successfully! Fresh food is being prepared."
+        );
+
+        router.push("/orders");
+        return;
+      }
+
+      // 3. ONLINE PAYMENT
+      if (paymentMethod === "Online Payment") {
+        if (!orderData.razorpayOrderId) {
+          throw new Error(
+            "Unable to initialize online payment."
+          );
+        }
+
+        if (!orderData.razorpayKeyId) {
+          throw new Error(
+            "Razorpay configuration is missing."
+          );
+        }
+
+        // Check Razorpay script
+        if (!window.Razorpay) {
+          toast.error(
+            "Payment gateway is still loading. Please try again."
+          );
+          return;
+        }
+
+        const options = {
+          key: orderData.razorpayKeyId,
+
+          amount:
+            Number(orderData.paymentAmount) * 100,
+
+          currency:
+            orderData.paymentCurrency || "INR",
+
+          name: "SFC Cafe",
+
+          description:
+            `Payment for Order #${orderData.order_number
+            }`,
+
+          order_id:
+            orderData.razorpayOrderId,
+
+          prefill: {
+            name:
+              orderData.customer_name ||
+              selectedAddress.receiver_name ||
+              user.name ||
+              "",
+
+            email:
+              orderData.customer_email ||
+              user.email ||
+              "",
+
+            contact:
+              orderData.customer_phone ||
+              selectedAddress.phone_number ||
+              user.phone ||
+              "",
+          },
+
+          notes: {
+            order_number:
+              orderData.order_number,
+          },
+
+          theme: {
+            color: "#4f7d16",
+          },
+
+          handler: async function (
+            response: any
+          ) {
+            try {
+              toast.loading(
+                "Verifying payment...",
+                {
+                  id: "payment-verification",
+                }
+              );
+
+              // 4. VERIFY PAYMENT WITH BACKEND
+              await verifyPayment({
+                orderId: orderData.id,
+
+                razorpay_order_id:
+                  response.razorpay_order_id,
+
+                razorpay_payment_id:
+                  response.razorpay_payment_id,
+
+                razorpay_signature:
+                  response.razorpay_signature,
+              }).unwrap();
+
+              toast.success(
+                "🎉 Payment successful! Your order has been placed.",
+                {
+                  id: "payment-verification",
+                }
+              );
+
+              router.push("/orders");
+            } catch (error: any) {
+              console.error(
+                "Payment verification error:",
+                error
+              );
+
+              toast.error(
+                error?.data?.message ||
+                "Payment verification failed. Please contact support.",
+                {
+                  id: "payment-verification",
+                }
+              );
+            }
+          },
+
+          modal: {
+            ondismiss: function () {
+              toast.error(
+                "Payment cancelled. Your order is still pending payment."
+              );
+            },
+          },
+        };
+
+        const razorpay =
+          new window.Razorpay(options);
+
+        razorpay.on(
+          "payment.failed",
+          function (response: any) {
+            console.error(
+              "Razorpay payment failed:",
+              response
+            );
+
+            toast.error(
+              response?.error?.description ||
+              "Payment failed. Please try again."
+            );
+          }
+        );
+
+        razorpay.open();
+      }
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to place order. Please try again.");
+      console.error(
+        "Checkout error:",
+        err
+      );
+
+      toast.error(
+        err?.data?.message ||
+        err?.message ||
+        "Failed to place order. Please try again."
+      );
     }
   };
+
+
   if (!user) {
     return (
       <main className="min-h-screen bg-[var(--bg-body)] mt-5">
@@ -514,8 +752,8 @@ export default function CartClient() {
                 active:scale-95
               "
             >
-              <Utensils size={16}                style={{color: "white"}}
- />
+              <Utensils size={16} style={{ color: "white" }}
+              />
               Explore Menu
               <ArrowRight size={15} />
             </Link>
@@ -576,13 +814,13 @@ export default function CartClient() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_390px] lg:items-start">
           {/* ITEMS & ADDRESS SECTION */}
           <section>
-           
+
 
             {/* CART ITEMS HEADER */}
             <div
-            
-            
-            className="
+
+
+              className="
 
             mb-4 flex items-center justify-between
                       overflow-hidden
@@ -648,7 +886,7 @@ export default function CartClient() {
                       transition-all
                       duration-200
                       hover:shadow-md
-                      ${it.isOutOfStock ? "opacity-60 grayscale" : ""}
+                      
                     `}
                   >
                     <div className="flex gap-4">
@@ -708,12 +946,7 @@ export default function CartClient() {
                           </div>
 
                           {/* Stock Warnings & Badges */}
-                          {it.isMadeToOrder ? (
-                            <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-orange-50 px-2.5 py-1 text-[11px] font-bold text-orange-700">
-                              <Sparkles size={13} className="text-orange-500 shrink-0" />
-                              <span>Freshly Made to Order — prepared hot on demand</span>
-                            </div>
-                          ) : it.isOutOfStock ? (
+                          { it.isOutOfStock ? (
                             <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600">
                               <AlertTriangle size={13} className="shrink-0" />
                               This item is currently out of stock. Please remove it to place your order.
@@ -768,7 +1001,7 @@ export default function CartClient() {
                               <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[11px] font-bold text-amber-800">
                                 <Gift size={13} className="text-amber-600 shrink-0" />
                                 <span>
-                                  🎁 Buy {buyQty} Get {getQty} Free: Add {needed} more to get {getQty} FREE with code{" "}
+                                  Buy {buyQty} Get {getQty} Free: Add {needed} more to get {getQty} FREE with code{" "}
                                   <strong className="underline">{itemBogo.code}</strong>!
                                 </span>
                               </div>
@@ -893,7 +1126,7 @@ export default function CartClient() {
               </div>
             </div>
 
-              {/* //addresses */}
+            {/* //addresses */}
             <div className="mb-6 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white p-5 shadow-sm sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
                 <div className="flex items-center gap-2.5">
@@ -961,7 +1194,7 @@ export default function CartClient() {
                     <Plus size={14} />
                     Add Address Now
                   </button>
-                 </div>
+                </div>
               ) : (
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {addresses.map((addr) => {
@@ -979,10 +1212,9 @@ export default function CartClient() {
                           p-4
                           transition-all
                           duration-200
-                          ${
-                            isSelected
-                              ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 shadow-sm"
-                              : "border-[var(--color-border)] bg-white hover:border-stone-300"
+                          ${isSelected
+                            ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 shadow-sm"
+                            : "border-[var(--color-border)] bg-white hover:border-stone-300"
                           }
                         `}
                       >
@@ -1001,10 +1233,9 @@ export default function CartClient() {
                                 font-black
                                 uppercase
                                 tracking-wider
-                                ${
-                                  addr.label === "Work"
-                                    ? "bg-blue-50 text-blue-700"
-                                    : addr.label === "Home"
+                                ${addr.label === "Work"
+                                  ? "bg-blue-50 text-blue-700"
+                                  : addr.label === "Home"
                                     ? "bg-green-50 text-green-700"
                                     : "bg-purple-50 text-purple-700"
                                 }
@@ -1058,10 +1289,9 @@ export default function CartClient() {
                                 rounded-full
                                 border-2
                                 transition
-                                ${
-                                  isSelected
-                                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                                    : "border-stone-300 bg-white"
+                                ${isSelected
+                                  ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                  : "border-stone-300 bg-white"
                                 }
                               `}
                             >
@@ -1094,48 +1324,6 @@ export default function CartClient() {
               )}
             </div>
 
-
-            {/* 3. PAYMENT METHOD (COD ONLY) */}
-            <div className="rounded-3xl border border-[var(--color-border)] bg-white p-5 sm:p-6 shadow-sm mt-5">
-              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
-                <div className="flex items-center gap-2">
-                  <Banknote size={18} className="text-[var(--color-primary)]" />
-                  <h2 className="text-sm font-black text-[var(--color-text-primary)]">
-                    Payment Method
-                  </h2>
-                </div>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                  100% Safe & Secure
-                </span>
-              </div>
-
-              {/* Cash on Delivery Card */}
-              <div className="mt-4 rounded-2xl border border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 p-4 shadow-sm ring-1 ring-[var(--color-primary)]">
-                <div className="flex items-start gap-3.5">
-                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm">
-                    <Banknote size={20} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-black text-[var(--color-text-primary)]">
-                        Cash on Delivery (COD)
-                      </p>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                        <CheckCircle2 size={12} /> Active
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                      Pay via cash or UPI scan directly to the delivery partner at your doorstep upon receiving your fresh order.
-                    </p>
-                    {summary.codFee > 0 && (
-                      <span className="mt-2.5 inline-block rounded-lg bg-amber-100/70 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-900">
-                        📦 Includes ₹{formatRupee(summary.codFee)} Cash on Delivery fee
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
 
           </section>
 
@@ -1246,11 +1434,10 @@ export default function CartClient() {
                           return (
                             <div
                               key={off.id}
-                              className={`rounded-xl border p-2.5 text-left transition flex items-center justify-between gap-2 ${
-                                isCurrentlyApplied
-                                  ? "border-emerald-300 bg-emerald-50/50"
-                                  : "border-[var(--color-border)] bg-white hover:border-[var(--color-primary)]/40"
-                              }`}
+                              className={`rounded-xl border p-2.5 text-left transition flex items-center justify-between gap-2 ${isCurrentlyApplied
+                                ? "border-emerald-300 bg-emerald-50/50"
+                                : "border-[var(--color-border)] bg-white hover:border-[var(--color-primary)]/40"
+                                }`}
                             >
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
@@ -1261,8 +1448,8 @@ export default function CartClient() {
                                     {off.type === "PERCENTAGE"
                                       ? `${off.discount_value}% OFF`
                                       : off.type === "FLAT"
-                                      ? `₹${off.discount_value} OFF`
-                                      : "BOGO"}
+                                        ? `₹${off.discount_value} OFF`
+                                        : "BOGO"}
                                   </span>
                                 </div>
                                 <p className="text-[10px] text-[var(--color-text-muted)] truncate mt-0.5">
@@ -1420,7 +1607,7 @@ export default function CartClient() {
                 {/* Free Delivery Goal Prompt */}
                 {!summary.isFreeDelivery && summary.freeDeliveryShortfall > 0 && (
                   <div className="rounded-xl bg-amber-50 p-2.5 text-[11px] font-bold text-amber-800 border border-amber-200">
-                    🎁 Add items worth ₹{formatRupee(summary.freeDeliveryShortfall)} more to get <b>FREE Delivery</b>!
+                    Add items worth ₹{formatRupee(summary.freeDeliveryShortfall)} more to get <b>FREE Delivery</b>!
                   </div>
                 )}
 
@@ -1514,12 +1701,97 @@ export default function CartClient() {
                   )}
                 </div>
 
+
+
                 {summary.hasOutOfStockItems && (
                   <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-[11px] font-bold text-red-600">
                     <AlertTriangle size={15} className="shrink-0" />
                     <span>Please remove or adjust out-of-stock items before checkout.</span>
                   </div>
                 )}
+
+
+                <div className="rounded-3xl border border-[var(--color-border)] bg-white p-5 sm:p-6 shadow-sm mt-5">
+                  <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
+                    <div className="flex items-center gap-2">
+                      <Banknote size={18} className="text-[var(--color-primary)]" />
+                      <h2 className="text-sm font-black text-[var(--color-text-primary)]">
+                        Payment Method
+                      </h2>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                      100% Safe & Secure
+                    </span>
+                  </div>
+
+
+                  <div>
+                    {/* Cash on Delivery Card */}
+                    <div
+
+                      onClick={() => setPaymentMethod("Cash on Delivery")}
+                      className={`mt-4 cursor-pointer rounded-2xl p-4 shadow-sm transition-all ${paymentMethod === "Cash on Delivery"
+                        ? "border border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 ring-1 ring-[var(--color-primary)]"
+                        : "border border-gray-200 bg-white hover:border-gray-300"
+                        }`}
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm">
+                          <Banknote size={20} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-black text-[var(--color-text-primary)]">
+                              Cash on Delivery (COD)
+                            </p>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                              <CheckCircle2 size={12} /> Active
+                            </span>
+                          </div>
+
+                          {summary.codFee <= 0 && (
+                            <span className="mt-2.5 inline-block rounded-lg bg-amber-100/70 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-900">
+                              📦 Includes ₹{formatRupee(summary.codFee)} Cash on Delivery fee
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Online Payment Card */}
+                    <div
+                      onClick={() => setPaymentMethod("Online Payment")}
+                      className={`mt-4 cursor-pointer rounded-2xl p-4 shadow-sm transition-all ${paymentMethod === "Online Payment"
+                        ? "border border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 ring-1 ring-[var(--color-primary)]"
+                        : "border border-gray-200 bg-white hover:border-gray-300"
+                        }`}
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white shadow-sm">
+                          <CreditCard size={20} />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-black text-[var(--color-text-primary)]">
+                              Online Payment
+                            </p>
+
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
+                              <CheckCircle2 size={12} /> Secure
+                            </span>
+                          </div>
+
+                          <p className="mt-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                            Pay securely using UPI, Debit/Credit Card, Net Banking or Wallets.
+                          </p>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
 
                 {/* Checkout Button */}
                 <button
@@ -1529,6 +1801,7 @@ export default function CartClient() {
                     summary.isBelowMinimumOrder ||
                     summary.isOutOfRange ||
                     isPlacingOrder ||
+                    isVerifyingPayment ||
                     items.length === 0 ||
                     !selectedAddress
                   }
@@ -1559,14 +1832,12 @@ export default function CartClient() {
                 >
                   <span>
                     {isPlacingOrder
-                      ? "Placing Order..."
-                      : summary.hasOutOfStockItems
-                      ? "Resolve Stock Issues"
-                      : summary.isBelowMinimumOrder
-                      ? `Min Order ₹${summary.minimumOrderAmount}`
-                      : summary.isOutOfRange
-                      ? "Out of Delivery Range"
-                      : "Place Order (Cash on Delivery)"}
+                      ? "Creating Order..."
+                      : isVerifyingPayment
+                        ? "Verifying Payment..."
+                        : paymentMethod === "Online Payment"
+                          ? "Pay & Place Order"
+                          : "Place Order"}
                   </span>
                   {isPlacingOrder ? (
                     <LoaderCircle size={16} className="animate-spin" />
@@ -1631,9 +1902,7 @@ export default function CartClient() {
         </div>
       </div>
 
-      {/* =========================================================
-          ADD / EDIT ADDRESS MODAL
-      ========================================================= */}
+      {/* ADD / EDIT ADDRESS MODAL */}
       <AddressModal
         open={addressModalOpen}
         onClose={() => setAddressModalOpen(false)}
@@ -1645,9 +1914,7 @@ export default function CartClient() {
         }}
       />
 
-      {/* =========================================================
-          DELETE ADDRESS CONFIRMATION DIALOG
-      ========================================================= */}
+      {/* DELETE ADDRESS CONFIRMATION DIALOG */}
       <DeleteAddressDialog
         open={Boolean(deletingAddress)}
         onClose={() => setDeletingAddress(null)}

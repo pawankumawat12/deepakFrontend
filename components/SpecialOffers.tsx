@@ -105,9 +105,6 @@ export default function SpecialOffers() {
           </div>
         </div>
 
-        {/* =====================================================
-            FEATURED OFFER
-        ===================================================== */}
         <div className="relative overflow-hidden rounded-3xl bg-[var(--color-primary)] shadow-[0_20px_50px_rgba(79,125,22,0.18)]">
           <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white opacity-[0.08]" />
           <div className="absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-black opacity-[0.08]" />
@@ -187,9 +184,6 @@ export default function SpecialOffers() {
           </div>
         </div>
 
-        {/* =====================================================
-            OFFER SELECTORS
-        ===================================================== */}
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {finalOffers.map((item, index) => {
             const isActive = index === currentActive;

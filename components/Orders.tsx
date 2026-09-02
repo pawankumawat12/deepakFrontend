@@ -225,7 +225,6 @@ export default function Orders() {
     if (activeFilter === "All") return orders;
     return orders.filter((order) => order.status === activeFilter);
   }, [activeFilter, orders]);
-
   const stats = useMemo(() => {
     const total = orders.length;
     const delivered = orders.filter((o) => o.status === "Delivered").length;
@@ -614,15 +613,14 @@ export default function Orders() {
                       </div>
 
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[10px] font-bold text-[var(--color-text-primary)]">
-                            Cash on Delivery
-                          </p>
-                          <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">
-                            COD Order
-                          </span>
-                        </div>
-                      </div>
+  <div className="flex items-center gap-2">
+    <p className="text-[10px] font-bold text-[var(--color-text-primary)]">
+      {order.payment === "Online Payment"
+        ? "Online Payment"
+        : "Cash on Delivery"}
+    </p>
+  </div>
+</div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">

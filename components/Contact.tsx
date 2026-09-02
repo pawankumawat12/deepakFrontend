@@ -434,6 +434,7 @@ export default function ContactPage() {
                       onChange={handleChange}
                       placeholder="you@example.com"
                       disabled={isLoading}
+                      readOnly
                       className="
                         w-full
                         rounded-xl
@@ -469,6 +470,7 @@ export default function ContactPage() {
                       onChange={handleChange}
                       placeholder="+91 98765 43210"
                       disabled={isLoading}
+                      readOnly
                       className="
                         w-full
                         rounded-xl
@@ -624,7 +626,7 @@ export default function ContactPage() {
 
               <div>
 
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary-light)]">
+                <span className="text-[10px] py-1 px-3 rounded-full font-bold uppercase tracking-[0.2em] text-[var(--color-primary-light)] bg-[var(--color-primary-50)]">
                   Find Us
                 </span>
 
@@ -632,7 +634,7 @@ export default function ContactPage() {
                   Come say
                   <br />
                   <span className="text-[var(--color-primary-light)]">
-                    hello 👋
+                    hello
                   </span>
                 </h2>
 
@@ -722,35 +724,24 @@ export default function ContactPage() {
                     </p>
 
                   </div>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
-
-
 
       <section className="px-5 pb-16 sm:px-8">
         <div className="mx-auto max-w-5xl text-center">
-
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
             Follow & Connect
           </p>
-
           <h2 className="mt-2 text-2xl font-black text-[var(--color-text-primary)]">
             Stay connected with SFC
           </h2>
           <div className="mt-6 flex justify-center gap-3">
             {socialLinks.map((social) => {
               const Icon = social.icon;
-
               return (
                 <a
                   key={social.name}
@@ -769,17 +760,15 @@ export default function ContactPage() {
                   transition
                   hover:bg-[var(--color-primary)]
                   hover:text-white"
-                    
+
                 >
                   <Icon size={social.size} />
                 </a>
               );
             })}
           </div>
-
         </div>
       </section>
-
     </main>
   );
 }

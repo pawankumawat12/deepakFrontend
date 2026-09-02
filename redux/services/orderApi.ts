@@ -95,6 +95,15 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Order", "Cart", "Product"],
     }),
+
+    verifyPayment: build.mutation({
+      query: (data) => ({
+        url: "/orders/verify-payment",
+        method: "POST",
+        body: data,
+      }),
+    }),
+
     cancelOrder: build.mutation<
       OrderResponse<Order>,
       { orderId: number; cancelReason: string }
@@ -113,6 +122,7 @@ export const {
   useGetOrdersQuery,
   useGetOrderDetailsQuery,
   useCreateOrderMutation,
+  useVerifyPaymentMutation,
   useCancelOrderMutation,
 } = orderApi;
 

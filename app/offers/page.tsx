@@ -332,6 +332,7 @@ export default function OffersPage() {
                     <Link
                       href="/menu"
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-primary-dark)]"
+                    style={{color: "white"}}
                     >
                       Order Now
                       <ArrowRight size={16} />
