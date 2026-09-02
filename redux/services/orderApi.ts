@@ -44,6 +44,8 @@ export interface Order {
   created_at: string;
   updated_at: string;
   items: OrderItem[];
+  [key: string]: any;
+  
 }
 
 export interface CreateOrderPayload {

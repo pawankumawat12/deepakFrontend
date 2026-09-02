@@ -1,5 +1,14 @@
 "use client";
 
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
