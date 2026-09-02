@@ -107,25 +107,24 @@ export default function LoginModal({
           message?: string;
           requiresVerification?: boolean;
           email?: string;
+          errors?: Record<string, string>;
         };
       };
-if(apiError){
-  toast.error(apiError?.data?.message as string)
-}
-      console.log(apiError, "Checkalsdfasklfjalskdfjalskdjkl")
+
+      const errorMsg =
+        apiError.data?.message ||
+        (apiError.data?.errors && Object.values(apiError.data.errors)[0]) ||
+        "Unable to log in. Please check your credentials.";
 
       if (apiError.data?.requiresVerification) {
         setPendingEmail(apiError.data.email || cleanEmail);
         setOtpDigits(["", "", "", ""]);
         setStep("verifyOtp");
         setResendTimer(RESEND_COOLDOWN_SECONDS);
-        toast("Please verify your email with the 4-digit code.", {
-          icon: "📩",
-        });
+        toast(errorMsg, { icon: "📩" });
       } else {
-        setError(
-          apiError.data?.message || "Unable to log in. Please try again."
-        );
+        toast.error(errorMsg);
+        setError(errorMsg);
       }
     }
   };
