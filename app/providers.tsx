@@ -36,7 +36,6 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isError) {
       dispatch(logout());
-      dispatch(baseApi.util.resetApiState());
     }
   }, [isError, dispatch]);
 
