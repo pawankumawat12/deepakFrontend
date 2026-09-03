@@ -46,3 +46,11 @@ public/sw.js.map
 public/workbox-*.js
 public/workbox-*.js.map
 public/fallback-*.js
+
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local

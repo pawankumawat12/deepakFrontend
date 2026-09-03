@@ -38,8 +38,20 @@ class SimpleMutex {
 
 const mutex = new SimpleMutex();
 
+const getNormalizedBaseUrl = () => {
+  const url = (
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
+    process.env.VITE_BACKEND_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    ""
+  ).trim();
+  if (!url) return "/api/v1";
+  const clean = url.replace(/\/+$/, "");
+  return clean.endsWith("/api/v1") ? clean : `${clean}/api/v1`;
+};
+
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL,
+  baseUrl: getNormalizedBaseUrl(),
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const stateToken = (getState() as any)?.auth?.accessToken;

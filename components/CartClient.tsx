@@ -72,8 +72,11 @@ import AddressModal from "./AddressModal";
 import DeleteAddressDialog from "./DeleteAddressDialog";
 
 const API_ORIGIN = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"
-).replace(/\/api\/v1$/, "");
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
+  process.env.VITE_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  ""
+).replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
 
 function formatRupee(v: number) {
   return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });

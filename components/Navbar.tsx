@@ -34,13 +34,16 @@ import { useGetLogoQuery } from "../redux/services/settingsApi";
 import { useGetUnreadNotificationCountQuery } from "../redux/services/notificationApi";
 import { getSocket } from "../lib/socket";
 import LogoutModal from "@/models/LogoutModel";
-const apiUrl =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-const assetOrigin = new URL(apiUrl).origin;
+const backendUrl = (
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
+  process.env.VITE_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
+  ""
+).replace(/\/+$/, "");
 
 const toAssetUrl = (path?: string | null) => {
-  if (!path || /^https?:\/\//i.test(path)) return path || "";
-  return `${assetOrigin}${path.startsWith("/") ? path : `/${path}`}`;
+  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
+  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
 const Navbar = () => {

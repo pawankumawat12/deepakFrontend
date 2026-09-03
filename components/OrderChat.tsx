@@ -29,9 +29,12 @@ import {
 import { getSocket } from "../lib/socket";
 import toast from "react-hot-toast";
 
-const API_ORIGIN =
-  process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") ||
-  "http://localhost:5000";
+const API_ORIGIN = (
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
+  process.env.VITE_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
+  ""
+).replace(/\/+$/, "");
 
 interface OrderChatProps {
   open: boolean;

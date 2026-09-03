@@ -16,6 +16,19 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   turbopack: {},
+  env: {
+    VITE_BACKEND_URL: process.env.VITE_BACKEND_URL || "",
+  },
+  webpack: (config, { webpack }) => {
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        "import.meta.env.VITE_BACKEND_URL": JSON.stringify(
+          process.env.VITE_BACKEND_URL || ""
+        ),
+      })
+    );
+    return config;
+  },
 };
 
 export default withPWA(nextConfig);
