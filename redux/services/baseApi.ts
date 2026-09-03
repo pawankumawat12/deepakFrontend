@@ -68,7 +68,10 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
       const release = await mutex.acquire();
       try {
         const refreshResult = await rawBaseQuery(
-          { url: "/auth/refresh-token", method: "POST" },
+          {
+            url: "/auth/refresh-token",
+            method: "POST",
+          },
           api,
           extraOptions
         );
@@ -76,7 +79,8 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
         if (refreshResult.data?.accessToken || refreshResult.data?.token) {
           const newAccessToken =
             refreshResult.data.accessToken || refreshResult.data.token;
-          if (typeof window !== "undefined") {
+
+          if (typeof window !== "undefined" && newAccessToken) {
             localStorage.setItem("accessToken", newAccessToken);
           }
           api.dispatch(setCredentials(refreshResult.data));
