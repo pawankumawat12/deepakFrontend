@@ -12,18 +12,47 @@ export interface User {
   block_reason?: string | null;
 }
 
-interface AuthState {
-  user: User | null;
+export interface User {
+  id: number | string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  role: string;
+  image?: string | null;
+  is_active?: boolean;
+  is_blocked?: boolean;
+  block_reason?: string | null;
+  token?: string;
 }
 
-const initialState: AuthState = { user: null };
+interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+}
+
+const initialState: AuthState = {
+  user: null,
+  accessToken: null,
+};
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      state.user = action.payload?.user || action.payload;
+      const payload = action.payload;
+      if (!payload) return;
+      const user = payload.user || (payload.id ? payload : null);
+      if (user) {
+        state.user = user;
+      }
+      const token = payload.accessToken || payload.token || user?.token;
+      if (token) {
+        state.accessToken = token;
+        if (typeof window !== "undefined") {
+          localStorage.setItem("accessToken", token);
+        }
+      }
     },
     updateUserStatus: (state, action) => {
       if (state.user) {
@@ -34,9 +63,14 @@ const authSlice = createSlice({
     },
     logout: (state) => {
       state.user = null;
+      state.accessToken = null;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("accessToken");
+      }
     },
   },
 });
 
 export const { setCredentials, updateUserStatus, logout } = authSlice.actions;
 export default authSlice.reducer;
+

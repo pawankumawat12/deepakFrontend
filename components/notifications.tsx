@@ -139,7 +139,7 @@ export default function NotificationsPage() {
     if (notification.type === "chat_message" && notification.order_id) {
       // Store the target orderId for Orders page to pick up
       if (typeof window !== "undefined") {
-        window.__sfcPendingChatOrderId = notification.order_id;
+        (window as any).__sfcPendingChatOrderId = notification.order_id;
       }
       router.push("/orders");
     }

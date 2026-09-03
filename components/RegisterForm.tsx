@@ -104,8 +104,18 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
 
   const completeRegistration = async ({ otp }: VerificationValues) => {
     try {
-      await verifyOtp({ email, otp }).unwrap();
-      dispatch(setCredentials(await getMe().unwrap()));
+      const res = await verifyOtp({ email, otp }).unwrap();
+      const token = res?.accessToken || res?.token || res?.user?.token;
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      }
+      dispatch(setCredentials(res));
+
+      try {
+        const me = await getMe().unwrap();
+        dispatch(setCredentials(me));
+      } catch {}
+
       toast.success("Your account is verified. Welcome!");
       if (onComplete) {
         onComplete();

@@ -95,9 +95,17 @@ export default function LoginModal({
         email: cleanEmail,
         password: data.password,
       }).unwrap();
-    localStorage.setItem("accessToken", res?.user?.token);
+      const token = res?.accessToken || res?.token || res?.user?.token;
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      }
+      dispatch(setCredentials(res));
 
-      dispatch(setCredentials(await getMe().unwrap()));
+      try {
+        const me = await getMe().unwrap();
+        dispatch(setCredentials(me));
+      } catch {}
+
       reset();
       toast.success("Logged in successfully.");
       onClose();
@@ -129,8 +137,6 @@ export default function LoginModal({
     }
   };
 
-
-
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
     const nextDigits = [...otpDigits];
@@ -160,12 +166,22 @@ export default function LoginModal({
 
     try {
       setError("");
-      await verifyOtp({
+      const res = await verifyOtp({
         email: pendingEmail,
         otp: fullOtp,
       }).unwrap();
 
-      dispatch(setCredentials(await getMe().unwrap()));
+      const token = res?.accessToken || res?.token || res?.user?.token;
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      }
+      dispatch(setCredentials(res));
+
+      try {
+        const me = await getMe().unwrap();
+        dispatch(setCredentials(me));
+      } catch {}
+
       toast.success("Email verified and logged in successfully!");
       reset();
       onClose();
