@@ -2,16 +2,29 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "SFC Cafe",
-    short_name: "SFC",
-    description: "Freshly prepared food, bold flavors and quick delivery.",
-    start_url: "/",
+    short_name: "SFC Cafe",
+    description: "Good Food, Great Vibes — Freshly prepared food delivered fast.",
+    start_url: "/?source=pwa",
     scope: "/",
     display: "standalone",
+    display_override: ["window-controls-overlay", "standalone", "minimal-ui"] as any,
     orientation: "portrait-primary",
-    background_color: "#fff8e8",
+    background_color: "#ffffff",
     theme_color: "#4f7d16",
-    categories: ["food", "shopping"],
+    categories: ["food", "shopping", "lifestyle"],
+    launch_handler: {
+      client_mode: ["navigate-existing", "auto"],
+    } as any,
+    related_applications: [
+      {
+        platform: "webapp",
+        url: "/manifest.webmanifest",
+        id: "sfc-cafe",
+      },
+    ] as any,
+    prefer_related_applications: false,
     icons: [
       {
         src: "/icons/icon-192.png",

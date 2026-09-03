@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import "../styles/global.css";
 import Providers from "./providers";
 import { Toaster } from "react-hot-toast";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -102,6 +103,7 @@ export default function RootLayout({
           <main className="app-main">{children}</main>
           <Toaster position="top-right" reverseOrder={false} />
           <Footer />
+          <PWAInstallPrompt />
         </Providers>
       </body>
     </html>

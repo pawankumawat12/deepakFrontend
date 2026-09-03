@@ -11,12 +11,12 @@ type PWAInstallButtonProps = {
 export default function PWAInstallButton({
   variant = "footer",
 }: PWAInstallButtonProps) {
-  const { canInstall, showIOSGuide, isInstalled, isStandalone, install } =
+  const { canInstall, showIOSGuide, isInstalled, isStandalone, install, openApp } =
     usePWAInstall();
   const [installing, setInstalling] = useState(false);
   const [showIOSSteps, setShowIOSSteps] = useState(false);
 
-  if (isStandalone || isInstalled) {
+  if (isStandalone) {
     return (
       <div
         className={
@@ -28,6 +28,23 @@ export default function PWAInstallButton({
         <CheckCircle2 size={18} className="text-[var(--color-primary-light)]" />
         App installed
       </div>
+    );
+  }
+
+  if (isInstalled) {
+    return (
+      <button
+        type="button"
+        onClick={openApp}
+        className={
+          variant === "footer"
+            ? "inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[var(--color-primary)] px-6 py-3.5 text-sm font-bold text-white shadow-[0_10px_30px_rgba(79,125,22,0.35)] transition hover:bg-[var(--color-primary-dark)] active:scale-[0.98] sm:w-auto"
+            : "inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[var(--color-primary-dark)]"
+        }
+      >
+        <Smartphone size={18} />
+        Open App
+      </button>
     );
   }
 

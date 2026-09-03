@@ -1,23 +1,45 @@
 {
+  "id": "/",
   "name": "SFC Cafe",
   "short_name": "SFC Cafe",
   "description": "Good Food, Great Vibes — Freshly prepared food delivered fast.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#4f7d16",
-  "orientation": "portrait-primary",
-  "start_url": "/",
+  "categories": ["food", "shopping", "lifestyle"],
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.webmanifest",
+      "id": "sfc-cafe"
+    }
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
-
