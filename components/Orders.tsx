@@ -121,6 +121,7 @@ export default function Orders() {
       status: activeFilter !== "All" ? activeFilter : undefined,
     },
     {
+      skip: !user,
       pollingInterval: 20000,
       refetchOnFocus: true,
     }
@@ -262,6 +263,58 @@ export default function Orders() {
     const cancelled = orders.filter((o) => o.status === "Cancelled").length;
     return { total, delivered, preparing, cancelled };
   }, [orders]);
+
+
+
+const backendUrl = (
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
+  process.env.VITE_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
+  ""
+).replace(/\/+$/, "");
+
+const toAssetUrl = (path?: string | null) => {
+  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
+  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
+};
+
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-[var(--bg-body)] flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full text-center bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)] flex items-center justify-center">
+            <ShoppingBag size={32} />
+          </div>
+          <h2 className="text-xl font-black text-[var(--color-text-primary)]">
+            Sign in to view orders
+          </h2>
+          <p className="mt-2 text-xs text-[var(--color-text-muted)] leading-relaxed">
+            Please log in to track your live orders, past receipts, and order updates.
+          </p>
+          <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("sfc_open_login"));
+                }
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3 text-xs font-bold text-white shadow-md transition hover:bg-[var(--color-primary-dark)]"
+            >
+              Sign In / Register
+            </button>
+            <Link
+              href="/menu"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-6 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Browse Menu
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
@@ -574,7 +627,7 @@ export default function Orders() {
                         "
                       >
                         <img
-                          src={item.img}
+                          src={toAssetUrl(item.img)}
                           alt={item.name}
                           className="
                             h-14
@@ -590,12 +643,12 @@ export default function Orders() {
                             <p className="truncate text-xs font-bold text-[var(--color-text-primary)]">
                               {item.name}
                             </p>
-                            {item.availability_type === "MADE_TO_ORDER" && (
+                            {/* {item.availability_type === "MADE_TO_ORDER" && (
                               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-black text-orange-700 border border-orange-200/60">
                                 <Sparkles size={10} />
                                 Made to Order
                               </span>
-                            )}
+                            )} */}
                           </div>
 
                           <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">

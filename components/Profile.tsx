@@ -164,6 +164,43 @@ export default function Profile() {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-body)] flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full text-center bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)] flex items-center justify-center">
+            <User size={32} />
+          </div>
+          <h2 className="text-xl font-black text-[var(--color-text-primary)]">
+            Sign in to view profile
+          </h2>
+          <p className="mt-2 text-xs text-[var(--color-text-muted)] leading-relaxed">
+            Please log in to manage your profile, delivery addresses, and account details.
+          </p>
+          <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("sfc_open_login"));
+                }
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3 text-xs font-bold text-white shadow-md transition hover:bg-[var(--color-primary-dark)]"
+            >
+              Sign In / Register
+            </button>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-6 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg-body)]">
 

@@ -37,7 +37,7 @@ const storage =
 const rootPersistConfig = {
   key: "sfc_root",
   storage,
-  whitelist: ["theme", "auth"], // Persist both theme and auth
+  whitelist: ["theme"], // Persist only theme; auth state is managed cleanly via accessToken + HttpOnly refresh cookie
 };
 
 const rootReducer = combineReducers({

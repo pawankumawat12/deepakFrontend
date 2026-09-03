@@ -53,10 +53,11 @@ const getNormalizedBaseUrl = () => {
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: getNormalizedBaseUrl(),
   credentials: "include",
-  prepareHeaders: (headers, { getState }) => {
-    const stateToken = (getState() as any)?.auth?.accessToken;
-    const localToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-    const accessToken = stateToken || localToken;
+  prepareHeaders: (headers) => {
+    const accessToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     if (accessToken) {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
@@ -70,8 +71,11 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
   let result = await rawBaseQuery(args, api, extraOptions);
 
   const url = typeof args === "string" ? args : args?.url;
+  const isRefreshRequest =
+    url === "/auth/refresh-token" || url?.includes("refresh-token");
   const isAuthEndpoint =
-    url === "/auth/refresh-token" ||
+    isRefreshRequest ||
+    url === "/auth/logout" ||
     url === "/auth/login" ||
     url === "/auth/verify-otp";
 
@@ -88,7 +92,10 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
           extraOptions
         );
 
-        if (refreshResult.data?.accessToken || refreshResult.data?.token) {
+        if (
+          !refreshResult.error &&
+          (refreshResult.data?.accessToken || refreshResult.data?.token)
+        ) {
           const newAccessToken =
             refreshResult.data.accessToken || refreshResult.data.token;
 
@@ -104,6 +111,7 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
             localStorage.removeItem("accessToken");
           }
           api.dispatch(logout());
+          api.dispatch(baseApi.util.resetApiState());
         }
       } finally {
         release();

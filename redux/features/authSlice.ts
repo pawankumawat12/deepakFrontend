@@ -10,18 +10,6 @@ export interface User {
   is_active?: boolean;
   is_blocked?: boolean;
   block_reason?: string | null;
-}
-
-export interface User {
-  id: number | string;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  role: string;
-  image?: string | null;
-  is_active?: boolean;
-  is_blocked?: boolean;
-  block_reason?: string | null;
   token?: string;
 }
 
