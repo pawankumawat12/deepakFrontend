@@ -20,8 +20,11 @@ import {
   Banknote,
   Check,
   X,
+  Eye,
+  FileText,
 } from "lucide-react";
 import OrderChat from "./OrderChat";
+import OrderDetailsModal from "./OrderDetailsModal";
 import Pagination from "./Pagination";
 import SkeletonLoader from "./SkeletonLoader";
 import {
@@ -31,10 +34,18 @@ import {
 import { getSocket } from "../lib/socket";
 import toast from "react-hot-toast";
 
-type OrderStatus = "Delivered" | "Preparing" | "Out for Delivery" | "Cancelled";
+type OrderStatus =
+  | "Pending"
+  | "Order Placed"
+  | "Pending Payment"
+  | "Preparing"
+  | "Out for Delivery"
+  | "Delivered"
+  | "Cancelled";
 
 const filters = [
   "All",
+  "Pending",
   "Preparing",
   "Out for Delivery",
   "Delivered",
@@ -64,16 +75,22 @@ function StatusIcon({ status }: { status: string }) {
 function statusClasses(status: string) {
   switch (status) {
     case "Delivered":
-      return "bg-green-50 text-green-700 border-green-100";
+      return "bg-green-50 text-green-700 border-green-200";
 
     case "Cancelled":
-      return "bg-red-50 text-red-600 border-red-100";
+      return "bg-red-50 text-red-600 border-red-200";
 
     case "Out for Delivery":
-      return "bg-orange-50 text-orange-700 border-orange-100";
+      return "bg-orange-50 text-orange-700 border-orange-200";
 
+    case "Preparing":
+      return "bg-blue-50 text-blue-700 border-blue-200";
+
+    case "Pending":
+    case "Order Placed":
+    case "Pending Payment":
     default:
-      return "bg-[var(--color-primary-50)] text-[var(--color-primary)] border-[var(--color-primary-light)]";
+      return "bg-amber-50 text-amber-800 border-amber-200";
   }
 }
 
@@ -85,6 +102,7 @@ export default function Orders() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [page, setPage] = useState(1);
   const [selectedChatOrder, setSelectedChatOrder] = useState<any | null>(null);
+  const [selectedDetailsOrder, setSelectedDetailsOrder] = useState<any | null>(null);
 
   // Capture the pending chat order ID set by notifications page before navigating here
   const [pendingChatOrderId, setPendingChatOrderId] = useState<number | null>(() => {
@@ -136,7 +154,7 @@ export default function Orders() {
 
     const handleOrderAccepted = (data: any) => {
       toast.success(
-        `Your Order #${data.orderNumber || data.orderId} was ACCEPTED! Food is being prepared.`,
+        `Your order #${data.orderNumber || data.orderId} has been accepted and is being prepared.`,
         { duration: 6000 }
       );
       refetch();
@@ -238,6 +256,7 @@ export default function Orders() {
         paymentStatus: (o as any).payment_status || "Pending",
         transactionId: (o as any).transaction_id,
         paymentDetailsJson,
+        notes: (o as any).notes || "",
         items: (o.items || []).map((it) => ({
           id: it.id,
           name: it.product_name,
@@ -253,14 +272,29 @@ export default function Orders() {
 
   const filteredOrders = useMemo(() => {
     if (activeFilter === "All") return orders;
+    if (activeFilter === "Pending") {
+      return orders.filter(
+        (order) =>
+          order.status === "Pending" ||
+          order.status === "Order Placed" ||
+          order.status === "Pending Payment"
+      );
+    }
     return orders.filter((order) => order.status === activeFilter);
   }, [activeFilter, orders]);
+
   const stats = useMemo(() => {
     const total = orders.length;
-    const delivered = orders.filter((o) => o.status === "Delivered").length;
+    const pending = orders.filter(
+      (o) =>
+        o.status === "Pending" ||
+        o.status === "Order Placed" ||
+        o.status === "Pending Payment"
+    ).length;
     const preparing = orders.filter((o) => o.status === "Preparing").length;
+    const delivered = orders.filter((o) => o.status === "Delivered").length;
     const cancelled = orders.filter((o) => o.status === "Cancelled").length;
-    return { total, delivered, preparing, cancelled };
+    return { total, pending, preparing, delivered, cancelled };
   }, [orders]);
 
 
@@ -383,7 +417,7 @@ const toAssetUrl = (path?: string | null) => {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pt-7 sm:px-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
             <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">
               Total Orders
@@ -396,11 +430,11 @@ const toAssetUrl = (path?: string | null) => {
 
           <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
             <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">
-              Delivered
+              Pending
             </p>
 
-            <p className="mt-2 text-2xl font-black text-[var(--color-primary)]">
-              {stats.delivered}
+            <p className="mt-2 text-2xl font-black text-amber-600">
+              {stats.pending}
             </p>
           </div>
 
@@ -411,6 +445,16 @@ const toAssetUrl = (path?: string | null) => {
 
             <p className="mt-2 text-2xl font-black text-[var(--color-secondary)]">
               {stats.preparing}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
+            <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">
+              Delivered
+            </p>
+
+            <p className="mt-2 text-2xl font-black text-[var(--color-primary)]">
+              {stats.delivered}
             </p>
           </div>
 
@@ -660,6 +704,46 @@ const toAssetUrl = (path?: string | null) => {
                     ))}
                   </div>
 
+                  {/* Order Note */}
+                  {order.notes && order.notes.trim() && (
+                    <div className="mt-3.5 flex items-start gap-2 rounded-xl bg-amber-50/80 border border-amber-200/80 px-3 py-2 text-[11px] text-amber-900">
+                      <FileText size={13} className="shrink-0 mt-0.5 text-amber-700" />
+                      <div>
+                        <span className="font-bold">Special Note: </span>
+                        <span>{order.notes}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Order Status Notice */}
+                  {(order.status === "Pending" ||
+                    order.status === "Order Placed" ||
+                    order.status === "Pending Payment") && (
+                    <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-xs text-amber-900">
+                      <span className="relative flex h-2.5 w-2.5 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                      </span>
+                      <div>
+                        <span className="font-bold">Waiting for order confirmation</span>
+                        <span className="text-amber-800"> — Your order has been placed and received. Waiting for store confirmation to begin preparation.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {order.status === "Preparing" && (
+                    <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-blue-50 border border-blue-200 px-3.5 py-2.5 text-xs text-blue-900">
+                      <span className="relative flex h-2.5 w-2.5 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+                      </span>
+                      <div>
+                        <span className="font-bold">Your order has been accepted and is being prepared.</span>
+                        <span className="text-blue-800"> Our kitchen is preparing fresh food for you.</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Bottom */}
 
                   <div
@@ -704,6 +788,33 @@ const toAssetUrl = (path?: string | null) => {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDetailsOrder(order)}
+                        className="
+                          inline-flex
+                          items-center
+                          justify-center
+                          gap-1.5
+                          rounded-xl
+                          border
+                          border-[var(--color-border)]
+                          bg-white
+                          px-4
+                          py-2.5
+                          text-[10px]
+                          font-bold
+                          text-[var(--color-text-primary)]
+                          transition
+                          hover:border-[var(--color-primary)]
+                          hover:text-[var(--color-primary)]
+                          hover:bg-[var(--color-primary-50)]/40
+                        "
+                      >
+                        <Eye size={14} />
+                        View Details
+                      </button>
+
                       <Link
                         href="/menu"
                         className="
@@ -778,6 +889,17 @@ const toAssetUrl = (path?: string | null) => {
           orderNumber={selectedChatOrder.id}
           orderStatus={selectedChatOrder.status}
           onClose={() => setSelectedChatOrder(null)}
+        />
+      )}
+
+      {selectedDetailsOrder && (
+        <OrderDetailsModal
+          order={selectedDetailsOrder}
+          onClose={() => setSelectedDetailsOrder(null)}
+          onOpenChat={(ord) => {
+            setSelectedDetailsOrder(null);
+            setSelectedChatOrder(ord);
+          }}
         />
       )}
     </main>

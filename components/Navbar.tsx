@@ -249,7 +249,6 @@ const Navbar = () => {
               })}
             </nav>
 
-            {/* ---------------- RIGHT ACTIONS ---------------- */}
 
             <div className="flex items-center gap-2">
               <Link
@@ -537,6 +536,8 @@ const Navbar = () => {
                 </button>
               )}
 
+              
+
               {/* <Link
                 href="/menu"
                 className="
@@ -607,40 +608,92 @@ const Navbar = () => {
                   Sign in
                 </button>
               )}
-
+<div className="flex items-center gap-2">
               <Link
-                href="/cart"
+                href="/notifications"
+                aria-label="Notifications"
+                title="Notifications"
                 className="
                   relative
-                  flex h-11 w-11
-                  items-center justify-center
+                  flex h-10 w-10 items-center justify-center
                   rounded-full
-                  bg-[var(--color-primary-50)]
-                  text-[var(--color-primary)]
+                  text-[var(--color-text-primary)]
+                  transition
+                  hover:bg-[var(--color-primary-50)]
+                  hover:text-[var(--color-primary)]
                 "
               >
-                <ShoppingCart size={21} />
+                <Bell size={20} />
 
-                {cartCount > 0 && (
+                {unreadNotifCount > 0 && (
+                  <span
+                    className="
+                        absolute
+                        -right-0.5
+                        -top-0.5
+                        flex
+                        h-5
+                        min-w-5
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-[var(--color-primary)]
+                        px-1
+                        text-[10px]
+                        font-bold
+                        text-white
+                      "
+                  >
+                    {unreadNotifCount > 99 ? "99+" : unreadNotifCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Wishlist Link */}
+              <Link
+                href="/favorites"
+                aria-label="Wishlist"
+                title="Your Wishlist"
+                className="
+                  relative
+                  flex h-10 w-10 items-center justify-center
+                  rounded-full
+                  text-[var(--color-text-primary)]
+                  transition
+                  hover:bg-[var(--color-primary-50)]
+                  hover:text-[var(--color-primary)]
+                "
+              >
+                <Bookmark
+                  size={20}
+                  className={wishlistCount > 0 ? "fill-[var(--color-primary)] text-[var(--color-primary)]" : ""}
+                />
+
+                {wishlistCount > 0 && (
                   <span
                     className="
                       absolute
-                      -right-1
-                      -top-1
-                      flex h-5 min-w-5
-                      items-center justify-center
+                      -right-0.5
+                      -top-0.5
+                      flex
+                      h-5
+                      min-w-5
+                      items-center
+                      justify-center
                       rounded-full
                       bg-[var(--color-primary)]
                       px-1
                       text-[10px]
                       font-bold
                       text-white
+                      shadow-sm
                     "
                   >
-                    {cartCount}
+                    {wishlistCount}
                   </span>
                 )}
               </Link>
+</div>
             </div>
           </div>
         </div>

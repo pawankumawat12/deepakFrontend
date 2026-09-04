@@ -15,17 +15,35 @@ import {
   LoaderCircle,
   CheckCircle2,
   AlertCircle,
+  ShieldCheck,
+  RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGetFooterQuery } from "@/redux/services/settingsApi";
-import { useSubmitContactQueryMutation } from "@/redux/services/contactApi";
+import {
+  useSubmitContactQueryMutation,
+  useGetMyContactQueriesQuery,
+} from "@/redux/services/contactApi";
+import { getSocket } from "@/lib/socket";
 
 export default function ContactPage() {
   const user = useSelector((state: any) => state.auth?.user);
   const { data: settings } = useGetFooterQuery();
   const settingData = settings?.data;
 
+  const [activeTab, setActiveTab] = useState<"form" | "threads">("form");
+
   const [submitQuery, { isLoading }] = useSubmitContactQueryMutation();
+  const {
+    data: myQueriesData,
+    isLoading: loadingMyQueries,
+    isFetching: fetchingMyQueries,
+    refetch: refetchQueries,
+  } = useGetMyContactQueriesQuery(undefined, {
+    skip: !user,
+  });
+
+  const myQueries = myQueriesData?.data || [];
 
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +55,22 @@ export default function ContactPage() {
 
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Listen to real-time socket events when an admin replies to customer inquiry
+  useEffect(() => {
+    if (!user?.id) return;
+    const socket = getSocket(user.id);
+    const handleReply = (updatedQuery: any) => {
+      refetchQueries();
+      toast.success(
+        `Support responded to your inquiry: "${updatedQuery?.subject || "Inquiry"}"`
+      );
+    };
+    socket.on("contact_query_replied", handleReply);
+    return () => {
+      socket.off("contact_query_replied", handleReply);
+    };
+  }, [user?.id, refetchQueries]);
 
   // Pre-fill with authenticated user details
   useEffect(() => {
@@ -333,281 +367,498 @@ export default function ContactPage() {
           {/* LEFT - FORM */}
 
           <div className="p-6 sm:p-8 md:p-10">
-
-            <div className="mb-7">
-
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                Send a Message
-              </span>
-
-              <h2 className="mt-2 text-2xl font-black text-[var(--color-text-primary)] sm:text-3xl">
-                How can we help?
-              </h2>
-
-              <p className="mt-2 text-xs leading-6 text-[var(--color-text-secondary)]">
-                Drop us a message and we'll get back to you as soon
-                as possible.
-              </p>
-
-            </div>
-
-            {submitted ? (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-6 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
-                  <CheckCircle2 size={28} />
-                </div>
-                <h3 className="mt-4 text-lg font-black text-emerald-950">
-                  Message Sent Successfully!
-                </h3>
-                <p className="mt-2 text-xs leading-relaxed text-emerald-700">
-                  Thank you for reaching out to SFC Cafe. Our team has received your inquiry and will respond to you shortly via email or phone.
-                </p>
+            {/* Tab Navigation */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setSubmitted(false)}
-                  className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
+                  onClick={() => setActiveTab("form")}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                    activeTab === "form"
+                      ? "bg-[var(--color-primary)] text-white shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:bg-[var(--bg-body)] hover:text-[var(--color-text-primary)]"
+                  }`}
                 >
-                  Send Another Message
+                  <Send size={13} />
+                  <span>Send a Message</span>
                 </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {errorMessage && (
-                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-600">
-                    <AlertCircle size={16} className="shrink-0" />
-                    <span>{errorMessage}</span>
-                  </div>
-                )}
 
-                {/* Name */}
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                  >
-                    Your Name *
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                    disabled={isLoading}
-                    className="
-                      w-full
-                      rounded-xl
-                      border
-                      border-[var(--color-border)]
-                      bg-[var(--bg-body)]
-                      px-4
-                      py-3
-                      text-sm
-                      outline-none
-                      transition
-                      placeholder:text-[var(--color-text-muted)]
-                      focus:border-[var(--color-primary)]
-                      focus:ring-2
-                      focus:ring-[var(--color-primary)]/10
-                      disabled:opacity-60
-                    "
-                  />
-                </div>
-
-                {/* Email & Phone Grid */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                    >
-                      Email Address *
-                    </label>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="you@example.com"
-                      disabled={isLoading}
-                      readOnly
-                      className="
-                        w-full
-                        rounded-xl
-                        border
-                        border-[var(--color-border)]
-                        bg-[var(--bg-body)]
-                        px-4
-                        py-3
-                        text-sm
-                        outline-none
-                        transition
-                        placeholder:text-[var(--color-text-muted)]
-                        focus:border-[var(--color-primary)]
-                        focus:ring-2
-                        focus:ring-[var(--color-primary)]/10
-                        disabled:opacity-60
-                      "
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                    >
-                      Phone Number
-                    </label>
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="+91 98765 43210"
-                      disabled={isLoading}
-                      readOnly
-                      className="
-                        w-full
-                        rounded-xl
-                        border
-                        border-[var(--color-border)]
-                        bg-[var(--bg-body)]
-                        px-4
-                        py-3
-                        text-sm
-                        outline-none
-                        transition
-                        placeholder:text-[var(--color-text-muted)]
-                        focus:border-[var(--color-primary)]
-                        focus:ring-2
-                        focus:ring-[var(--color-primary)]/10
-                        disabled:opacity-60
-                      "
-                    />
-                  </div>
-                </div>
-
-                {/* Subject */}
-                <div>
-                  <label
-                    htmlFor="subject"
-                    className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                  >
-                    Subject *
-                  </label>
-                  <input
-                    id="subject"
-                    name="subject"
-                    type="text"
-                    required
-                    value={formData.subject}
-                    onChange={handleChange}
-                    placeholder="e.g. Catering inquiry, feedback, order assistance"
-                    disabled={isLoading}
-                    className="
-                      w-full
-                      rounded-xl
-                      border
-                      border-[var(--color-border)]
-                      bg-[var(--bg-body)]
-                      px-4
-                      py-3
-                      text-sm
-                      outline-none
-                      transition
-                      placeholder:text-[var(--color-text-muted)]
-                      focus:border-[var(--color-primary)]
-                      focus:ring-2
-                      focus:ring-[var(--color-primary)]/10
-                      disabled:opacity-60
-                    "
-                  />
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
-                  >
-                    Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={4}
-                    required
-                    value={formData.message}
-                    onChange={handleChange}
-                    placeholder="Tell us what's on your mind or how we can assist you..."
-                    disabled={isLoading}
-                    className="
-                      w-full
-                      resize-none
-                      rounded-xl
-                      border
-                      border-[var(--color-border)]
-                      bg-[var(--bg-body)]
-                      px-4
-                      py-3
-                      text-sm
-                      outline-none
-                      transition
-                      placeholder:text-[var(--color-text-muted)]
-                      focus:border-[var(--color-primary)]
-                      focus:ring-2
-                      focus:ring-[var(--color-primary)]/10
-                      disabled:opacity-60
-                    "
-                  />
-                </div>
-
-                {/* Submit */}
                 <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="
-                    inline-flex
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-xl
-                    bg-[var(--color-primary)]
-                    px-5
-                    py-3.5
-                    text-sm
-                    font-bold
-                    text-white
-                    shadow-md
-                    transition
-                    hover:bg-[var(--color-primary-dark)]
-                    hover:-translate-y-0.5
-                    active:scale-[0.99]
-                    disabled:cursor-not-allowed
-                    disabled:opacity-60
-                  "
+                  type="button"
+                  onClick={() => setActiveTab("threads")}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                    activeTab === "threads"
+                      ? "bg-[var(--color-primary)] text-white shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:bg-[var(--bg-body)] hover:text-[var(--color-text-primary)]"
+                  }`}
                 >
-                  {isLoading ? (
-                    <>
-                      <LoaderCircle size={16} className="animate-spin" />
-                      <span>Sending Message...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Send Message</span>
-                      <Send size={16} />
-                    </>
+                  <MessageCircle size={13} />
+                  <span>My Messages</span>
+                  {user && myQueries.length > 0 && (
+                    <span
+                      className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                        activeTab === "threads"
+                          ? "bg-white/20 text-white"
+                          : "bg-[var(--color-primary-50)] text-[var(--color-primary)]"
+                      }`}
+                    >
+                      {myQueries.length}
+                    </span>
                   )}
                 </button>
-              </form>
+              </div>
+
+              {activeTab === "threads" && user && (
+                <button
+                  type="button"
+                  onClick={() => refetchQueries()}
+                  disabled={fetchingMyQueries}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--color-text-secondary)] transition hover:bg-[var(--bg-body)]"
+                  title="Refresh inquiries"
+                >
+                  <RefreshCw size={12} className={fetchingMyQueries ? "animate-spin" : ""} />
+                  <span>Refresh</span>
+                </button>
+              )}
+            </div>
+
+            {/* TAB 1: FORM */}
+            {activeTab === "form" && (
+              <div>
+                <div className="mb-7">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                    Send a Message
+                  </span>
+                  <h2 className="mt-2 text-2xl font-black text-[var(--color-text-primary)] sm:text-3xl">
+                    How can we help?
+                  </h2>
+                  <p className="mt-2 text-xs leading-6 text-[var(--color-text-secondary)]">
+                    Drop us a message and we'll get back to you as soon as possible.
+                  </p>
+                </div>
+
+                {submitted ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-6 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+                      <CheckCircle2 size={28} />
+                    </div>
+                    <h3 className="mt-4 text-lg font-black text-emerald-950">
+                      Message Sent Successfully!
+                    </h3>
+                    <p className="mt-2 text-xs leading-relaxed text-emerald-700">
+                      Thank you for reaching out to SFC Cafe. Our team has received your inquiry and will respond to you shortly via email or phone.
+                    </p>
+                    <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSubmitted(false);
+                          setActiveTab("threads");
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)] active:scale-95"
+                      >
+                        <MessageCircle size={14} />
+                        <span>View Inquiries & Responses</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSubmitted(false)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-4 py-2.5 text-xs font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-50 active:scale-95"
+                      >
+                        <span>Send Another Message</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    {errorMessage && (
+                      <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-600">
+                        <AlertCircle size={16} className="shrink-0" />
+                        <span>{errorMessage}</span>
+                      </div>
+                    )}
+
+                    {/* Name */}
+                    <div>
+                      <label
+                        htmlFor="name"
+                        className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                      >
+                        Your Name *
+                      </label>
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Enter your full name"
+                        disabled={isLoading}
+                        className="
+                          w-full
+                          rounded-xl
+                          border
+                          border-[var(--color-border)]
+                          bg-[var(--bg-body)]
+                          px-4
+                          py-3
+                          text-sm
+                          outline-none
+                          transition
+                          placeholder:text-[var(--color-text-muted)]
+                          focus:border-[var(--color-primary)]
+                          focus:ring-2
+                          focus:ring-[var(--color-primary)]/10
+                          disabled:opacity-60
+                        "
+                      />
+                    </div>
+
+                    {/* Email & Phone Grid */}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                        >
+                          Email Address *
+                        </label>
+                        <input
+                          id="email"
+                          name="email"
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="you@example.com"
+                          disabled={isLoading}
+                          readOnly={Boolean(user?.email)}
+                          className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[var(--color-border)]
+                            bg-[var(--bg-body)]
+                            px-4
+                            py-3
+                            text-sm
+                            outline-none
+                            transition
+                            placeholder:text-[var(--color-text-muted)]
+                            focus:border-[var(--color-primary)]
+                            focus:ring-2
+                            focus:ring-[var(--color-primary)]/10
+                            disabled:opacity-60
+                          "
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="phone"
+                          className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                        >
+                          Phone Number
+                        </label>
+                        <input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          placeholder="+91 98765 43210"
+                          disabled={isLoading}
+                          readOnly={Boolean(user?.phone)}
+                          className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-[var(--color-border)]
+                            bg-[var(--bg-body)]
+                            px-4
+                            py-3
+                            text-sm
+                            outline-none
+                            transition
+                            placeholder:text-[var(--color-text-muted)]
+                            focus:border-[var(--color-primary)]
+                            focus:ring-2
+                            focus:ring-[var(--color-primary)]/10
+                            disabled:opacity-60
+                          "
+                        />
+                      </div>
+                    </div>
+
+                    {/* Subject */}
+                    <div>
+                      <label
+                        htmlFor="subject"
+                        className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                      >
+                        Subject *
+                      </label>
+                      <input
+                        id="subject"
+                        name="subject"
+                        type="text"
+                        required
+                        value={formData.subject}
+                        onChange={handleChange}
+                        placeholder="e.g. Catering inquiry, feedback, order assistance"
+                        disabled={isLoading}
+                        className="
+                          w-full
+                          rounded-xl
+                          border
+                          border-[var(--color-border)]
+                          bg-[var(--bg-body)]
+                          px-4
+                          py-3
+                          text-sm
+                          outline-none
+                          transition
+                          placeholder:text-[var(--color-text-muted)]
+                          focus:border-[var(--color-primary)]
+                          focus:ring-2
+                          focus:ring-[var(--color-primary)]/10
+                          disabled:opacity-60
+                        "
+                      />
+                    </div>
+
+                    {/* Message */}
+                    <div>
+                      <label
+                        htmlFor="message"
+                        className="mb-1.5 block text-xs font-bold text-[var(--color-text-primary)]"
+                      >
+                        Message *
+                      </label>
+                      <textarea
+                        id="message"
+                        name="message"
+                        rows={4}
+                        required
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Tell us what's on your mind or how we can assist you..."
+                        disabled={isLoading}
+                        className="
+                          w-full
+                          resize-none
+                          rounded-xl
+                          border
+                          border-[var(--color-border)]
+                          bg-[var(--bg-body)]
+                          px-4
+                          py-3
+                          text-sm
+                          outline-none
+                          transition
+                          placeholder:text-[var(--color-text-muted)]
+                          focus:border-[var(--color-primary)]
+                          focus:ring-2
+                          focus:ring-[var(--color-primary)]/10
+                          disabled:opacity-60
+                        "
+                      />
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="
+                        inline-flex
+                        w-full
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-xl
+                        bg-[var(--color-primary)]
+                        px-5
+                        py-3.5
+                        text-sm
+                        font-bold
+                        text-white
+                        shadow-md
+                        transition
+                        hover:bg-[var(--color-primary-dark)]
+                        hover:-translate-y-0.5
+                        active:scale-[0.99]
+                        disabled:cursor-not-allowed
+                        disabled:opacity-60
+                      "
+                    >
+                      {isLoading ? (
+                        <>
+                          <LoaderCircle size={16} className="animate-spin" />
+                          <span>Sending Message...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Send Message</span>
+                          <Send size={16} />
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
+              </div>
             )}
 
+            {/* TAB 2: CONVERSATION THREADS */}
+            {activeTab === "threads" && (
+              <div>
+                <div className="mb-5">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                    Inquiry History
+                  </span>
+                  <h2 className="mt-1 text-xl font-black text-[var(--color-text-primary)] sm:text-2xl">
+                    Your Inquiries & Responses
+                  </h2>
+                  <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    Track questions submitted to our team and view official replies.
+                  </p>
+                </div>
+
+                {!user ? (
+                  <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--bg-body)]/50 p-8 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                      <MessageCircle size={22} />
+                    </div>
+                    <h3 className="mt-4 text-sm font-bold text-[var(--color-text-primary)]">
+                      Sign In to View Your Messages
+                    </h3>
+                    <p className="mt-1 text-xs text-[var(--color-text-secondary)] max-w-sm mx-auto">
+                      Log in to your account to view your conversation history and replies from our customer support team.
+                    </p>
+                    <Link
+                      href="/login"
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)] transition"
+                    >
+                      <span>Sign In</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                ) : loadingMyQueries ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
+                    <LoaderCircle size={28} className="animate-spin text-[var(--color-primary)]" />
+                    <p className="mt-3 text-xs font-medium">Loading your conversations...</p>
+                  </div>
+                ) : myQueries.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--bg-body)]/50 p-8 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
+                      <MessageCircle size={22} />
+                    </div>
+                    <h3 className="mt-4 text-sm font-bold text-[var(--color-text-primary)]">
+                      No Inquiries Yet
+                    </h3>
+                    <p className="mt-1 text-xs text-[var(--color-text-secondary)] max-w-sm mx-auto">
+                      You haven't submitted any inquiries yet. If you have questions about catering, orders, or anything else, let us know!
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("form")}
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)] transition"
+                    >
+                      <Send size={13} />
+                      <span>Send a Message</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="max-h-[560px] overflow-y-auto space-y-4 pr-1">
+                    {myQueries.map((inquiry) => (
+                      <div
+                        key={inquiry.id}
+                        className="rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-sm transition hover:border-[var(--color-primary)]/30"
+                      >
+                        {/* Header: Subject, Date, Status */}
+                        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-neutral-100 pb-3">
+                          <div>
+                            <h4 className="text-sm font-extrabold text-[var(--color-text-primary)]">
+                              {inquiry.subject}
+                            </h4>
+                            <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
+                              Submitted on {new Date(inquiry.created_at).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+
+                          <div>
+                            {inquiry.admin_reply ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                                <CheckCircle2 size={12} /> Replied
+                              </span>
+                            ) : inquiry.status === "in_progress" ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
+                                <Clock3 size={12} /> In Progress
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
+                                <AlertCircle size={12} /> Under Review
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Customer's Query */}
+                        <div className="mt-3 rounded-xl bg-[var(--bg-body)] p-3.5 text-xs text-[var(--color-text-secondary)]">
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                            Your Message
+                          </p>
+                          <p className="whitespace-pre-wrap leading-relaxed">
+                            {inquiry.message}
+                          </p>
+                        </div>
+
+                        {/* Admin's Response Thread */}
+                        {inquiry.admin_reply ? (
+                          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+                            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1">
+                              <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-950">
+                                <ShieldCheck size={14} className="text-emerald-700" />
+                                <span>Support Team Response</span>
+                                {inquiry.admin_responder_name && (
+                                  <span className="text-[11px] font-semibold text-emerald-800">
+                                    • {inquiry.admin_responder_name}
+                                  </span>
+                                )}
+                              </div>
+                              {inquiry.replied_at && (
+                                <span className="text-[10px] font-medium text-emerald-700">
+                                  {new Date(inquiry.replied_at).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs leading-relaxed text-emerald-950 whitespace-pre-wrap">
+                              {inquiry.admin_reply}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-amber-200 bg-amber-50/60 p-3 text-[11.5px] text-amber-800">
+                            <Clock3 size={13} className="shrink-0 text-amber-600" />
+                            <span>Our support team is reviewing your query. You will receive an update here and via email shortly.</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="relative min-h-[520px]">
             <div

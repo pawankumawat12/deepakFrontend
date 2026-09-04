@@ -285,7 +285,7 @@ export default function Menu() {
       : categories.find((c) => c.id === selected)?.name || "Menu";
 
   return (
-    <main className="min-h-screen bg-[var(--bg-body)] pb-32">
+    <main className="min-h-screen bg-[var(--bg-body)]">
       <section className="relative overflow-hidden bg-[var(--color-primary-dark)]">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute -bottom-28 -left-24 h-80 w-80 rounded-full bg-[var(--color-secondary)]/10" />

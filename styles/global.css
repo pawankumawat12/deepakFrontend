@@ -74,19 +74,18 @@ button {
   width: 100%;
   min-width: 0;
 }
-
+/* 
 @media (min-width: 768px) {
   .app-main {
     padding-top: 82px;
   }
 }
-
-@media (max-width: 767px) {
+   @media (max-width: 767px) {
   .app-main {
     padding-top: calc(68px + env(safe-area-inset-top, 0px));
     padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
   }
-}
+} */
 
 .app-footer {
   margin-top: auto;

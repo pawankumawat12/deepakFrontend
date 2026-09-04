@@ -103,7 +103,7 @@ export default function OrderChat({
   orderId,
   dbOrderId,
   orderNumber,
-  orderStatus = "Preparing",
+  orderStatus = "Pending",
   onClose,
 }: OrderChatProps) {
   const user = useSelector(
@@ -463,7 +463,17 @@ export default function OrderChat({
           <span className="font-medium text-[#54656f]">
             Order: <b className="text-[#111b21]">{displayOrderNum}</b>
           </span>
-          <span className="rounded-full bg-[#d9fdd3] px-2.5 py-0.5 text-[10px] font-bold text-[#008069] border border-[#c1f5b8]">
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+              orderStatus === "Delivered"
+                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                : orderStatus === "Preparing"
+                ? "bg-blue-100 text-blue-800 border-blue-200"
+                : orderStatus === "Out for Delivery"
+                ? "bg-orange-100 text-orange-800 border-orange-200"
+                : "bg-amber-100 text-amber-800 border-amber-200"
+            }`}
+          >
             {orderStatus}
           </span>
         </div>

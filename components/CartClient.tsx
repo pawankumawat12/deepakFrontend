@@ -47,6 +47,7 @@ import {
   ChevronUp,
   Pencil,
   CreditCard,
+  FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -109,6 +110,7 @@ export default function CartClient() {
   const [appliedOfferCode, setAppliedOfferCode] = useState<string>("");
   const [couponInput, setCouponInput] = useState<string>("");
   const [showCoupons, setShowCoupons] = useState<boolean>(false);
+  const [orderNotes, setOrderNotes] = useState<string>("");
 
   // Clear Cart Confirmation Modal State
   const [clearCartModalOpen, setClearCartModalOpen] = useState<boolean>(false);
@@ -381,6 +383,8 @@ export default function CartClient() {
         deliveryAddressJson: selectedAddress,
 
         paymentMethod,
+
+        notes: orderNotes.trim(),
 
         offerCode:
           appliedOfferCode ||
@@ -1737,6 +1741,36 @@ export default function CartClient() {
                 )}
 
 
+                {/* Order Note / Special Instructions */}
+                <div className="rounded-3xl border border-[var(--color-border)] bg-white p-5 sm:p-6 shadow-sm mt-5">
+                  <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3.5">
+                    <div className="flex items-center gap-2">
+                      <FileText size={18} className="text-[var(--color-primary)]" />
+                      <h2 className="text-sm font-black text-[var(--color-text-primary)]">
+                        Order Note / Special Instructions
+                      </h2>
+                    </div>
+                    <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[10px] font-bold text-stone-500">
+                      Optional
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5">
+                    <textarea
+                      value={orderNotes}
+                      onChange={(e) => setOrderNotes(e.target.value)}
+                      maxLength={300}
+                      rows={3}
+                      placeholder="e.g. Please make it less spicy, No onions, Pack separately, etc."
+                      className="w-full rounded-2xl border border-gray-200 bg-stone-50/50 p-3.5 text-xs text-[var(--color-text-primary)] placeholder-gray-400 transition-all focus:border-[var(--color-primary)] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
+                    />
+                    <div className="mt-1.5 flex items-center justify-between text-[11px] text-[var(--color-text-muted)]">
+                      <span>Kitchen will prepare your food according to your preferences.</span>
+                      <span className="font-medium text-stone-400">{orderNotes.length}/300</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="rounded-3xl border border-[var(--color-border)] bg-white p-5 sm:p-6 shadow-sm mt-5">
                   <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
                     <div className="flex items-center gap-2">
@@ -1775,12 +1809,12 @@ export default function CartClient() {
                             </span>
                           </div>
 
-                          {summary.codFee <= 0 && (
+                          {/* {summary.codFee <= 0 && (
                             <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-amber-100/70 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-900">
                               <Package size={12} className="shrink-0" />
                               <span>Includes ₹{formatRupee(summary.codFee)} Cash on Delivery fee</span>
                             </span>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </div>
