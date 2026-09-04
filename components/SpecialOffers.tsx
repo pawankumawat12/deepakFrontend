@@ -6,7 +6,10 @@ import {
   ArrowRight,
   Clock3,
   Flame,
+  Leaf,
   Tag,
+  Truck,
+  Utensils,
   Zap,
 } from "lucide-react";
 import { useGetOffersQuery } from "@/redux/services/offerApi";
@@ -50,6 +53,9 @@ export default function SpecialOffers() {
   const offer = displayOffers[currentActive];
 
   return (
+
+    <>
+      
     <section className="bg-[var(--bg-body)] px-4 py-6 md:px-8 md:py-10">
       <div className="mx-auto max-w-7xl">
 
@@ -248,6 +254,8 @@ export default function SpecialOffers() {
         </div>
 
       </div>
+    
     </section>
+    </>
   );
 }

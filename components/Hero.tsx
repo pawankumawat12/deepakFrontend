@@ -599,7 +599,7 @@ export default function Hero() {
       </section>
 
 
-      <section className="mx-auto max-w-7xl px-5 py-12 md:px-8 md:py-16">
+      <section className="mx-auto hidden max-w-7xl px-5 py-12 md:block md:px-8 md:py-16">
 
         <div className="grid gap-4 sm:grid-cols-3">
 
