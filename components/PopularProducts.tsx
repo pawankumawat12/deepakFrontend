@@ -84,7 +84,7 @@ export default function PopularProducts() {
         productId: Number(productId),
       }).unwrap();
       if (res.inWishlist) {
-        toast.success("Added to favorites ❤️");
+        toast.success("Added to favorites");
       } else {
         toast.success("Removed from favorites");
       }
@@ -110,7 +110,7 @@ export default function PopularProducts() {
     try {
       await addCartItem({ productId: Number(product.id), quantity: 1 }).unwrap();
       setAddedProduct(product.id);
-      toast.success("Added to cart 🛒");
+      toast.success("Added to cart");
       setTimeout(() => {
         setAddedProduct(null);
       }, 1200);

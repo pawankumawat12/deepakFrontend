@@ -93,9 +93,10 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
             Your payment security is our top priority:
           </p>
-          <div className="mt-3 rounded-2xl border border-[var(--color-border)] bg-stone-50/70 p-4">
+          <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-[var(--color-border)] bg-stone-50/70 p-4">
+            <Lock size={16} className="mt-0.5 shrink-0 text-[var(--color-primary)]" />
             <p className="text-xs font-semibold leading-relaxed text-[var(--color-text-primary)]">
-              🔒 <strong>Zero Card Credential Storage:</strong> SFC Cafe does not store your debit card, credit card, net banking credentials, or UPI PINs on our servers. All digital payments and UPI QR scans are processed securely via RBI-authorized payment gateways complying with PCI-DSS standards.
+              <strong>Zero Card Credential Storage:</strong> SFC Cafe does not store your debit card, credit card, net banking credentials, or UPI PINs on our servers. All digital payments and UPI QR scans are processed securely via RBI-authorized payment gateways complying with PCI-DSS standards.
             </p>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">

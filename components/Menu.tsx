@@ -15,6 +15,8 @@ import {
   Star,
   Utensils,
   Gift,
+  Leaf,
+  Zap,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -120,7 +122,7 @@ export default function Menu() {
     try {
       const res = await toggleWishlist({ productId }).unwrap();
       if (res.inWishlist) {
-        toast.success("Added to favorites ❤️");
+        toast.success("Added to favorites");
       } else {
         toast.success("Removed from favorites");
       }
@@ -141,7 +143,7 @@ export default function Menu() {
     }
     try {
       await addCartItem({ productId, quantity: 1 }).unwrap();
-      toast.success("Added to cart 🛒");
+      toast.success("Added to cart");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to add to cart");
     }
@@ -352,20 +354,20 @@ export default function Menu() {
           <div className="mt-8 flex flex-wrap gap-2">
 
             <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur">
-              <span className="text-xs font-bold text-white">
-                🍔 Freshly Prepared
+              <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                <Utensils size={13} /> Freshly Prepared
               </span>
             </div>
 
             <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur">
-              <span className="text-xs font-bold text-white">
-                ⚡ Quick Service
+              <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                <Zap size={13} /> Quick Service
               </span>
             </div>
 
             <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur">
-              <span className="text-xs font-bold text-white">
-                ❤️ Customer Favorites
+              <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                <Heart size={13} /> Customer Favorites
               </span>
             </div>
 
@@ -516,8 +518,8 @@ export default function Menu() {
                 md:py-4
               "
             >
-              <div className="text-lg md:text-xl">
-                🥬
+              <div className="flex justify-center text-lg md:text-xl text-[var(--color-primary)]">
+                <Leaf size={22} />
               </div>
 
               <p className="mt-1 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
@@ -535,8 +537,8 @@ export default function Menu() {
                 md:py-4
               "
             >
-              <div className="text-lg md:text-xl">
-                ⚡
+              <div className="flex justify-center text-lg md:text-xl text-[var(--color-secondary)]">
+                <Zap size={22} />
               </div>
 
               <p className="mt-1 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
@@ -554,8 +556,8 @@ export default function Menu() {
                 md:py-4
               "
             >
-              <div className="text-lg md:text-xl">
-                ❤️
+              <div className="flex justify-center text-lg md:text-xl text-rose-500">
+                <Heart size={22} />
               </div>
 
               <p className="mt-1 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">

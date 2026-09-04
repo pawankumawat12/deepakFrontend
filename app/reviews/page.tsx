@@ -34,11 +34,11 @@ import {
 import { RootState } from "../../redux/store";
 
 const RATING_LABELS: Record<number, string> = {
-  1: "Poor 😞",
-  2: "Fair 😐",
-  3: "Good 🙂",
-  4: "Very Good 😊",
-  5: "Exceptional Cafe Experience! 🌟",
+  1: "Poor",
+  2: "Fair",
+  3: "Good",
+  4: "Very Good",
+  5: "Exceptional Cafe Experience!",
 };
 
 export default function ReviewsPage() {

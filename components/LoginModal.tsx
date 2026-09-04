@@ -129,7 +129,7 @@ export default function LoginModal({
         setOtpDigits(["", "", "", ""]);
         setStep("verifyOtp");
         setResendTimer(RESEND_COOLDOWN_SECONDS);
-        toast(errorMsg, { icon: "📩" });
+        toast(errorMsg);
       } else {
         toast.error(errorMsg);
         setError(errorMsg);

@@ -54,7 +54,7 @@ export default function BlockedAccountScreen() {
     socket.on("customer_status_changed", async (data) => {
       if (data?.is_blocked === false || data?.is_active === true) {
         toast.success(
-          "🎉 Your account has been unblocked by the administrator! Restoring access..."
+          "Your account has been unblocked by the administrator! Restoring access..."
         );
         try {
           const freshUser = await getMe().unwrap();

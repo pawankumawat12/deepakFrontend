@@ -15,6 +15,8 @@ import {
   Star,
   Truck,
   Utensils,
+  Leaf,
+  Zap,
   Edit2,
   Trash2,
   MessageSquare,
@@ -95,7 +97,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
         productId: Number(product.id),
       }).unwrap();
       if (res.inWishlist) {
-        toast.success("Added to favorites ❤️");
+        toast.success("Added to favorites");
       } else {
         toast.success("Removed from favorites");
       }
@@ -271,7 +273,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
           title: title.trim() || undefined,
           comment: comment.trim(),
         }).unwrap();
-        toast.success("Review updated successfully! ✨");
+        toast.success("Review updated successfully!");
       } else {
         await createProductReview({
           productId: Number(product.id),
@@ -279,7 +281,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
           title: title.trim() || undefined,
           comment: comment.trim(),
         }).unwrap();
-        toast.success("Review submitted! Thank you for your feedback ❤️");
+        toast.success("Review submitted! Thank you for your feedback");
       }
       setReviewPage(1);
       handleCancelReviewForm();
@@ -370,7 +372,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
         quantity: qty,
       }).unwrap();
       setAdded(true);
-      toast.success("Added to cart 🛒");
+      toast.success("Added to cart");
       setTimeout(() => setAdded(false), 900);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to add to cart");
@@ -584,8 +586,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                   shadow-sm
                 "
               >
-                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)]">
-                  🥬
+                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <Leaf size={16} />
                 </div>
 
                 <p className="mt-2 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
@@ -604,8 +606,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                   shadow-sm
                 "
               >
-                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)]">
-                  ⚡
+                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <Zap size={16} />
                 </div>
 
                 <p className="mt-2 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
@@ -624,8 +626,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                   shadow-sm
                 "
               >
-                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)]">
-                  ❤️
+                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <Heart size={16} />
                 </div>
 
                 <p className="mt-2 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
@@ -1745,8 +1747,9 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                     </div>
                   )}
                   {!hasMore && allReviews.length > 0 && (
-                    <p className="text-[11px] font-semibold text-[var(--color-text-muted)]">
-                      ✓ You have viewed all {totalReviews} reviews
+                    <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[var(--color-text-muted)]">
+                      <Check size={13} className="text-emerald-500" />
+                      <span>You have viewed all {totalReviews} reviews</span>
                     </p>
                   )}
                 </div>

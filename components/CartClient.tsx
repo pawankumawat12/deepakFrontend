@@ -26,7 +26,11 @@ import {
   Truck,
   Utensils,
   AlertTriangle,
+  Package,
   ShieldCheck,
+  Leaf,
+  Zap,
+  Heart,
   MapPin,
   Home,
   Briefcase,
@@ -494,7 +498,7 @@ export default function CartClient() {
               }).unwrap();
 
               toast.success(
-                "🎉 Payment successful! Your order has been placed.",
+                "Payment successful! Your order has been placed.",
                 {
                   id: "payment-verification",
                 }
@@ -651,20 +655,20 @@ export default function CartClient() {
             </div>
 
             <div className="mt-10 grid grid-cols-3 gap-2 border-t border-[var(--color-border)] pt-8">
-              <div className="p-2">
-                <div className="text-xl">🥬</div>
+              <div className="p-2 text-center">
+                <div className="flex justify-center text-[var(--color-primary)]"><Leaf size={22} /></div>
                 <p className="mt-1 text-[10px] font-bold text-[var(--color-text-secondary)]">
                   Fresh Food
                 </p>
               </div>
-              <div className="p-2">
-                <div className="text-xl">⚡</div>
+              <div className="p-2 text-center">
+                <div className="flex justify-center text-[var(--color-secondary)]"><Zap size={22} /></div>
                 <p className="mt-1 text-[10px] font-bold text-[var(--color-text-secondary)]">
                   Quick Service
                 </p>
               </div>
-              <div className="p-2">
-                <div className="text-xl">🛡️</div>
+              <div className="p-2 text-center">
+                <div className="flex justify-center text-blue-600"><ShieldCheck size={22} /></div>
                 <p className="mt-1 text-[10px] font-bold text-[var(--color-text-secondary)]">
                   Safe & Secure
                 </p>
@@ -781,19 +785,19 @@ export default function CartClient() {
 
             <div className="mt-10 grid grid-cols-3 gap-2 border-t border-[var(--color-border)] pt-6">
               <div className="rounded-xl bg-[var(--color-primary-50)] p-3 text-center">
-                <div className="text-lg">🥬</div>
+                <div className="flex justify-center text-[var(--color-primary)]"><Leaf size={20} /></div>
                 <p className="mt-1 text-[9px] font-black text-[var(--color-text-secondary)]">
                   Fresh
                 </p>
               </div>
               <div className="rounded-xl bg-[var(--color-primary-50)] p-3 text-center">
-                <div className="text-lg">⚡</div>
+                <div className="flex justify-center text-[var(--color-secondary)]"><Zap size={20} /></div>
                 <p className="mt-1 text-[9px] font-black text-[var(--color-text-secondary)]">
                   Fast
                 </p>
               </div>
               <div className="rounded-xl bg-[var(--color-primary-50)] p-3 text-center">
-                <div className="text-lg">❤️</div>
+                <div className="flex justify-center text-rose-500"><Heart size={20} /></div>
                 <p className="mt-1 text-[9px] font-black text-[var(--color-text-secondary)]">
                   Delicious
                 </p>
@@ -1010,7 +1014,7 @@ export default function CartClient() {
                                 <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
                                   <Gift size={13} className="text-emerald-600 shrink-0" />
                                   <span>
-                                    🎉 Buy {buyQty} Get {getQty} Free Applied: {freeCount} item(s) free with code{" "}
+                                    Buy {buyQty} Get {getQty} Free Applied: {freeCount} item(s) free with code{" "}
                                     <strong className="underline">{itemBogo.code}</strong>!
                                   </span>
                                 </div>
@@ -1707,8 +1711,9 @@ export default function CartClient() {
                     </div>
                   ) : (
                     <div className="mt-2 text-center">
-                      <p className="text-[11px] font-bold text-amber-700">
-                        ⚠️ No delivery address selected
+                      <p className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-amber-700">
+                        <AlertTriangle size={13} className="shrink-0" />
+                        <span>No delivery address selected</span>
                       </p>
                       <button
                         type="button"
@@ -1771,8 +1776,9 @@ export default function CartClient() {
                           </div>
 
                           {summary.codFee <= 0 && (
-                            <span className="mt-2.5 inline-block rounded-lg bg-amber-100/70 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-900">
-                              📦 Includes ₹{formatRupee(summary.codFee)} Cash on Delivery fee
+                            <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-amber-100/70 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-900">
+                              <Package size={12} className="shrink-0" />
+                              <span>Includes ₹{formatRupee(summary.codFee)} Cash on Delivery fee</span>
                             </span>
                           )}
                         </div>

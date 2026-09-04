@@ -58,7 +58,7 @@ export default function ProfileAddresses({ user }: ProfileAddressesProps) {
     try {
       setSettingDefaultId(addressId);
       await setDefaultAddress(addressId).unwrap();
-      toast.success("Default delivery address updated! ✨");
+      toast.success("Default delivery address updated!");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to set default address");
     } finally {

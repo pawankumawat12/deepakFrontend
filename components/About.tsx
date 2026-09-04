@@ -171,8 +171,8 @@ export default function AboutPage() {
                 "
               >
 
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-lg">
-                  🍔
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <Utensils size={18} />
                 </div>
 
                 <div>
@@ -241,9 +241,9 @@ export default function AboutPage() {
               "
             >
 
-              <p className="text-lg font-black">
-                ❤️
-              </p>
+              <div className="flex items-center justify-center mb-1">
+                <Heart size={20} className="fill-current text-white" />
+              </div>
 
               <p className="text-[9px] font-bold uppercase tracking-wider">
                 Made with love
@@ -440,8 +440,8 @@ export default function AboutPage() {
 
                 <div className="flex items-center gap-2">
 
-                  <span className="text-xl">
-                    🍟
+                  <span className="text-[var(--color-cheese)] flex items-center">
+                    <Sparkles size={18} />
                   </span>
 
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-cheese)]">
@@ -516,8 +516,8 @@ export default function AboutPage() {
 
           <div className="mx-auto max-w-xl">
 
-            <div className="text-3xl">
-              🍔 🍟 🥤
+            <div className="flex justify-center items-center gap-2 text-white/90">
+              <Utensils size={28} />
             </div>
 
             <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">

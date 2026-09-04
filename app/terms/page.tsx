@@ -125,9 +125,10 @@ export default function TermsAndConditionsPage() {
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
             We offer convenient payment options including Cash on Delivery (COD) and doorstep UPI scan:
           </p>
-          <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+          <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-700" />
             <p className="text-xs font-semibold leading-relaxed text-amber-900">
-              ⚠️ <strong>COD Commitment:</strong> When placing a Cash on Delivery order, you commit to accepting and paying for the order upon arrival. Placing fraudulent COD orders or repeatedly refusing doorstep delivery will result in permanent blacklisting of your phone number and address.
+              <strong>COD Commitment:</strong> When placing a Cash on Delivery order, you commit to accepting and paying for the order upon arrival. Placing fraudulent COD orders or repeatedly refusing doorstep delivery will result in permanent blacklisting of your phone number and address.
             </p>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">

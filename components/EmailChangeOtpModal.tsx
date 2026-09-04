@@ -146,7 +146,7 @@ export default function EmailChangeOtpModal({
         }
       }
 
-      toast.success(response?.message || "Email verified and updated successfully! 🎉");
+      toast.success(response?.message || "Email verified and updated successfully!");
       if (response?.user && onSuccess) {
         onSuccess(response.user);
       }

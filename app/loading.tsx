@@ -6,8 +6,8 @@ export default function CafeLoader() {
       <div className="pizza-scene">
 
         {/* Flying particles */}
-        <span className="spark spark-1">✦</span>
-        <span className="spark spark-2">✦</span>
+        <span className="spark spark-1">•</span>
+        <span className="spark spark-2">•</span>
         <span className="spark spark-3">•</span>
         <span className="spark spark-4">•</span>
 

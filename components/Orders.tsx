@@ -136,7 +136,7 @@ export default function Orders() {
 
     const handleOrderAccepted = (data: any) => {
       toast.success(
-        `🎉 Your Order #${data.orderNumber || data.orderId} was ACCEPTED! Food is being prepared.`,
+        `Your Order #${data.orderNumber || data.orderId} was ACCEPTED! Food is being prepared.`,
         { duration: 6000 }
       );
       refetch();
@@ -144,7 +144,7 @@ export default function Orders() {
 
     const handleOrderRejected = (data: any) => {
       toast.error(
-        `⚠️ Your Order #${data.orderNumber || data.orderId} was declined. Reason: ${data.cancelReason || "Not specified"}`,
+        `Your Order #${data.orderNumber || data.orderId} was declined. Reason: ${data.cancelReason || "Not specified"}`,
         { duration: 8000 }
       );
       refetch();
@@ -152,8 +152,7 @@ export default function Orders() {
 
     const handleOrderStatusUpdated = (data: any) => {
       toast(
-        `📦 Order #${data.orderNumber || data.orderId} status updated to: ${data.status}`,
-        { icon: "🔔" }
+        `Order #${data.orderNumber || data.orderId} status updated to: ${data.status}`
       );
       refetch();
     };
@@ -161,8 +160,7 @@ export default function Orders() {
     const handleNewMessage = (data: any) => {
       if (!selectedChatOrder || String(selectedChatOrder.dbId) !== String(data.orderId)) {
         toast(
-          `💬 New message from store on #${data.orderNumber}: "${data.message?.message?.substring(0, 40)}..."`,
-          { icon: "💬" }
+          `New message from store on #${data.orderNumber}: "${data.message?.message?.substring(0, 40)}..."`
         );
       }
     };

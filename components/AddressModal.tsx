@@ -147,13 +147,13 @@ export default function AddressModal({
           id: initialData.id,
           data: payload,
         }).unwrap();
-        toast.success(res?.message || "Address updated successfully! 📍");
+        toast.success(res?.message || "Address updated successfully!");
         if (res?.data && onSuccess) {
           onSuccess(res.data);
         }
       } else {
         const res = await createAddress(payload).unwrap();
-        toast.success(res?.message || "Address saved successfully! 📍");
+        toast.success(res?.message || "Address saved successfully!");
         if (res?.data && onSuccess) {
           onSuccess(res.data);
         }

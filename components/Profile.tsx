@@ -298,7 +298,7 @@ export default function Profile() {
 
                 <div className="mt-2 flex flex-wrap items-center gap-2.5">
                   <p className="text-xs text-white/80">
-                    Welcome back to SFC Cafe 👋
+                    Welcome back to SFC Cafe
                   </p>
                 </div>
 

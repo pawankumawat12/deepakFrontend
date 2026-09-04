@@ -120,7 +120,7 @@ export default function FavoritesPage() {
       setAddedItems((current) =>
         current.includes(product.id) ? current : [...current, product.id]
       );
-      toast.success(`${product.name} added to cart! 🛒`);
+      toast.success(`${product.name} added to cart!`);
 
       setTimeout(() => {
         setAddedItems((current) =>

@@ -12,6 +12,11 @@ import {
   Utensils,
   Star,
   Flame,
+  Pizza,
+  Coffee,
+  Cake,
+  Sandwich,
+  Sparkles,
 } from "lucide-react";
 
 const slides = [
@@ -53,45 +58,9 @@ const slides = [
   },
 ];
 
-const categories = [
-  {
-    label: "Burgers",
-    icon: "🍔",
-    href: "/menu?category=burgers",
-  },
-  {
-    label: "Pizzas",
-    icon: "🍕",
-    href: "/menu?category=pizza",
-  },
-  {
-    label: "Wraps",
-    icon: "🌯",
-    href: "/menu?category=wraps",
-  },
-  {
-    label: "Fries",
-    icon: "🍟",
-    href: "/menu?category=fries",
-  },
-  {
-    label: "Drinks",
-    icon: "🥤",
-    href: "/menu?category=drinks",
-  },
-  {
-    label: "Desserts",
-    icon: "🍰",
-    href: "/menu?category=desserts",
-  },
-];
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
-
-  /* --------------------------------------------------
-     AUTO SLIDER
-  -------------------------------------------------- */
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -102,10 +71,6 @@ export default function Hero() {
   }, []);
 
   const currentSlide = slides[index];
-
-  /* --------------------------------------------------
-     SLIDER CONTROLS
-  -------------------------------------------------- */
 
   const previousSlide = () => {
     setIndex(
@@ -304,9 +269,6 @@ export default function Hero() {
               </Link>
             </div>
 
-            {/* =================================================
-                BENEFITS
-            ================================================= */}
             <div
               className="
                 mt-10
@@ -397,9 +359,6 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* =================================================
-              RIGHT FLOATING CARDS & HIGHLIGHTS
-          ================================================= */}
           <div className="relative hidden lg:flex flex-col items-end gap-4 z-20 mr-2">
             {/* Rating badge */}
             <div
