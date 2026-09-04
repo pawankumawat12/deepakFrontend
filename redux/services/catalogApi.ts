@@ -21,6 +21,7 @@ type ApiProduct = {
   price: number | string;
   images?: string[];
   is_active?: boolean;
+  offers?: any[];
   [key: string]: unknown;
 };
 
@@ -61,6 +62,7 @@ const normalizeProduct = (product: ApiProduct) => {
     isMadeToOrder,
     rating: Number(product.rating || 0),
     total_reviews: Number(product.total_reviews || 0),
+    offers: Array.isArray(product.offers) ? product.offers : [],
   };
 };
 

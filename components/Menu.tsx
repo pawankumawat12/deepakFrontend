@@ -35,6 +35,7 @@ import {
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
 import { useGetOffersQuery } from "../redux/services/offerApi";
+import { getProductPrimaryOffer, formatOfferBadge } from "../utils/offerUtils";
 import SkeletonLoader from "./SkeletonLoader";
 
 interface Category {
@@ -763,13 +764,28 @@ export default function Menu() {
                       </div>
                     )}
 
-                    {/* BOGO Offer Badge */}
-                    {bogoOffersMap.has(p.id) && (
-                      <div className="absolute left-2 bottom-2 z-10 flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[8.5px] font-black uppercase tracking-wide text-white shadow-md backdrop-blur-xs">
-                        <Gift size={10} />
-                        BUY {bogoOffersMap.get(p.id)?.buy_qty || 1} GET {bogoOffersMap.get(p.id)?.get_qty || 1} FREE
-                      </div>
-                    )}
+                    {/* Applicable Offer Badge */}
+                    {(() => {
+                      const offer = getProductPrimaryOffer(p, offersData);
+                      if (!offer) return null;
+                      const badgeText = formatOfferBadge(offer);
+                      const isProductSpecific =
+                        offer.is_product_specific ||
+                        (Array.isArray(offer.target_product_ids) &&
+                          offer.target_product_ids.map(Number).includes(Number(p.id)));
+
+                      return (
+                        <div
+                          className={`absolute left-2 bottom-2 z-10 flex items-center gap-1 rounded-full px-2.5 py-1 text-[8.5px] font-black uppercase tracking-wide text-white shadow-md backdrop-blur-xs ${
+                            isProductSpecific ? "bg-amber-500" : "bg-emerald-600"
+                          }`}
+                        >
+                          <Gift size={10} />
+                          {badgeText}
+                        </div>
+                      );
+                    })()}
+
 
                     {/* Wishlist Toggle Button */}
                     <button

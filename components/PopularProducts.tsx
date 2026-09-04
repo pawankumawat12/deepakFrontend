@@ -12,6 +12,7 @@ import {
   Plus,
   Minus,
   Check,
+  Gift,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -26,6 +27,8 @@ import {
   useAddCartItemMutation,
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
+import { useGetOffersQuery } from "../redux/services/offerApi";
+import { getProductPrimaryOffer, formatOfferBadge } from "../utils/offerUtils";
 import SkeletonLoader from "./SkeletonLoader";
 
 export default function PopularProducts() {
@@ -45,6 +48,7 @@ export default function PopularProducts() {
   const { data: cartResponse } = useGetCartQuery(undefined, {
     skip: !user,
   });
+  const { data: offersData = [] } = useGetOffersQuery();
   const [toggleWishlist] = useToggleWishlistMutation();
   const [addCartItem] = useAddCartItemMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
@@ -389,14 +393,31 @@ export default function PopularProducts() {
 
                     Best Seller
                   </div>
-{/* 
-                  {outOfStock && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
-                      <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[var(--color-text-primary)]">
-                        Out of stock
-                      </span>
-                    </div>
-                  )} */}
+
+                  {/* Applicable Offer Badge */}
+                  {(() => {
+                    const offer = getProductPrimaryOffer(product, offersData);
+                    if (!offer) return null;
+                    const badgeText = formatOfferBadge(offer);
+                    const isProductSpecific =
+                      offer.is_product_specific ||
+                      (Array.isArray(offer.target_product_ids) &&
+                        offer.target_product_ids
+                          .map(Number)
+                          .includes(Number(product.id)));
+
+                    return (
+                      <div
+                        className={`absolute left-3 bottom-3 z-10 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-md backdrop-blur-xs ${
+                          isProductSpecific ? "bg-amber-500" : "bg-emerald-600"
+                        }`}
+                      >
+                        <Gift size={11} />
+                        {badgeText}
+                      </div>
+                    );
+                  })()}
+
 
                   {/* Wishlist Button */}
                   <button

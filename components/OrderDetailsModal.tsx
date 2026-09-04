@@ -25,10 +25,17 @@ import {
 
 interface OrderItem {
   id: number | string;
-  name: string;
-  qty: number;
+  name?: string;
+  product_name?: string;
+  qty?: number;
+  quantity?: number;
+  paid_quantity?: number;
+  free_quantity?: number;
+  bogo_details_json?: any;
   price: number;
+  total?: number;
   img?: string;
+  image?: string;
   availability_type?: string;
   production_status?: string;
 }
@@ -338,33 +345,62 @@ export default function OrderDetailsModal({
             </div>
 
             <div className="rounded-2xl border border-[var(--color-border)] divide-y divide-[var(--color-border)] overflow-hidden">
-              {(order.items || []).map((item: OrderItem) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3.5 p-3.5 bg-white transition hover:bg-stone-50/50"
-                >
-                  <img
-                    src={toAssetUrl(item.img)}
-                    alt={item.name}
-                    className="h-14 w-14 shrink-0 rounded-xl object-cover bg-stone-100"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-black text-[var(--color-text-primary)] truncate">
-                        {item.name}
+              {(order.items || []).map((item: OrderItem) => {
+                const name = item.product_name || item.name || "Item";
+                const totalQty = Number(item.quantity ?? item.qty ?? 1);
+                const paidQty =
+                  item.paid_quantity != null
+                    ? Number(item.paid_quantity)
+                    : item.free_quantity
+                    ? totalQty - Number(item.free_quantity)
+                    : totalQty;
+                const freeQty = Number(item.free_quantity || 0);
+                const lineTotal =
+                  item.total != null
+                    ? Number(item.total)
+                    : Number(item.price) * paidQty;
+                const img = item.image || item.img;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3.5 p-3.5 bg-white transition hover:bg-stone-50/50"
+                  >
+                    <img
+                      src={toAssetUrl(img)}
+                      alt={name}
+                      className="h-14 w-14 shrink-0 rounded-xl object-cover bg-stone-100"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-black text-[var(--color-text-primary)] truncate">
+                          {name}
+                        </p>
+                        {freeQty > 0 && (
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-emerald-800">
+                            BOGO: +{freeQty} Free
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                        {formatRupee(item.price)} × {paidQty} paid
+                        {freeQty > 0 ? (
+                          <span className="text-emerald-700 font-bold">
+                            {" "}+ {freeQty} FREE (Total: {totalQty})
+                          </span>
+                        ) : (
+                          ""
+                        )}
                       </p>
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-                      {formatRupee(item.price)} × {item.qty}
-                    </p>
+                    <div className="text-right">
+                      <p className="text-xs font-black text-[var(--color-text-primary)]">
+                        {formatRupee(lineTotal)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs font-black text-[var(--color-text-primary)]">
-                      {formatRupee(item.price * item.qty)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

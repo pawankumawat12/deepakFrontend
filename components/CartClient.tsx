@@ -971,6 +971,11 @@ export default function CartClient() {
                               <p className="text-[10px] text-[var(--color-text-muted)]">
                                 ₹{formatRupee(it.price)} each
                               </p>
+                              {Number(it.free_quantity || 0) > 0 && (
+                                <p className="text-[10px] font-black text-emerald-700 mt-0.5">
+                                  +{it.free_quantity} Free Included
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -997,44 +1002,56 @@ export default function CartClient() {
                             </div>
                           ) : null}
 
-                          {/* BOGO Offer Eligibility & Progress Callout */}
+                          {/* BOGO Offer Eligibility & Breakdown */}
                           {(() => {
-                            const itemBogo = (availableOffers || []).find(
-                              (o) =>
-                                o.is_active &&
-                                o.type === "BOGO" &&
-                                (o.target_product_ids || []).map(Number).includes(Number(it.id))
-                            );
-                            if (!itemBogo) return null;
+                            const bogo = it.bogo_details;
+                            const freeQty = Number(it.free_quantity || bogo?.free_quantity || 0);
+                            const paidQty = Number(it.paid_quantity ?? it.quantity);
+                            const totalQty = Number(it.total_quantity ?? (paidQty + freeQty));
 
-                            const buyQty = itemBogo.buy_qty || 1;
-                            const getQty = itemBogo.get_qty || 1;
-                            const step = buyQty + getQty;
-                            const freeBatches = Math.floor(it.quantity / step);
-                            const freeCount = freeBatches * getQty;
-
-                            if (freeCount > 0) {
+                            if (freeQty > 0) {
+                              const buyQty = bogo?.buy_qty || 1;
+                              const getQty = bogo?.get_qty || freeQty;
                               return (
-                                <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
-                                  <Gift size={13} className="text-emerald-600 shrink-0" />
+                                <div className="mt-2.5 rounded-xl border border-emerald-200 bg-emerald-50/90 p-2.5 text-emerald-950">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5 text-xs font-black text-emerald-800">
+                                      <Gift size={14} className="text-emerald-600 shrink-0" />
+                                      <span>
+                                        Buy {buyQty} Get {getQty} Free Applied: {freeQty} Free Item{freeQty > 1 ? "s" : ""} Included!
+                                      </span>
+                                    </div>
+                                    {bogo?.offer_code && (
+                                      <span className="rounded bg-emerald-200 px-1.5 py-0.5 text-[9.5px] font-black uppercase text-emerald-900 font-mono">
+                                        {bogo.offer_code}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-bold text-emerald-900 bg-white/95 rounded-lg px-2.5 py-1 border border-emerald-200/60 shadow-2xs">
+                                    <span>Paid: <strong className="text-[var(--color-primary)]">{paidQty}</strong></span>
+                                    <span className="text-emerald-300">•</span>
+                                    <span>Free: <strong className="text-emerald-700">+{freeQty} FREE</strong></span>
+                                    <span className="text-emerald-300">•</span>
+                                    <span>Total Delivered: <strong className="text-emerald-950">{totalQty}</strong></span>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // If item has a BOGO deal that requires more BUY quantity to unlock
+                            if (bogo && bogo.needed_to_unlock > 0) {
+                              return (
+                                <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[11px] font-bold text-amber-800">
+                                  <Gift size={13} className="text-amber-600 shrink-0" />
                                   <span>
-                                    Buy {buyQty} Get {getQty} Free Applied: {freeCount} item(s) free with code{" "}
-                                    <strong className="underline">{itemBogo.code}</strong>!
+                                    Buy {bogo.buy_qty} Get {bogo.get_qty} Free: Add {bogo.needed_to_unlock} more to get {bogo.get_qty} FREE
+                                    {bogo.offer_code ? <> with code <strong className="underline">{bogo.offer_code}</strong></> : ""}!
                                   </span>
                                 </div>
                               );
                             }
 
-                            const needed = step - (it.quantity % step);
-                            return (
-                              <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[11px] font-bold text-amber-800">
-                                <Gift size={13} className="text-amber-600 shrink-0" />
-                                <span>
-                                  Buy {buyQty} Get {getQty} Free: Add {needed} more to get {getQty} FREE with code{" "}
-                                  <strong className="underline">{itemBogo.code}</strong>!
-                                </span>
-                              </div>
-                            );
+                            return null;
                           })()}
                         </div>
 
@@ -1105,6 +1122,12 @@ export default function CartClient() {
                               <Plus size={12} strokeWidth={3} />
                             </button>
                           </div>
+
+                          {Number(it.free_quantity || 0) > 0 && (
+                            <span className="text-[11px] font-bold text-stone-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                              Total: <strong className="text-emerald-800">{it.total_quantity ?? (it.quantity + (it.free_quantity || 0))}</strong> items
+                            </span>
+                          )}
 
                           {/* Delete Item Action */}
                           <button
@@ -1384,7 +1407,7 @@ export default function CartClient() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-mono text-xs font-black uppercase text-emerald-900">
-                          {summary.appliedOffer.code}
+                           {summary.appliedOffer.code}
                         </p>
                         <p className="text-[11px] font-semibold text-emerald-700 truncate">
                           {summary.appliedOffer.title} (-₹{formatRupee(summary.discount)})
@@ -1522,11 +1545,46 @@ export default function CartClient() {
                 {/* Item Total */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[var(--color-text-secondary)]">
-                    Item Total ({summary.totalItems} item{summary.totalItems === 1 ? "" : "s"})
+                    Item Total ({summary.paidItemsCount ?? summary.cartQuantity ?? summary.totalItems} item{(summary.paidItemsCount ?? summary.cartQuantity ?? summary.totalItems) === 1 ? "" : "s"})
                   </span>
                   <span className="font-bold text-[var(--color-text-primary)]">
                     ₹{formatRupee(summary.subtotal)}
                   </span>
+                </div>
+
+                {/* Products Delivery Breakdown */}
+                <div className="rounded-2xl border border-stone-200/80 bg-stone-50/80 p-3.5 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-medium text-stone-600">
+                    <span className="flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-stone-400"></span>
+                      <span>Paid Items (Cart Qty)</span>
+                    </span>
+                    <span className="font-bold text-stone-900">
+                      {summary.paidItemsCount ?? summary.cartQuantity ?? summary.totalItems}
+                    </span>
+                  </div>
+
+                  {Boolean(summary.freeItemsCount && summary.freeItemsCount > 0) && (
+                    <div className="flex items-center justify-between text-xs font-medium text-emerald-700">
+                      <span className="flex items-center gap-1.5">
+                        <Gift size={13} className="text-emerald-600 shrink-0" />
+                        <span>Promotional / Free Items</span>
+                      </span>
+                      <span className="font-bold text-emerald-700">
+                        +{summary.freeItemsCount} FREE
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="border-t border-stone-200 pt-2 flex items-center justify-between text-xs font-black text-stone-900">
+                    <span className="flex items-center gap-1.5 text-[var(--color-text-primary)]">
+                      <Package size={14} className="text-[var(--color-primary)] shrink-0" />
+                      <span>Total Products to be Delivered</span>
+                    </span>
+                    <span className="rounded-lg bg-emerald-100 px-2 py-0.5 text-xs font-black text-emerald-800">
+                      {summary.totalProductsDelivered ?? summary.totalItems} item{(summary.totalProductsDelivered ?? summary.totalItems) === 1 ? "" : "s"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Discount */}
@@ -1546,6 +1604,23 @@ export default function CartClient() {
                     </span>
                     <span className="font-bold text-emerald-600">
                       - ₹{formatRupee(summary.discount)}
+                    </span>
+                  </div>
+                )}
+
+                {/* BOGO Savings */}
+                {Boolean(summary.bogoSavings && summary.bogoSavings > 0) && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[var(--color-text-secondary)] flex items-center gap-1.5">
+                      <span>BOGO Free Items Savings</span>
+                      {summary.appliedOffer?.code && (
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-mono font-black text-emerald-800">
+                          {summary.appliedOffer.code}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-bold text-emerald-600">
+                      ₹{formatRupee(summary.bogoSavings || 0)} Saved
                     </span>
                   </div>
                 )}

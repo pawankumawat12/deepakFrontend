@@ -7,6 +7,9 @@ export interface OrderItem {
   product_name: string;
   price: number;
   quantity: number;
+  paid_quantity?: number;
+  free_quantity?: number;
+  bogo_details_json?: any;
   total: number;
   availability_type: "IN_STOCK" | "MADE_TO_ORDER";
   production_status: "COMPLETED" | "PENDING_PRODUCTION" | "PRODUCED";

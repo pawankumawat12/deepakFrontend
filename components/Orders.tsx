@@ -704,16 +704,7 @@ const toAssetUrl = (path?: string | null) => {
                     ))}
                   </div>
 
-                  {/* Order Note */}
-                  {order.notes && order.notes.trim() && (
-                    <div className="mt-3.5 flex items-start gap-2 rounded-xl bg-amber-50/80 border border-amber-200/80 px-3 py-2 text-[11px] text-amber-900">
-                      <FileText size={13} className="shrink-0 mt-0.5 text-amber-700" />
-                      <div>
-                        <span className="font-bold">Special Note: </span>
-                        <span>{order.notes}</span>
-                      </div>
-                    </div>
-                  )}
+                 
 
                   {/* Order Status Notice */}
                   {(order.status === "Pending" ||

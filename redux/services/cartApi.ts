@@ -29,6 +29,10 @@ export interface CartItem {
   category_id: number | string;
   category_name: string;
   quantity: number;
+  paid_quantity?: number;
+  free_quantity?: number;
+  total_quantity?: number;
+  bogo_details?: any;
   itemTotal: number;
   isOutOfStock: boolean;
   exceedsStock: boolean;
@@ -38,6 +42,13 @@ export interface CartItem {
 
 export interface CartSummary {
   totalItems: number;
+  totalProductsDelivered?: number;
+  totalQuantity?: number;
+  cartQuantity?: number;
+  normalCartQuantity?: number;
+  paidItemsCount?: number;
+  freeItemsCount?: number;
+  bogoSavings?: number;
   itemTypesCount: number;
   subtotal: number;
   discountPercent: number;
@@ -128,6 +139,11 @@ const transformCartResponse = (response: any): CartResponse => {
       ? item.images[0]
       : item.image || item.img || null;
 
+    const paidQuantity = item.paid_quantity != null ? Number(item.paid_quantity) : quantity;
+    const freeQuantity = item.free_quantity != null ? Number(item.free_quantity) : 0;
+    const totalQuantity = item.total_quantity != null ? Number(item.total_quantity) : (paidQuantity + freeQuantity);
+    const itemTotal = item.itemTotal != null ? Number(item.itemTotal) : price * paidQuantity;
+
     return {
       id: Number(item.product_id || item.id),
       cart_item_id: Number(item.cart_item_id || item.id),
@@ -145,7 +161,11 @@ const transformCartResponse = (response: any): CartResponse => {
       category_id: item.category_id || "",
       category_name: item.category_name || "Menu",
       quantity,
-      itemTotal: price * quantity,
+      paid_quantity: paidQuantity,
+      free_quantity: freeQuantity,
+      total_quantity: totalQuantity,
+      bogo_details: item.bogo_details || null,
+      itemTotal,
       // MADE_TO_ORDER products are never out of stock
       isOutOfStock: isMadeToOrder ? false : (stock <= 0 || item.is_active === false),
       exceedsStock: isMadeToOrder ? false : quantity > stock,
@@ -157,10 +177,32 @@ const transformCartResponse = (response: any): CartResponse => {
   const rawSummary = rawData?.summary || {};
   const rawPricing = rawData?.pricing || {};
 
-  const totalItems =
-    rawSummary.totalItems !== undefined
-      ? Number(rawSummary.totalItems)
-      : items.reduce((sum, it) => sum + it.quantity, 0);
+  const paidItemsCount = Number(
+    rawSummary.paidItemsCount ??
+      rawSummary.normalCartQuantity ??
+      rawSummary.cartQuantity ??
+      rawPricing.paid_items ??
+      rawPricing.normal_cart_quantity ??
+      items.reduce((sum, it) => sum + (it.paid_quantity ?? it.quantity), 0)
+  );
+  const freeItemsCount = Number(
+    rawSummary.freeItemsCount ??
+      rawPricing.free_items ??
+      items.reduce((sum, it) => sum + (it.free_quantity ?? 0), 0)
+  );
+  const totalProductsDelivered = Number(
+    rawSummary.totalProductsDelivered ??
+      rawSummary.totalQuantity ??
+      rawSummary.totalItems ??
+      rawPricing.total_products_delivered ??
+      rawPricing.total_quantity ??
+      rawPricing.total_items ??
+      (paidItemsCount + freeItemsCount)
+  );
+  const totalItems = totalProductsDelivered;
+  const bogoSavings = Number(
+    rawSummary.bogoSavings ?? rawPricing.bogo_savings ?? 0
+  );
 
   const subtotal =
     rawSummary.subtotal !== undefined
@@ -207,6 +249,13 @@ const transformCartResponse = (response: any): CartResponse => {
 
   const summary: CartSummary = {
     totalItems,
+    totalProductsDelivered,
+    totalQuantity: totalProductsDelivered,
+    cartQuantity: paidItemsCount,
+    normalCartQuantity: paidItemsCount,
+    paidItemsCount,
+    freeItemsCount,
+    bogoSavings,
     itemTypesCount: items.length,
     subtotal,
     discountPercent,

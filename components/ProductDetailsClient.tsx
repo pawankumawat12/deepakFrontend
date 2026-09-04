@@ -50,6 +50,7 @@ import {
   ReviewItem,
 } from "../redux/services/reviewApi";
 import { useGetOffersQuery } from "../redux/services/offerApi";
+import { getAllProductOffers } from "../utils/offerUtils";
 import { Gift } from "lucide-react";
 
 export default function ProductDetailsClient({ product }: { product: any }) {
@@ -79,12 +80,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   );
 
   const { data: availableOffers = [] } = useGetOffersQuery();
-  const bogoOffer = (availableOffers || []).find(
-    (o) =>
-      o.is_active &&
-      o.type === "BOGO" &&
-      (o.target_product_ids || []).map(Number).includes(Number(product.id))
-  );
+  const applicableOffers = getAllProductOffers(product, availableOffers);
+
 
   const handleToggleWishlist = async () => {
     if (!user) {
@@ -771,24 +768,117 @@ export default function ProductDetailsClient({ product }: { product: any }) {
               </div>
             </div>
 
-            {/* BOGO Deal Banner */}
-            {bogoOffer && (
-              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-3.5 text-amber-900 shadow-xs">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
-                  <Gift size={20} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-black uppercase tracking-wide text-amber-800">
-                    Buy {bogoOffer.buy_qty || 1} Get {bogoOffer.get_qty || 1} Free Offer!
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-amber-700">
-                    Add at least {(bogoOffer.buy_qty || 1) + (bogoOffer.get_qty || 1)} items to your cart and apply promo code{" "}
-                    <strong className="rounded bg-amber-200/80 px-1.5 py-0.5 font-black text-amber-950">
-                      {bogoOffer.code}
-                    </strong>{" "}
-                    at checkout to get {bogoOffer.get_qty || 1} free.
-                  </p>
-                </div>
+            {/* Applicable Offers */}
+            {applicableOffers.length > 0 && (
+              <div className="mt-4 space-y-2.5">
+                {applicableOffers.map((offer: any, idx: number) => {
+                  const isBogo = offer.type === "BOGO";
+                  const isProductSpecific =
+                    offer.is_product_specific ||
+                    (Array.isArray(offer.target_product_ids) &&
+                      offer.target_product_ids
+                        .map(Number)
+                        .includes(Number(product.id)));
+
+                  return (
+                    <div
+                      key={offer.id || offer.code || idx}
+                      className={`flex items-start gap-3 rounded-2xl border p-3.5 shadow-xs transition-all ${
+                        isProductSpecific
+                          ? "border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50/80 text-amber-950"
+                          : "border-emerald-200 bg-emerald-50/80 text-emerald-950"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm ${
+                          isProductSpecific ? "bg-amber-500" : "bg-emerald-600"
+                        }`}
+                      >
+                        <Gift size={20} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <p
+                            className={`text-xs font-black uppercase tracking-wide ${
+                              isProductSpecific
+                                ? "text-amber-900"
+                                : "text-emerald-900"
+                            }`}
+                          >
+                            {isBogo
+                              ? `Buy ${offer.buy_qty || 1} Get ${offer.get_qty || 1} Free Offer!`
+                              : offer.title ||
+                                (offer.discount_value
+                                  ? `${offer.discount_value}% Off Special Offer`
+                                  : "Special Offer")}
+                          </p>
+                          {offer.badge && (
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${
+                                isProductSpecific
+                                  ? "bg-amber-200 text-amber-900"
+                                  : "bg-emerald-200 text-emerald-900"
+                              }`}
+                            >
+                              {offer.badge}
+                            </span>
+                          )}
+                          {isProductSpecific ? (
+                            <span className="rounded-full bg-orange-200/90 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-orange-950">
+                              Item Special
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-emerald-200/90 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-emerald-950">
+                              Category Deal
+                            </span>
+                          )}
+                        </div>
+                        <p
+                          className={`mt-1 text-[11px] leading-relaxed ${
+                            isProductSpecific
+                              ? "text-amber-800"
+                              : "text-emerald-800"
+                          }`}
+                        >
+                          {isBogo ? (
+                            <>
+                              Add {offer.buy_qty || 1} to your cart and automatically get{" "}
+                              {offer.get_qty || 1} FREE at checkout
+                              {offer.auto_apply ? "" : (
+                                <>
+                                  {" "}with promo code{" "}
+                                  <strong className="rounded bg-white/90 px-1.5 py-0.5 font-black shadow-xs">
+                                    {offer.code}
+                                  </strong>
+                                </>
+                              )}
+                              {" "}(Total {(offer.buy_qty || 1) + (offer.get_qty || 1)} items delivered, pay for only {offer.buy_qty || 1})!
+                            </>
+                          ) : (
+                            <>
+                              {offer.description || (
+                                <>
+                                  Use promo code{" "}
+                                  <strong className="rounded bg-white/90 px-1.5 py-0.5 font-black shadow-xs">
+                                    {offer.code}
+                                  </strong>{" "}
+                                  at checkout to save{" "}
+                                  {offer.type === "PERCENTAGE"
+                                    ? `${offer.discount_value}%`
+                                    : `₹${offer.discount_value}`}
+                                  {offer.min_order_amount > 0
+                                    ? ` (min order ₹${offer.min_order_amount})`
+                                    : ""}
+                                  .
+                                </>
+                              )}
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
