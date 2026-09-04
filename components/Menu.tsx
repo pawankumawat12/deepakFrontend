@@ -33,6 +33,13 @@ import {
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
 import { useGetOffersQuery } from "../redux/services/offerApi";
+import SkeletonLoader from "./SkeletonLoader";
+
+interface Category {
+  id: string;
+  name: string;
+  img: string;
+}
 
 function formatRupee(v: number) {
   return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
@@ -45,13 +52,18 @@ export default function Menu() {
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
-  const { data: categoryResponse } = useGetStoreCategoriesQuery({});
+  const { data: categoryResponse, isLoading: isCategoriesLoading } =
+    useGetStoreCategoriesQuery({});
   const [selected, setSelected] = useState<string>("all");
   const productQuery = useMemo(
     () => (selected === "all" ? {} : { categoryId: selected }),
     [selected]
   );
-  const { data: productResponse } = useGetStoreProductsQuery(productQuery);
+  const {
+    data: productResponse,
+    isLoading: isProductsLoading,
+    isFetching: isProductsFetching,
+  } = useGetStoreProductsQuery(productQuery);
   const { data: wishlistData } = useGetWishlistQuery(undefined, {
     skip: !user,
   });
@@ -415,54 +427,56 @@ export default function Menu() {
             </button>
 
             {/* CATEGORIES */}
-
-            {categories.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => selectCategory(c.id)}
-                className={`
-                  group
-                  flex
-                  h-11
-                  min-w-[120px]
-                  shrink-0
-                  items-center
-                  gap-2
-                  overflow-hidden
-                  rounded-full
-                  px-2
-                  pr-4
-                  text-xs
-                  font-bold
-                  transition-all
-                  duration-200
-                  active:scale-95
-                  ${
-                    selected === c.id
-                      ? "bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20"
-                      : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                  }
-                `}
-              >
-                <img
-                  src={c.img}
-                  alt={c.name}
-                  className="
-                    h-9
-                    w-9
+            {isCategoriesLoading ? (
+              <SkeletonLoader variant="category" count={8} />
+            ) : (
+              categories.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => selectCategory(c.id)}
+                  className={`
+                    group
+                    flex
+                    h-11
+                    min-w-[120px]
+                    shrink-0
+                    items-center
+                    gap-2
+                    overflow-hidden
                     rounded-full
-                    object-cover
-                    transition-transform
-                    duration-300
-                    group-hover:scale-110
-                  "
-                />
+                    px-2
+                    pr-4
+                    text-xs
+                    font-bold
+                    transition-all
+                    duration-200
+                    active:scale-95
+                    ${
+                      selected === c.id
+                        ? "bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20"
+                        : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                    }
+                  `}
+                >
+                  <img
+                    src={c.img}
+                    alt={c.name}
+                    className="
+                      h-9
+                      w-9
+                      rounded-full
+                      object-cover
+                      transition-transform
+                      duration-300
+                      group-hover:scale-110
+                    "
+                  />
 
-                <span>{c.name}</span>
-
-              </button>
-            ))}
+                  <span>{c.name}</span>
+                </button>
+              ))
+            )}
 
           </div>
         </div>
@@ -626,20 +640,25 @@ export default function Menu() {
 
         </section>
         <section>
-
-          <div
-            className="
-              grid
-              grid-cols-2
-              gap-3
-              pb-8
-              sm:gap-5
-              md:grid-cols-3
-              lg:grid-cols-4
-            "
-          >
-
-            {pagedProducts.map((p, index) => {
+          {isProductsLoading ? (
+            <SkeletonLoader
+              variant="product"
+              count={8}
+              gridClassName="grid grid-cols-2 gap-3 pb-8 sm:gap-5 md:grid-cols-3 lg:grid-cols-4"
+            />
+          ) : (
+            <div
+              className="
+                grid
+                grid-cols-2
+                gap-3
+                pb-8
+                sm:gap-5
+                md:grid-cols-3
+                lg:grid-cols-4
+              "
+            >
+              {pagedProducts.map((p, index) => {
               const inCartQty = cartItemsMap.get(Number(p.id)) || 0;
               const inCart = inCartQty > 0;
               const isMadeToOrder = Boolean(
@@ -1079,6 +1098,7 @@ export default function Menu() {
             })}
 
           </div>
+          )}
 
           {/* =======================================================
               INFINITE SCROLL SENTINEL

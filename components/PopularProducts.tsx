@@ -26,13 +26,14 @@ import {
   useAddCartItemMutation,
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
+import SkeletonLoader from "./SkeletonLoader";
 
 export default function PopularProducts() {
   const router = useRouter();
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
-  const { data: productResponse } = useGetStoreProductsQuery({ limit: 6 });
+  const { data: productResponse, isLoading } = useGetStoreProductsQuery({ limit: 6 });
   const products = productResponse?.data || [];
   const [addedProduct, setAddedProduct] = React.useState<string | null>(
     null
@@ -264,16 +265,23 @@ export default function PopularProducts() {
           </Link>
         </div>
 
-        <div
-          className="
-            grid
-            grid-cols-1
-            gap-5
-            sm:grid-cols-2
-            lg:grid-cols-3
-          "
-        >
-          {popularProducts.map((product: any, index: number) => {
+        {isLoading ? (
+          <SkeletonLoader
+            variant="product"
+            count={6}
+            gridClassName="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          />
+        ) : (
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-5
+              sm:grid-cols-2
+              lg:grid-cols-3
+            "
+          >
+            {popularProducts.map((product: any, index: number) => {
             const discount = getDiscount(product);
             const ratingInfo = getRatingInfo(product);
 
@@ -696,6 +704,7 @@ export default function PopularProducts() {
             );
           })}
         </div>
+        )}
 
         <div className="mt-7 flex justify-center sm:hidden">
           <Link

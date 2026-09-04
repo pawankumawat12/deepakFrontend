@@ -24,6 +24,7 @@ import {
 } from "@/redux/services/addressApi";
 import AddressModal from "./AddressModal";
 import DeleteAddressDialog from "./DeleteAddressDialog";
+import SkeletonLoader from "./SkeletonLoader";
 
 interface ProfileAddressesProps {
   user: any;
@@ -143,24 +144,11 @@ export default function ProfileAddresses({ user }: ProfileAddressesProps) {
       {/* SECTION BODY */}
       <div className="p-6 sm:p-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="animate-pulse rounded-2xl border border-[var(--color-border)] bg-stone-50 p-5"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="h-6 w-20 rounded-lg bg-stone-200" />
-                  <div className="h-6 w-16 rounded-lg bg-stone-200" />
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="h-4 w-32 rounded bg-stone-200" />
-                  <div className="h-3 w-3/4 rounded bg-stone-200" />
-                  <div className="h-3 w-1/2 rounded bg-stone-200" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <SkeletonLoader
+            variant="card"
+            count={2}
+            gridClassName="grid grid-cols-1 gap-4 sm:grid-cols-2"
+          />
         ) : addresses.length === 0 ? (
           /* EMPTY STATE (Swiggy style) */
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--color-border)] bg-stone-50/50 py-12 px-4 text-center">

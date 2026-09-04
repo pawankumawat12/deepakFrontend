@@ -47,6 +47,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import SkeletonLoader from "./SkeletonLoader";
 
 import {
   useGetCartQuery,
@@ -693,12 +694,20 @@ export default function CartClient() {
   ============================================================ */
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[var(--bg-body)] pt-28 pb-20">
-        <div className="mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4">
-          <LoaderCircle size={44} className="animate-spin text-[var(--color-primary)]" />
-          <p className="mt-4 text-sm font-bold text-[var(--color-text-muted)]">
-            Loading your persistent cart...
-          </p>
+      <main className="min-h-screen bg-[var(--bg-body)] pt-24 pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 space-y-2">
+            <SkeletonLoader variant="text" lines={1} height={32} width={200} />
+            <SkeletonLoader variant="text" lines={1} height={16} width={140} />
+          </div>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <SkeletonLoader variant="list" count={3} />
+            </div>
+            <div className="lg:col-span-4">
+              <SkeletonLoader variant="card" count={1} />
+            </div>
+          </div>
         </div>
       </main>
     );

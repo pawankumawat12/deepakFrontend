@@ -19,6 +19,7 @@ import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
 import Pagination from "./Pagination";
+import SkeletonLoader from "./SkeletonLoader";
 import {
   useGetWishlistQuery,
   useRemoveWishlistItemMutation,
@@ -301,14 +302,8 @@ export default function FavoritesPage() {
             </button>
           </div>
         ) : isLoading || isFetching ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <LoaderCircle
-              size={34}
-              className="animate-spin text-[var(--color-primary)]"
-            />
-            <p className="mt-4 text-xs font-semibold text-[var(--color-text-muted)]">
-              Loading your favorites...
-            </p>
+          <div className="py-4">
+            <SkeletonLoader variant="product" count={6} />
           </div>
         ) : error ? (
           <div

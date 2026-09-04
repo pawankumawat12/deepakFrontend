@@ -1,8 +1,8 @@
 "use client";
 
-import CafeLoader from "@/app/loading";
 import NotFound from "@/app/not-found";
 import ProductDetailsClient from "./ProductDetailsClient";
+import SkeletonLoader from "./SkeletonLoader";
 import { useGetStoreProductQuery } from "../redux/services/catalogApi";
 
 type ProductPageClientProps = {
@@ -17,7 +17,9 @@ export default function ProductPageClient({ id }: ProductPageClientProps) {
   });
 
   if (!isValidId || isError) return <NotFound />;
-  if (isLoading || isFetching || !data?.data) return <CafeLoader />;
+  if (isLoading || isFetching || !data?.data) {
+    return <SkeletonLoader variant="product-detail" />;
+  }
 
   return <ProductDetailsClient product={data.data} />;
 }

@@ -10,9 +10,10 @@ import {
 } from "lucide-react";
 
 import { useGetStoreCategoriesQuery } from "../redux/services/catalogApi";
+import SkeletonLoader from "./SkeletonLoader";
 
 export default function PopularPreview() {
-  const { data: categoryResponse } = useGetStoreCategoriesQuery({});
+  const { data: categoryResponse, isLoading } = useGetStoreCategoriesQuery({});
   const categories = categoryResponse?.data || [];
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [autoplay, setAutoplay] = useState(true);
@@ -206,7 +207,21 @@ export default function PopularPreview() {
             "
           >
 
-            {categories.map((category) => (
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="min-w-[180px] snap-start overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white p-3 shadow-sm sm:min-w-[210px] md:min-w-[225px]"
+                >
+                  <SkeletonLoader variant="rectangular" height={150} className="w-full !rounded-xl" />
+                  <div className="mt-3 space-y-2">
+                    <SkeletonLoader variant="text" lines={1} height={18} width="70%" />
+                    <SkeletonLoader variant="text" lines={1} height={14} width="40%" />
+                  </div>
+                </div>
+              ))
+            ) : (
+              categories.map((category) => (
               <button
                 key={category.id}
                 type="button"
@@ -337,7 +352,8 @@ export default function PopularPreview() {
                   </span>
                 </div>
               </button>
-            ))}
+            ))
+            )}
           </div>
 
           {/* Right Arrow */}

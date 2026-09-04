@@ -777,7 +777,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-black uppercase tracking-wide text-amber-800">
-                    🔥 Buy {bogoOffer.buy_qty || 1} Get {bogoOffer.get_qty || 1} Free Offer!
+                    Buy {bogoOffer.buy_qty || 1} Get {bogoOffer.get_qty || 1} Free Offer!
                   </p>
                   <p className="mt-0.5 text-[11px] text-amber-700">
                     Add at least {(bogoOffer.buy_qty || 1) + (bogoOffer.get_qty || 1)} items to your cart and apply promo code{" "}

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import SkeletonLoader from "@/components/SkeletonLoader";
 import {
   useGetSiteReviewsQuery,
   useGetMyReviewsQuery,
@@ -311,15 +312,7 @@ export default function ReviewsPage() {
 
             {/* REVIEWS LIST */}
             {loadingSite ? (
-              <div className="flex items-center justify-center py-16 text-[var(--color-text-muted)]">
-                <LoaderCircle
-                  size={28}
-                  className="animate-spin text-[var(--color-primary)]"
-                />
-                <span className="ml-3 text-xs font-black">
-                  Loading customer reviews...
-                </span>
-              </div>
+              <SkeletonLoader variant="list" count={4} />
             ) : errorSite ? (
               <div className="rounded-2xl bg-red-50 p-6 text-center text-xs font-black text-red-600">
                 Failed to load store reviews.
@@ -491,15 +484,7 @@ export default function ReviewsPage() {
                 </button>
               </div>
             ) : loadingMy ? (
-              <div className="flex items-center justify-center py-16 text-[var(--color-text-muted)]">
-                <LoaderCircle
-                  size={28}
-                  className="animate-spin text-[var(--color-primary)]"
-                />
-                <span className="ml-3 text-xs font-black">
-                  Loading your reviews...
-                </span>
-              </div>
+              <SkeletonLoader variant="list" count={3} />
             ) : errorMy ? (
               <div className="rounded-2xl bg-red-50 p-6 text-center text-xs font-black text-red-600">
                 Failed to load your submitted reviews.

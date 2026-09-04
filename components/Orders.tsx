@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import OrderChat from "./OrderChat";
 import Pagination from "./Pagination";
+import SkeletonLoader from "./SkeletonLoader";
 import {
   useGetOrdersQuery,
   useGetOrderDetailsQuery,
@@ -472,9 +473,7 @@ const toAssetUrl = (path?: string | null) => {
 
       <section className="mx-auto max-w-6xl px-5 py-6 pb-16 sm:px-8">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20 text-[var(--color-primary)]">
-            <LoaderCircle size={32} className="animate-spin" />
-          </div>
+          <SkeletonLoader variant="card" count={3} gridClassName="flex flex-col gap-4" />
         ) : filteredOrders.length === 0 ? (
           <div
             className="

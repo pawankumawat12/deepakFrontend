@@ -24,6 +24,7 @@ import {
   useDeleteReviewMutation,
   ReviewItem,
 } from "../redux/services/reviewApi";
+import SkeletonLoader from "./SkeletonLoader";
 import { RootState } from "../redux/store";
 
 const RATING_LABELS: Record<number, string> = {
@@ -258,15 +259,7 @@ export default function ProductReviewSection({
       {/* REVIEWS LIST */}
       <div className="mt-8 space-y-4">
         {isLoading ? (
-          <div className="flex items-center justify-center py-14 text-[var(--color-text-muted)]">
-            <LoaderCircle
-              size={24}
-              className="animate-spin text-[var(--color-primary)]"
-            />
-            <span className="ml-2.5 text-xs font-black">
-              Loading reviews...
-            </span>
-          </div>
+          <SkeletonLoader variant="list" count={3} />
         ) : isError ? (
           <div className="py-6 text-center text-xs font-black text-red-500">
             Failed to load reviews. Please try again.

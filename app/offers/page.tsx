@@ -16,6 +16,7 @@ import {
   Gift,
 } from "lucide-react";
 import { useGetOffersQuery, OfferItem } from "@/redux/services/offerApi";
+import SkeletonLoader from "@/components/SkeletonLoader";
 import toast from "react-hot-toast";
 
 const filters = ["All", "Percentage Deals", "Flat Discounts", "BOGO / Combos"];
@@ -227,14 +228,11 @@ export default function OffersPage() {
 
         {/* Offer Cards */}
         {isLoading ? (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="animate-pulse rounded-3xl border border-gray-100 bg-white p-4 h-96"
-              />
-            ))}
-          </div>
+          <SkeletonLoader
+            variant="card"
+            count={6}
+            gridClassName="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          />
         ) : (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredOffers.map((offer) => (

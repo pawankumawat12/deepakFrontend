@@ -28,6 +28,7 @@ import {
   useMarkAllNotificationsReadMutation,
   NotificationItem,
 } from "@/redux/services/notificationApi";
+import SkeletonLoader from "./SkeletonLoader";
 import { getSocket } from "@/lib/socket";
 
 const filters = [
@@ -296,14 +297,7 @@ export default function NotificationsPage() {
       {/* NOTIFICATIONS LIST */}
       <section className="mx-auto max-w-5xl px-5 py-6 pb-24 sm:px-8">
         {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-20 animate-pulse rounded-2xl border border-[var(--color-border)] bg-white p-4"
-              />
-            ))}
-          </div>
+          <SkeletonLoader variant="list" count={4} />
         ) : filteredNotifications.length === 0 ? (
           <div className="rounded-3xl border border-[var(--color-border)] bg-white px-6 py-16 text-center shadow-sm">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
