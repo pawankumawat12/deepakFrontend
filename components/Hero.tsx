@@ -18,8 +18,26 @@ import {
   Sandwich,
   Sparkles,
 } from "lucide-react";
+import { toAssetUrl } from "../utils/backendUrl";
+import { useGetActiveHeroSlidersQuery } from "../redux/services/heroSliderApi";
 
-const slides = [
+interface SlideItem {
+  id?: number | string;
+  tag: string;
+  title: string;
+  highlight: string;
+  subtitle?: string | null;
+  cta?: string | null;
+  secondaryCta?: string | null;
+  secondary_cta?: string | null;
+  href?: string | null;
+  secondaryHref?: string | null;
+  secondary_href?: string | null;
+  img?: string | null;
+  image?: string | null;
+}
+
+const FALLBACK_SLIDES: SlideItem[] = [
   {
     tag: "FRESH & DELICIOUS",
     title: "Good Food,",
@@ -58,21 +76,44 @@ const slides = [
   },
 ];
 
-
 export default function Hero() {
+  const { data: remoteSliders } = useGetActiveHeroSlidersQuery();
+  const slides: SlideItem[] =
+    remoteSliders && remoteSliders.length > 0
+      ? remoteSliders
+      : FALLBACK_SLIDES;
+
   const [index, setIndex] = useState(0);
 
+  // Keep index within bounds if slide count changes dynamically
   useEffect(() => {
+    if (index >= slides.length) {
+      setIndex(0);
+    }
+  }, [slides.length, index]);
+
+  // Auto-slide every 5 seconds if multiple slides exist
+  useEffect(() => {
+    if (slides.length <= 1) return;
+
     const id = setInterval(() => {
       setIndex((current) => (current + 1) % slides.length);
     }, 5000);
 
     return () => clearInterval(id);
-  }, []);
+  }, [slides.length]);
 
-  const currentSlide = slides[index];
+  const currentSlide = slides[index] || slides[0] || FALLBACK_SLIDES[0];
+  const slideImage = toAssetUrl(currentSlide.img || currentSlide.image);
+  const slideHref = currentSlide.href || "/menu";
+  const slideSecondaryHref =
+    currentSlide.secondaryHref || currentSlide.secondary_href || "/menu";
+  const slideCta = currentSlide.cta || "Order Now";
+  const slideSecondaryCta =
+    currentSlide.secondaryCta || currentSlide.secondary_cta || "View Menu";
 
   const previousSlide = () => {
+    if (slides.length <= 1) return;
     setIndex(
       (current) =>
         (current - 1 + slides.length) % slides.length
@@ -80,6 +121,7 @@ export default function Hero() {
   };
 
   const nextSlide = () => {
+    if (slides.length <= 1) return;
     setIndex(
       (current) =>
         (current + 1) % slides.length
@@ -87,24 +129,23 @@ export default function Hero() {
   };
 
   return (
-    <main className="w-full overflow-hidden bg-[var(--bg-body)]">
+    <main className="w-full overflow-hidden bg-(--bg-body)">
 
-
-      <section className="relative min-h-[400px] md:min-h-[600px] lg:min-h-[650px] overflow-hidden bg-stone-900 flex items-center">
+      <section className="relative min-h-100 md:min-h-150 lg:min-h-162.5 overflow-hidden bg-stone-900 flex items-center">
 
         {/* Full Background Slider Image */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
-            key={currentSlide.img}
-            src={currentSlide.img}
+            key={slideImage}
+            src={slideImage}
             alt={currentSlide.highlight}
             className="h-full w-full object-cover object-center transition-all duration-1000 scale-105"
           />
 
           {/* Contrast & Depth Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/35 sm:to-black/25" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/20 to-black/60" />
+          <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/70 to-black/35 sm:to-black/25" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-black/50" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-transparent via-black/20 to-black/60" />
         </div>
 
         {/* Main hero container */}
@@ -148,7 +189,7 @@ export default function Hero() {
                 backdrop-blur-md
               "
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--color-primary) text-white">
                 <Leaf size={12} />
               </span>
               {currentSlide.tag}
@@ -166,7 +207,7 @@ export default function Hero() {
                   text-2xl
                   italic
                   font-semibold
-                  text-[var(--color-secondary)]
+                  text-(--color-secondary)
                   sm:text-3xl
                   md:text-4xl
                 "
@@ -212,14 +253,14 @@ export default function Hero() {
             {/* Buttons */}
             <div className="mt-8 flex flex-wrap items-center gap-3.5">
               <Link
-                href={currentSlide.href}
+                href={slideHref}
                 className="
                   group
                   inline-flex
                   items-center
                   gap-3
                   rounded-xl
-                  bg-[var(--color-primary)]
+                  bg-(--color-primary)
                   px-7
                   py-3.5
                   text-sm
@@ -229,11 +270,11 @@ export default function Hero() {
                   transition-all
                   duration-300
                   hover:-translate-y-1
-                  hover:bg-[var(--color-primary-dark)]
+                  hover:bg-(--color-primary-dark)
                 "
                 style={{color:"white"}}
               >
-                {currentSlide.cta}
+                {slideCta}
                 <ArrowRight
                   size={18}
                   className="transition-transform duration-300 group-hover:translate-x-1"
@@ -242,7 +283,7 @@ export default function Hero() {
               </Link>
 
               <Link
-                href={currentSlide.secondaryHref}
+                href={slideSecondaryHref}
                 className="
                   inline-flex
                   items-center
@@ -261,11 +302,11 @@ export default function Hero() {
                   duration-300
                   hover:-translate-y-1
                   hover:bg-white
-                  hover:text-[var(--color-primary)]
+                  hover:text-(--color-primary)
                 "
                 style={{color: "white"}}
               >
-                {currentSlide.secondaryCta}
+                {slideSecondaryCta}
               </Link>
             </div>
 
@@ -344,7 +385,7 @@ export default function Hero() {
                     justify-center
                     rounded-full
                     bg-white/15
-                    text-[var(--color-secondary)]
+                    text-(--color-secondary)
                     shadow-sm
                     backdrop-blur-md
                   "
@@ -387,8 +428,8 @@ export default function Hero() {
                   items-center
                   justify-center
                   rounded-full
-                  bg-[var(--color-secondary)]/20
-                  text-[var(--color-secondary)]
+                  bg-(--color-secondary)/20
+                  text-(--color-secondary)
                 "
               >
                 <Star size={20} fill="currentColor" />
@@ -429,7 +470,7 @@ export default function Hero() {
                   items-center
                   justify-center
                   rounded-xl
-                  bg-[var(--color-primary)]
+                  bg-(--color-primary)
                   text-white
                   shadow-md
                 "
@@ -455,7 +496,7 @@ export default function Hero() {
                 rounded-full
                 border
                 border-white/20
-                bg-[var(--color-secondary)]/90
+                bg-(--color-secondary)/90
                 px-4
                 py-2
                 text-xs
@@ -561,7 +602,7 @@ export default function Hero() {
         >
           {slides.map((slide, i) => (
             <button
-              key={slide.title}
+              key={slide.id ? `slide-${slide.id}` : `${slide.title}-${i}`}
               type="button"
               aria-label={`Go to slide ${i + 1}`}
               onClick={() => setIndex(i)}
@@ -590,7 +631,7 @@ export default function Hero() {
             max-w-6xl
             overflow-hidden
             rounded-2xl
-            bg-[var(--color-primary)]
+            bg-(--color-primary)
             shadow-[0_15px_40px_rgba(79,125,22,0.22)]
           "
         >
@@ -610,7 +651,7 @@ export default function Hero() {
               gap-4
               rounded-2xl
               border
-              border-[var(--color-border)]
+              border-(--color-border)
               bg-white
               p-5
             "
@@ -624,19 +665,19 @@ export default function Hero() {
                 items-center
                 justify-center
                 rounded-full
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
+                bg-(--color-primary-50)
+                text-(--color-primary)
               "
             >
               <Leaf size={22} />
             </div>
 
             <div>
-              <h3 className="font-bold text-[var(--color-text-primary)]">
+              <h3 className="font-bold text-(--color-text-primary)">
                 Fresh Ingredients
               </h3>
 
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              <p className="mt-1 text-xs text-(--color-text-muted)">
                 Quality ingredients in every meal
               </p>
             </div>
@@ -649,7 +690,7 @@ export default function Hero() {
               gap-4
               rounded-2xl
               border
-              border-[var(--color-border)]
+              border-(--color-border)
               bg-white
               p-5
             "
@@ -663,19 +704,19 @@ export default function Hero() {
                 items-center
                 justify-center
                 rounded-full
-                bg-[var(--color-secondary)]/10
-                text-[var(--color-secondary)]
+                bg-(--color-secondary)/10
+                text-(--color-secondary)
               "
             >
               <Truck size={22} />
             </div>
 
             <div>
-              <h3 className="font-bold text-[var(--color-text-primary)]">
+              <h3 className="font-bold text-(--color-text-primary)">
                 Fast Delivery
               </h3>
 
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              <p className="mt-1 text-xs text-(--color-text-muted)">
                 Hot food delivered to your door
               </p>
             </div>
@@ -688,7 +729,7 @@ export default function Hero() {
               gap-4
               rounded-2xl
               border
-              border-[var(--color-border)]
+              border-(--color-border)
               bg-white
               p-5
             "
@@ -702,19 +743,19 @@ export default function Hero() {
                 items-center
                 justify-center
                 rounded-full
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
+                bg-(--color-primary-50)
+                text-(--color-primary)
               "
             >
               <Utensils size={22} />
             </div>
 
             <div>
-              <h3 className="font-bold text-[var(--color-text-primary)]">
+              <h3 className="font-bold text-(--color-text-primary)">
                 Made With Love
               </h3>
 
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              <p className="mt-1 text-xs text-(--color-text-muted)">
                 Delicious food, every single time
               </p>
             </div>
