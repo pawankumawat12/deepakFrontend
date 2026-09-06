@@ -694,15 +694,16 @@ export default function Menu() {
             <SkeletonLoader
               variant="product"
               count={8}
-              gridClassName="grid grid-cols-2 gap-3 pb-8 sm:gap-5 md:grid-cols-3 lg:grid-cols-4"
+              gridClassName="grid grid-cols-1 gap-4 pb-8 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4"
             />
           ) : (
             <div
               className="
                 grid
-                grid-cols-2
-                gap-3
+                grid-cols-1
+                gap-4
                 pb-8
+                sm:grid-cols-2
                 sm:gap-5
                 md:grid-cols-3
                 lg:grid-cols-4
@@ -740,7 +741,7 @@ export default function Menu() {
 
                     <Link
                       href={`/product/${p.id}`}
-                      className="relative block h-40 w-full sm:h-48 overflow-hidden"
+                      className="relative block h-48 w-full overflow-hidden"
                     >
                       {p.img ? (
                         <Image
@@ -1184,102 +1185,7 @@ export default function Menu() {
 
       </div>
 
-      {/* =========================================================
-          STICKY CART
-      ========================================================= */}
-
-      {cartSummary.totalItems > 0 && (
-        <div
-          className="
-            cart-bar
-            fixed
-            inset-x-3
-            bottom-25
-            z-50
-            mx-auto
-            max-w-lg
-            rounded-2xl
-            border
-            border-white/10
-            bg-[var(--color-primary-dark)]/95
-            p-2
-            text-white
-            shadow-[0_14px_45px_rgba(0,0,0,0.25)]
-            backdrop-blur-xl
-            sm:inset-x-auto
-            sm:right-6
-            sm:left-auto
-            sm:mx-0
-            sm:w-[360px]
-          "
-        >
-
-          <div className="flex items-center justify-between gap-3 px-2">
-
-            {/* Cart information */}
-
-            <div className="flex min-w-0 items-center gap-3">
-
-              <div
-                className="
-                  flex
-                  h-11
-                  w-11
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-white/10
-                "
-              >
-                <ShoppingBag size={19} />
-              </div>
-
-              <div className="min-w-0">
-
-                <p className="truncate text-[10px] font-semibold text-white/60">
-                  {cartSummary.totalItems} item
-                  {cartSummary.totalItems !== 1 ? "s" : ""} in your cart
-                </p>
-
-                <p className="text-sm font-black">
-                  ₹{formatRupee(cartSummary.grandTotal)}
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* View cart */}
-
-            <Link
-              href="/cart"
-              className="
-                flex
-                h-11
-                shrink-0
-                items-center
-                gap-2
-                rounded-xl
-                bg-[var(--color-primary)]
-                px-4
-                text-xs
-                font-black
-                text-white
-                transition
-                hover:-translate-y-0.5
-                active:scale-95
-              "
-            >
-              View Cart
-
-              <ArrowRight size={15} />
-            </Link>
-
-          </div>
-
-        </div>
-      )}
+    
 
     </main>
   );

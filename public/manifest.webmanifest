@@ -14,13 +14,6 @@
   "launch_handler": {
     "client_mode": ["navigate-existing", "auto"]
   },
-  "related_applications": [
-    {
-      "platform": "webapp",
-      "url": "/manifest.webmanifest",
-      "id": "sfc-cafe"
-    }
-  ],
   "prefer_related_applications": false,
   "icons": [
     {

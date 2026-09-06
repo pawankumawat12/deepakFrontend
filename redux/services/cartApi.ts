@@ -1,16 +1,5 @@
 import { baseApi } from "./baseApi";
-
-const backendUrl = (
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
-  process.env.VITE_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-  ""
-).replace(/\/+$/, "");
-
-const toAssetUrl = (path?: string | null) => {
-  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
-  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
-};
+import { toAssetUrl } from "@/utils/backendUrl";
 
 export interface CartItem {
   id: number;

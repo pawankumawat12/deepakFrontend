@@ -1,5 +1,4 @@
 import { io, Socket } from "socket.io-client";
-import { store } from "../redux/store";
 
 const SOCKET_URL = (
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
@@ -9,9 +8,33 @@ const SOCKET_URL = (
 ).replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
 
 let socket: Socket | null = null;
+let storeRef: any = null;
+
+export function injectSocketStore(store: any) {
+  storeRef = store;
+}
+
+function getStoredToken(): string {
+  if (storeRef) {
+    try {
+      return storeRef.getState()?.auth?.accessToken || "";
+    } catch {}
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const persisted = localStorage.getItem("persist:sfc_root");
+      if (persisted) {
+        const parsed = JSON.parse(persisted);
+        const auth = JSON.parse(parsed.auth || "{}");
+        if (auth?.accessToken) return auth.accessToken;
+      }
+    } catch {}
+  }
+  return "";
+}
 
 export function getSocket(userId?: number | string | null): Socket {
-  const token = store.getState().auth?.accessToken;
+  const token = getStoredToken();
 
   if (!socket) {
     socket = io(SOCKET_URL, {

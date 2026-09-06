@@ -3,6 +3,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout, setCredentials } from "../features/authSlice";
 import { updateSocketToken, disconnectSocket } from "../../lib/socket";
+import { getApiUrl } from "@/utils/backendUrl";
 
 class SimpleMutex {
   private _queue: Promise<void> = Promise.resolve();
@@ -40,15 +41,7 @@ class SimpleMutex {
 const mutex = new SimpleMutex();
 
 const getNormalizedBaseUrl = () => {
-  const url = (
-    (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
-    process.env.VITE_BACKEND_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    ""
-  ).trim();
-  if (!url) return "/api/v1";
-  const clean = url.replace(/\/+$/, "");
-  return clean.endsWith("/api/v1") ? clean : `${clean}/api/v1`;
+  return getApiUrl();
 };
 
 const rawBaseQuery = fetchBaseQuery({
@@ -76,7 +69,12 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
     isRefreshRequest ||
     url === "/auth/logout" ||
     url === "/auth/login" ||
-    url === "/auth/verify-otp";
+    url === "/auth/google" ||
+    url === "/auth/register" ||
+    url === "/auth/send-otp" ||
+    url === "/auth/verify-otp" ||
+    url?.includes("/auth/google") ||
+    url?.includes("/auth/login");
 
   if (result.error?.status === 401 && !isAuthEndpoint) {
     if (!mutex.isLocked()) {
@@ -106,9 +104,12 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
           // Retry the original query with the new access token
           result = await rawBaseQuery(args, api, extraOptions);
         } else {
-          // Stop all retries immediately, clear Redux auth state cleanly
+          // Stop all retries immediately, only logout if there was a verified user
           disconnectSocket();
-          api.dispatch(logout());
+          const currentState = api.getState() as any;
+          if (currentState?.auth?.user || currentState?.auth?.accessToken) {
+            api.dispatch(logout());
+          }
         }
       } finally {
         release();

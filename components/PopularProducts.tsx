@@ -265,17 +265,6 @@ export default function PopularProducts() {
               </span>
             </div>
 
-            <h2
-              className="
-                text-3xl
-                font-black
-                tracking-tight
-                text-[var(--color-text-primary)]
-                md:text-4xl
-              "
-            >
-              Popular Picks
-            </h2>
             <p
               className="
                 mt-2
@@ -420,33 +409,7 @@ export default function PopularProducts() {
                   />
 
               
-                  <div
-                    className="
-                      absolute
-                      left-3
-                      top-3
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      rounded-full
-                      bg-[var(--color-primary)]
-                      px-3
-                      py-1.5
-                      text-[10px]
-                      font-bold
-                      uppercase
-                      tracking-wide
-                      text-white
-                      shadow-md
-                    "
-                  >
-                    <Flame
-                      size={12}
-                      fill="currentColor"
-                    />
-
-                    Best Seller
-                  </div>
+                
 
                   {/* Applicable Offer Badge */}
                   {(() => {

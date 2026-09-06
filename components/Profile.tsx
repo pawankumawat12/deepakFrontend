@@ -32,20 +32,9 @@ import { setCredentials } from "@/redux/features/authSlice";
 import { updateProfileSchema } from "@/schemas/authSchema";
 import ProfileAddresses from "./ProfileAddresses";
 import EmailChangeOtpModal from "./EmailChangeOtpModal";
+import { toAssetUrl } from "@/utils/backendUrl";
 
 type ProfileFormValues = z.infer<typeof updateProfileSchema>;
-
-const backendUrl = (
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
-  process.env.VITE_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-  ""
-).replace(/\/+$/, "");
-
-const toAssetUrl = (path?: string | null) => {
-  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
-  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
-};
 
 export default function Profile() {
   const dispatch = useDispatch();

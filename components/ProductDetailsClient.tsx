@@ -58,6 +58,7 @@ import {
   ReviewItem,
 } from "../redux/services/reviewApi";
 import { useGetOffersQuery } from "../redux/services/offerApi";
+import { useGetStoreProductsQuery } from "../redux/services/catalogApi";
 import { getAllProductOffers } from "../utils/offerUtils";
 import { Gift } from "lucide-react";
 
@@ -103,6 +104,27 @@ export default function ProductDetailsClient({ product }: { product: any }) {
 
   const { data: availableOffers = [] } = useGetOffersQuery();
   const applicableOffers = getAllProductOffers(product, availableOffers);
+
+  const { data: storeProductsResponse } = useGetStoreProductsQuery({ isActive: true });
+  const relatedProducts = React.useMemo(() => {
+    const all = storeProductsResponse?.data || [];
+    const currentId = Number(product.id);
+    const currentCatId = String(product.category_id || product.category || "");
+
+    let sameCategory = all.filter(
+      (p: any) => Number(p.id) !== currentId && String(p.category_id || p.category) === currentCatId
+    );
+
+    if (sameCategory.length < 4) {
+      const others = all.filter(
+        (p: any) =>
+          Number(p.id) !== currentId && !sameCategory.some((s: any) => Number(s.id) === Number(p.id))
+      );
+      sameCategory = [...sameCategory, ...others];
+    }
+
+    return sameCategory.slice(0, 4);
+  }, [storeProductsResponse, product]);
 
 
   const handleToggleWishlist = async () => {
@@ -1906,6 +1928,124 @@ export default function ProductDetailsClient({ product }: { product: any }) {
           </div>
         </div>
       </section>
+
+      {/* RELATED PRODUCTS / SIMILAR DISHES */}
+      {relatedProducts && relatedProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-8 md:px-8 border-t border-[var(--color-border)]/60">
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <Utensils size={13} />
+                </span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+                  Pair It With
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-[var(--color-text-primary)]">
+                More from {product.categoryName || "this category"}
+              </h2>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                Handcrafted dishes loved by customers who ordered this.
+              </p>
+            </div>
+            <Link
+              href="/menu"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--color-primary)] hover:underline self-start sm:self-auto"
+            >
+              <span>Explore full menu</span>
+              <ChevronRight size={15} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {relatedProducts.map((rel: any) => {
+              const relRating = Number(rel.rating || 0);
+              const relReviews = Number(rel.total_reviews || 0);
+              const isMadeToOrder = Boolean(
+                rel.isMadeToOrder ||
+                String(rel.availability_type || "").toUpperCase() === "MADE_TO_ORDER"
+              );
+              const isOut = !isMadeToOrder && Number(rel.stock) <= 0;
+
+              return (
+                <article
+                  key={rel.id}
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-xs transition hover:-translate-y-1 hover:shadow-lg"
+                >
+                  <Link href={`/product/${rel.id}`} className="relative block h-44 w-full overflow-hidden bg-stone-100">
+                    {rel.img ? (
+                      <Image
+                        src={rel.img}
+                        alt={rel.name}
+                        fill
+                        unoptimized
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-stone-400 text-xs font-semibold">
+                        No image
+                      </div>
+                    )}
+                    {isOut && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-xs font-black uppercase text-white">
+                        Out of Stock
+                      </div>
+                    )}
+                    {rel.categoryName && (
+                      <div className="absolute left-2.5 bottom-2.5 rounded-full bg-black/60 px-2.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-xs">
+                        {rel.categoryName}
+                      </div>
+                    )}
+                  </Link>
+
+                  <div className="flex flex-1 flex-col justify-between p-4">
+                    <div>
+                      <Link href={`/product/${rel.id}`} className="block">
+                        <h3 className="line-clamp-1 text-sm sm:text-base font-black text-[var(--color-text-primary)] group-hover:text-[var(--color-primary)] transition">
+                          {rel.name}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 min-h-[32px] text-[11px] leading-4 text-[var(--color-text-muted)]">
+                          {rel.description || "Freshly handcrafted with authentic taste."}
+                        </p>
+                      </Link>
+
+                      <div className="mt-2.5 flex items-center gap-2 text-xs">
+                        <span className="flex items-center gap-1 font-bold text-amber-500">
+                          <Star size={12} className="fill-amber-400 text-amber-400" />
+                          <span>{relRating > 0 ? relRating.toFixed(1) : "New"}</span>
+                        </span>
+                        {relReviews > 0 && (
+                          <span className="text-[10px] text-[var(--color-text-muted)]">
+                            ({relReviews})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between border-t border-[var(--color-border)]/60 pt-3">
+                      <div>
+                        <span className="text-[10px] text-[var(--color-text-muted)] font-bold">Price</span>
+                        <p className="text-base font-black text-[var(--color-text-primary)]">
+                          ₹{Number(rel.price).toLocaleString("en-IN")}
+                        </p>
+                      </div>
+
+                      <Link
+                        href={`/product/${rel.id}`}
+                        className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[var(--color-primary-dark)] active:scale-95"
+                      >
+                        View Dish
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
         <div

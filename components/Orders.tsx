@@ -38,6 +38,7 @@ import {
 } from "../redux/services/orderApi";
 import { getSocket } from "../lib/socket";
 import { loadRazorpayScript } from "../lib/razorpay";
+import { toAssetUrl } from "@/utils/backendUrl";
 import toast from "react-hot-toast";
 
 type OrderStatus =
@@ -411,17 +412,6 @@ export default function Orders() {
 
 
 
-const backendUrl = (
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
-  process.env.VITE_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-  ""
-).replace(/\/+$/, "");
-
-const toAssetUrl = (path?: string | null) => {
-  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
-  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
-};
 
 
   if (!user) {

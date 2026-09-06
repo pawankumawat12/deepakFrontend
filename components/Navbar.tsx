@@ -36,17 +36,7 @@ import { useGetLogoQuery } from "../redux/services/settingsApi";
 import { useGetUnreadNotificationCountQuery } from "../redux/services/notificationApi";
 import { getSocket } from "../lib/socket";
 import LogoutModal from "@/models/LogoutModel";
-const backendUrl = (
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
-  process.env.VITE_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-  ""
-).replace(/\/+$/, "");
-
-const toAssetUrl = (path?: string | null) => {
-  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
-  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
-};
+import { toAssetUrl } from "@/utils/backendUrl";
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -218,7 +208,7 @@ const Navbar = () => {
           DESKTOP NAVBAR
       ========================================================= */}
 
-      <header className="hidden md:block relative top-0  inset-x-0 z-50">
+      <header className="hidden md:block sticky top-0 inset-x-0 z-50">
         <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
           <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6 lg:px-8">
             {/* ---------------- LOGO ---------------- */}
@@ -606,7 +596,7 @@ const Navbar = () => {
       {/* MOBILE / PWA TOP BAR */}
 
       <header
-        className="md:hidden relative top-0 inset-x-0 z-50"
+        className="md:hidden sticky top-0 inset-x-0 z-50"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div

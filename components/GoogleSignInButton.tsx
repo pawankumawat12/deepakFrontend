@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -84,7 +84,15 @@ export default function GoogleSignInButton({
 
       try {
         const me = await getMe().unwrap();
-        dispatch(setCredentials(me));
+        if (me?.user) {
+          dispatch(
+            setCredentials({
+              ...me,
+              token: me.token || me.accessToken || res.token || res.accessToken,
+              accessToken: me.accessToken || me.token || res.accessToken || res.token,
+            })
+          );
+        }
       } catch {
         // me query error shouldn't block login
       }

@@ -15,20 +15,10 @@ import {
   Wifi,
 } from "lucide-react";
 import PWAInstallButton from "@/components/PWAInstallButton";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useGetFooterQuery, useGetLogoQuery } from "../redux/services/settingsApi";
 import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
-
-const backendUrl = (
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
-  process.env.VITE_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-  ""
-).replace(/\/+$/, "");
-
-const toAssetUrl = (path?: string | null) => {
-  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
-  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
-};
+import { toAssetUrl } from "@/utils/backendUrl";
 
 const quickLinks = [
   {
@@ -78,6 +68,8 @@ const helpLinks = [
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { isInstalled, isStandalone } = usePWAInstall();
+  const isAppInstalled = Boolean(isInstalled || isStandalone);
   const { data: footerResponse } = useGetFooterQuery();
   const { data: logoResponse } = useGetLogoQuery();
   const footerSettings = footerResponse?.data;
@@ -91,7 +83,100 @@ export default function Footer() {
   return (
     <footer className="app-footer bg-[var(--bg-footer)] text-white">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]">
+        {/* Mobile Compact Footer */}
+        <div className="flex flex-col gap-4 sm:hidden">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1 shadow-md">
+                <Image
+                  src={logoSrc || "/images/sfcLogo.png"}
+                  alt="SFC Cafe"
+                  width={36}
+                  height={36}
+                  unoptimized
+                  onError={() => setLogoSrc("/images/sfcLogo.png")}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div>
+                <span className="block text-base font-black tracking-tight">SFC Cafe</span>
+                <span className="block text-[8px] font-medium uppercase tracking-[0.16em] text-white/50">
+                  Fresh • Fast • Delicious
+                </span>
+              </div>
+            </Link>
+
+            <div className="flex items-center gap-2">
+              {footerSettings?.facebook && (
+                <a
+                  href={footerSettings.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white"
+                >
+                  <FaFacebook size={14} />
+                </a>
+              )}
+              {footerSettings?.instagram && (
+                <a
+                  href={footerSettings.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white"
+                >
+                  <FaInstagram size={14} />
+                </a>
+              )}
+              {footerSettings?.twitter && (
+                <a
+                  href={footerSettings.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Twitter"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white"
+                >
+                  <FaTwitter size={14} />
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
+            <Link href="/" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+              Home
+            </Link>
+            <Link href="/menu" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+              Menu
+            </Link>
+            <Link href="/offers" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+              Offers
+            </Link>
+            <Link href="/orders" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+              Orders
+            </Link>
+            <Link href="/privacy-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+              Privacy
+            </Link>
+            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+              Terms
+            </Link>
+          </div>
+
+          {!isAppInstalled && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2">
+              <div className="flex items-center gap-2">
+                <Zap size={14} className="text-[var(--color-primary-light)] shrink-0" />
+                <span className="text-xs font-bold text-white/90">Install SFC Cafe App</span>
+              </div>
+              <PWAInstallButton variant="footer" />
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Directory Grid */}
+        <div className="hidden sm:grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]">
           <div>
             <Link
               href="/"
@@ -389,73 +474,58 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[var(--color-primary)]/25 via-white/5 to-transparent p-5 sm:p-6 md:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.25)] ring-1 ring-white/20">
-                <Image
-                  src={logoSrc || "/images/sfcLogo.png"}
-                  alt="SFC Cafe app icon"
-                  width={72}
-                  height={72}
-                  unoptimized
-                  onError={() => setLogoSrc("/images/sfcLogo.png")}
-                  className="h-full w-full object-contain"
-                />
-              </div>
+        {!isAppInstalled && (
+          <div className="mt-10 hidden sm:block overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[var(--color-primary)]/25 via-white/5 to-transparent p-5 sm:p-6 md:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.25)] ring-1 ring-white/20">
+                  <Image
+                    src={logoSrc || "/images/sfcLogo.png"}
+                    alt="SFC Cafe app icon"
+                    width={72}
+                    height={72}
+                    unoptimized
+                    onError={() => setLogoSrc("/images/sfcLogo.png")}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
 
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--color-primary-light)]">
-                  Mobile App Experience
-                </p>
-                <h3 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
-                  Install SFC Cafe App
-                </h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
-                  Add SFC Cafe to your home screen for faster ordering, quick
-                  reorders, and an app-like experience — no app store needed.
-                </p>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--color-primary-light)]">
+                    Mobile App Experience
+                  </p>
+                  <h3 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
+                    Install SFC Cafe App
+                  </h3>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
+                    Add SFC Cafe to your home screen for faster ordering, quick
+                    reorders, and an app-like experience — no app store needed.
+                  </p>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {[
-                    { icon: Zap, label: "Fast ordering" },
-                    { icon: Bell, label: "Order updates" },
-                    { icon: Wifi, label: "Offline support" },
-                  ].map(({ icon: Icon, label }) => (
-                    <span
-                      key={label}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/75"
-                    >
-                      <Icon size={13} className="text-[var(--color-primary-light)]" />
-                      {label}
-                    </span>
-                  ))}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {[
+                      { icon: Zap, label: "Fast ordering" },
+                      { icon: Bell, label: "Order updates" },
+                      { icon: Wifi, label: "Offline support" },
+                    ].map(({ icon: Icon, label }) => (
+                      <span
+                        key={label}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/75"
+                      >
+                        <Icon size={13} className="text-[var(--color-primary-light)]" />
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="shrink-0 lg:pl-4">
-              <PWAInstallButton variant="footer" />
+              <div className="shrink-0 lg:pl-4">
+                <PWAInstallButton variant="footer" />
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 sm:hidden">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-black">Hungry already?</p>
-              <p className="mt-1 text-[11px] text-white/50">
-                Order your favorite food now.
-              </p>
-            </div>
-
-            <Link
-              href="/menu"
-              className="shrink-0 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold text-white"
-            >
-              Order Now
-            </Link>
-          </div>
-        </div>
+        )}
         <div className="my-8 h-px bg-white/10" />
         <div
           className="

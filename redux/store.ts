@@ -13,6 +13,7 @@ import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import authReducer from "./features/authSlice";
 import themeReducer from "./features/themeSlice";
 import { baseApi } from "./services/baseApi";
+import { injectSocketStore } from "../lib/socket";
 
 // SSR-safe storage for Next.js
 const createNoopStorage = () => {
@@ -57,6 +58,8 @@ export const store = configureStore({
       },
     }).concat(baseApi.middleware),
 });
+
+injectSocketStore(store);
 
 export const persistor = persistStore(store);
 

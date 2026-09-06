@@ -9,21 +9,14 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/?source=pwa",
     scope: "/",
     display: "standalone",
-    display_override: ["window-controls-overlay", "standalone", "minimal-ui"] as any,
+    display_override: ["window-controls-overlay", "standalone", "minimal-ui"],
     orientation: "portrait-primary",
     background_color: "#ffffff",
     theme_color: "#4f7d16",
     categories: ["food", "shopping", "lifestyle"],
     launch_handler: {
       client_mode: ["navigate-existing", "auto"],
-    } as any,
-    related_applications: [
-      {
-        platform: "webapp",
-        url: "/manifest.webmanifest",
-        id: "sfc-cafe",
-      },
-    ] as any,
+    },
     prefer_related_applications: false,
     icons: [
       {

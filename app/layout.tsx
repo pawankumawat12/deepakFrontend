@@ -4,7 +4,7 @@ import Footer from "./footer";
 import Navbar from "../components/Navbar";
 import "../styles/global.css";
 import Providers from "./providers";
-import { Toaster } from "react-hot-toast";
+import CustomToaster from "@/components/CustomToaster";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { getSiteUrl } from "@/utils/backendUrl";
 
@@ -76,34 +76,18 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var saved = localStorage.getItem('sfc_theme');
-                  var savedColor = localStorage.getItem('sfc_color_theme') || 'matcha';
-                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  if (saved === 'dark' || (!saved && prefersDark)) {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.setAttribute('data-theme', 'light');
-                  }
-                  document.documentElement.setAttribute('data-color-theme', savedColor);
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
       <body className="app-shell">
+        <script
+          id="theme-initializer"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('sfc_theme'),c=localStorage.getItem('sfc_color_theme')||'matcha',p=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(!s&&p)){document.documentElement.classList.add('dark');document.documentElement.setAttribute('data-theme','dark');}else{document.documentElement.classList.remove('dark');document.documentElement.setAttribute('data-theme','light');}document.documentElement.setAttribute('data-color-theme',c);}catch(e){}})();`,
+          }}
+          suppressHydrationWarning
+        />
         <Providers>
           <Navbar />
           <main className="app-main">{children}</main>
-          <Toaster position="top-right" reverseOrder={false} />
+          <CustomToaster />
           <Footer />
           <PWAInstallPrompt />
         </Providers>

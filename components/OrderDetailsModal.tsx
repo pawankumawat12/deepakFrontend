@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import toast from "react-hot-toast";
+import { toAssetUrl } from "@/utils/backendUrl";
 import {
   X,
   MapPin,
@@ -54,17 +55,6 @@ interface OrderDetailsModalProps {
   retryingOrderId?: number | null;
 }
 
-const backendUrl = (
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
-  process.env.VITE_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-  ""
-).replace(/\/+$/, "");
-
-const toAssetUrl = (path?: string | null) => {
-  if (!path || /^https?:\/\//i.test(path) || /^(?:blob:|data:)/i.test(path)) return path || "";
-  return `${backendUrl}${path.startsWith("/") ? path : `/${path}`}`;
-};
 
 function formatRupee(value: number) {
   return `₹${Number(value || 0).toLocaleString("en-IN")}`;

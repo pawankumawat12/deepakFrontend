@@ -14,19 +14,24 @@ import BlockedAccountScreen from "../components/BlockedAccountScreen";
 function AuthLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
-  const { data, isError } = useGetMeQuery(undefined, {
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+  const { data, isError, isLoading } = useGetMeQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
   useEffect(() => {
-    if (data?.user) dispatch(setCredentials(data));
+    if (data?.user) {
+      dispatch(setCredentials(data));
+    }
   }, [data, dispatch]);
 
   useEffect(() => {
-    if (isError) {
+    // Only logout if an active authenticated session fails verification.
+    // Never trigger logout for guests or during active login transitions.
+    if (isError && !isLoading && (user || accessToken)) {
       dispatch(logout());
     }
-  }, [isError, dispatch]);
+  }, [isError, isLoading, user, accessToken, dispatch]);
 
   const isBlocked = Boolean(
     user && (user.is_blocked || user.is_active === false)

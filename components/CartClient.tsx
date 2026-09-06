@@ -957,8 +957,8 @@ export default function CartClient() {
                         className="
                           group
                           relative
-                          h-24
-                          w-24
+                          h-20
+                          w-20
                           shrink-0
                           overflow-hidden
                           rounded-xl
@@ -973,7 +973,7 @@ export default function CartClient() {
                             alt={it.name}
                             fill
                             unoptimized
-                            sizes="(max-width: 640px) 96px, 112px"
+                            sizes="(max-width: 640px) 80px, 112px"
                             className="object-cover transition-transform duration-500 group-hover:scale-110"
                           />
                         ) : (
@@ -1092,7 +1092,7 @@ export default function CartClient() {
                         </div>
 
                         {/* Controls: Stepper & Remove */}
-                        <div className="mt-3 flex items-center justify-between border-t border-[var(--color-border)] pt-3">
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3">
                           {/* Quantity Stepper */}
                           <div className="flex items-center gap-1.5 rounded-full bg-[var(--color-primary-50)] p-1 ring-1 ring-[var(--color-primary)]/10">
                             <button
@@ -1528,7 +1528,7 @@ export default function CartClient() {
                       }
                     }}
                     placeholder="Enter Promo Code"
-                    className="flex-1 rounded-xl border border-[var(--color-border)] bg-stone-50 px-3.5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-[var(--color-text-primary)] placeholder:font-sans placeholder:tracking-normal focus:border-[var(--color-primary)] focus:bg-white focus:outline-none"
+                    className="min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-stone-50 px-3.5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-[var(--color-text-primary)] placeholder:font-sans placeholder:tracking-normal focus:border-[var(--color-primary)] focus:bg-white focus:outline-none"
                   />
                   <button
                     type="button"

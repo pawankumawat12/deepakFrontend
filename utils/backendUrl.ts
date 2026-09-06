@@ -1,11 +1,23 @@
 export const getBackendUrl = (): string => {
-  const url = (
-    (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
+  const envUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "") : "") ||
+    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_BACKEND_URL) ||
     process.env.VITE_BACKEND_URL ||
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-    ""
-  ).trim();
-  return url.replace(/\/+$/, "");
+    "";
+
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, "");
+  }
+
+  if (typeof window !== "undefined") {
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      return "http://localhost:5000";
+    }
+    return window.location.origin;
+  }
+
+  return "http://localhost:5000";
 };
 
 export const getApiUrl = (): string => {
@@ -24,13 +36,39 @@ export const getSiteUrl = (): string => {
 };
 
 export const toAssetUrl = (path?: string | null): string => {
-  if (!path || /^https?:\/\//i.test(path) || /^(?:data:|blob:)/i.test(path)) {
-    return path || "";
+  if (!path || typeof path !== "string") return "";
+  const trimmed = path.trim();
+  if (!trimmed) return "";
+
+  // Already an absolute URL or data/blob URI
+  if (/^https?:\/\//i.test(trimmed) || /^(?:data:|blob:)/i.test(trimmed)) {
+    return trimmed;
   }
+
+  // Normalize backslashes from Windows paths
+  const normalized = trimmed.replace(/\\/g, "/");
+
+  // Local frontend static assets in /public folder
+  if (
+    normalized.startsWith("/images/") ||
+    normalized.startsWith("/icons/") ||
+    normalized.startsWith("/assets/") ||
+    normalized.startsWith("images/") ||
+    normalized.startsWith("icons/") ||
+    normalized.startsWith("assets/")
+  ) {
+    return normalized.startsWith("/") ? normalized : `/${normalized}`;
+  }
+
   const backend = getBackendUrl();
-  if (!backend) {
-    const site = getSiteUrl();
-    return `${site}${path.startsWith("/") ? path : `/${path}`}`;
+
+  // If path already starts with /uploads/ or uploads/
+  if (normalized.startsWith("/uploads/") || normalized.startsWith("uploads/")) {
+    const clean = normalized.startsWith("/") ? normalized : `/${normalized}`;
+    return `${backend}${clean}`;
   }
-  return `${backend}${path.startsWith("/") ? path : `/${path}`}`;
+
+  // If path is a standalone filename or relative subpath, ensure /uploads/
+  const clean = normalized.startsWith("/") ? normalized.slice(1) : normalized;
+  return `${backend}/uploads/${clean}`;
 };
