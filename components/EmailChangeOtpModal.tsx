@@ -51,7 +51,7 @@ export default function EmailChangeOtpModal({
   // Reset state on open
   useEffect(() => {
     if (open) {
-      setOtp(["", "", "", ""]);
+      setOtp(["", "", "", "", "", ""]);
       setTimer(30);
       setErrorMessage("");
       setTimeout(() => {
@@ -82,13 +82,13 @@ export default function EmailChangeOtpModal({
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (cleanValue && index < 3) {
+    if (cleanValue && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto-submit if all 4 digits are filled
+    // Auto-submit if all 6 digits are filled
     const fullCode = newOtp.join("");
-    if (fullCode.length === 4 && !newOtp.includes("")) {
+    if (fullCode.length === 6 && !newOtp.includes("")) {
       handleVerify(fullCode);
     }
   };
@@ -100,7 +100,7 @@ export default function EmailChangeOtpModal({
       }
     } else if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1]?.focus();
-    } else if (e.key === "ArrowRight" && index < 3) {
+    } else if (e.key === "ArrowRight" && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -108,27 +108,27 @@ export default function EmailChangeOtpModal({
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     setErrorMessage("");
-    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (!pastedData) return;
 
-    const newOtp = ["", "", "", ""];
+    const newOtp = ["", "", "", "", "", ""];
     for (let i = 0; i < pastedData.length; i++) {
       newOtp[i] = pastedData[i];
     }
     setOtp(newOtp);
 
-    const nextIndex = Math.min(pastedData.length, 3);
+    const nextIndex = Math.min(pastedData.length, 5);
     inputRefs.current[nextIndex]?.focus();
 
-    if (pastedData.length === 4) {
+    if (pastedData.length === 6) {
       handleVerify(pastedData);
     }
   };
 
   const handleVerify = async (codeToVerify?: string) => {
     const fullOtp = codeToVerify || otp.join("");
-    if (fullOtp.length !== 4) {
-      setErrorMessage("Please enter the complete 4-digit verification code");
+    if (fullOtp.length !== 6) {
+      setErrorMessage("Please enter the complete 6-digit verification code");
       return;
     }
 
@@ -141,9 +141,6 @@ export default function EmailChangeOtpModal({
 
       if (response?.user) {
         dispatch(setCredentials(response));
-        if (response.token || response.accessToken) {
-          localStorage.setItem("accessToken", response.token || response.accessToken || "");
-        }
       }
 
       toast.success(response?.message || "Email verified and updated successfully!");
@@ -249,10 +246,10 @@ export default function EmailChangeOtpModal({
         {/* OTP INPUTS */}
         <div className="mt-6">
           <label className="mb-2 block text-center text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">
-            Enter 4-Digit Code
+            Enter 6-Digit Code
           </label>
 
-          <div className="flex justify-center gap-3" onPaste={handlePaste}>
+          <div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -268,13 +265,16 @@ export default function EmailChangeOtpModal({
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 disabled={isVerifying}
                 className={`
-                  h-14
-                  w-14
-                  rounded-2xl
+                  h-11
+                  w-11
+                  sm:h-13
+                  sm:w-13
+                  rounded-xl
                   border-2
                   bg-stone-50/70
                   text-center
-                  text-xl
+                  text-lg
+                  sm:text-xl
                   font-black
                   text-[var(--color-text-primary)]
                   outline-none

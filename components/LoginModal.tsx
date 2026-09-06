@@ -31,6 +31,8 @@ import {
 import { emailLoginSchema } from "@/schemas/authSchema";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../redux/features/authSlice";
+import { useMergeCartMutation } from "../redux/services/cartApi";
+import { getGuestCart, clearGuestCart } from "../lib/guestCart";
 
 interface LoginModalProps {
   open: boolean;
@@ -52,7 +54,7 @@ export default function LoginModal({
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
-  const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [resendTimer, setResendTimer] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -60,8 +62,29 @@ export default function LoginModal({
   const [login, { isLoading }] = useLoginMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
   const [sendOtp, { isLoading: isSendingOtp }] = useSendOtpMutation();
+  const [mergeCart] = useMergeCartMutation();
   const [getMe] = useLazyGetMeQuery();
   const dispatch = useDispatch();
+
+  const syncGuestCart = async () => {
+    const guestItems = getGuestCart();
+    if (guestItems.length === 0) return;
+    try {
+      const mergeRes = await mergeCart({
+        items: guestItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+      }).unwrap();
+      clearGuestCart();
+      const report = mergeRes?.data?.mergeReport;
+      if (report?.adjustedItems?.length) {
+        toast("Some cart items were adjusted to available stock.");
+      }
+      if (report?.outOfStockItems?.length || report?.skippedInactiveItems?.length) {
+        toast("Unavailable items were removed from your cart.");
+      }
+    } catch {
+      // keep guest cart if merge fails
+    }
+  };
 
   const {
     register,
@@ -85,8 +108,6 @@ export default function LoginModal({
   }, [resendTimer]);
 
   const onSubmit = async (data: { email: string; password: string }) => {
-   
-
     const cleanEmail = data.email.trim().toLowerCase();
 
     try {
@@ -95,16 +116,16 @@ export default function LoginModal({
         email: cleanEmail,
         password: data.password,
       }).unwrap();
-      const token = res?.accessToken || res?.token || res?.user?.token;
-      if (token) {
-        localStorage.setItem("accessToken", token);
-      }
+
+      // Access token is held in Redux memory (no localStorage)
       dispatch(setCredentials(res));
 
       try {
         const me = await getMe().unwrap();
         dispatch(setCredentials(me));
       } catch {}
+
+      await syncGuestCart();
 
       reset();
       toast.success("Logged in successfully.");
@@ -126,7 +147,7 @@ export default function LoginModal({
 
       if (apiError.data?.requiresVerification) {
         setPendingEmail(apiError.data.email || cleanEmail);
-        setOtpDigits(["", "", "", ""]);
+        setOtpDigits(["", "", "", "", "", ""]);
         setStep("verifyOtp");
         setResendTimer(RESEND_COOLDOWN_SECONDS);
         toast(errorMsg);
@@ -143,7 +164,7 @@ export default function LoginModal({
     nextDigits[index] = value.slice(-1);
     setOtpDigits(nextDigits);
 
-    if (value && index < 3) {
+    if (value && index < 5) {
       otpRefs.current[index + 1]?.focus();
     }
   };
@@ -159,8 +180,8 @@ export default function LoginModal({
 
   const handleVerifyOtp = async () => {
     const fullOtp = otpDigits.join("");
-    if (fullOtp.length < 4) {
-      setError("Please enter the complete 4-digit OTP.");
+    if (fullOtp.length < 6) {
+      setError("Please enter the complete 6-digit OTP.");
       return;
     }
 
@@ -171,16 +192,15 @@ export default function LoginModal({
         otp: fullOtp,
       }).unwrap();
 
-      const token = res?.accessToken || res?.token || res?.user?.token;
-      if (token) {
-        localStorage.setItem("accessToken", token);
-      }
+      // Access token is held in Redux memory (no localStorage)
       dispatch(setCredentials(res));
 
       try {
         const me = await getMe().unwrap();
         dispatch(setCredentials(me));
       } catch {}
+
+      await syncGuestCart();
 
       toast.success("Email verified and logged in successfully!");
       reset();
@@ -669,14 +689,14 @@ export default function LoginModal({
                   <span>Email Verification Pending</span>
                 </div>
                 Your account was registered but not verified yet. We just sent a
-                4-digit code to <b>{pendingEmail}</b>. Please enter it below to complete verification and log in.
+                6-digit code to <b>{pendingEmail}</b>. Please enter it below to complete verification and log in.
               </div>
 
               <div>
                 <label className="mb-2 block text-center text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                  Enter 4-Digit Code
+                  Enter 6-Digit Code
                 </label>
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center gap-2 sm:gap-3">
                   {otpDigits.map((digit, index) => (
                     <input
                       key={index}
@@ -690,10 +710,10 @@ export default function LoginModal({
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       className="
-                        h-14 w-12
+                        h-12 w-10 sm:h-14 sm:w-12
                         rounded-xl
                         border-2 border-[var(--color-border)]
-                        text-center text-xl font-bold
+                        text-center text-lg sm:text-xl font-bold
                         outline-none
                         transition
                         focus:border-[var(--color-primary)]

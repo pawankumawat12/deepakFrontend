@@ -26,6 +26,8 @@ import {
   registerSchema,
   verifyOtpSchema,
 } from "../schemas/authSchema";
+import { useMergeCartMutation } from "../redux/services/cartApi";
+import { getGuestCart, clearGuestCart } from "../lib/guestCart";
 
 type ApiError = {
   data?: { message?: string; errors?: Record<string, string> };
@@ -48,7 +50,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"register" | "verify">("register");
-  const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [resendTimer, setResendTimer] = useState(0);
   const [resendCount, setResendCount] = useState(0);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -56,6 +58,27 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const [getMe] = useLazyGetMeQuery();
   const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
+  const [mergeCart] = useMergeCartMutation();
+
+  const syncGuestCart = async () => {
+    const guestItems = getGuestCart();
+    if (guestItems.length === 0) return;
+    try {
+      const mergeRes = await mergeCart({
+        items: guestItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+      }).unwrap();
+      clearGuestCart();
+      const report = mergeRes?.data?.mergeReport;
+      if (report?.adjustedItems?.length) {
+        toast("Some cart items were adjusted to available stock.");
+      }
+      if (report?.outOfStockItems?.length || report?.skippedInactiveItems?.length) {
+        toast("Unavailable items were removed from your cart.");
+      }
+    } catch {
+      // keep guest cart if merge fails
+    }
+  };
 
   const registration = useForm({
     resolver: zodResolver(registerSchema),
@@ -91,7 +114,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
     try {
       await registerAccount(account).unwrap();
       setEmail(account.email);
-      setOtpDigits(["", "", "", ""]);
+      setOtpDigits(["", "", "", "", "", ""]);
       verification.reset({ otp: "" });
       setStep("verify");
       setResendCount(0);
@@ -105,16 +128,16 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const completeRegistration = async ({ otp }: VerificationValues) => {
     try {
       const res = await verifyOtp({ email, otp }).unwrap();
-      const token = res?.accessToken || res?.token || res?.user?.token;
-      if (token) {
-        localStorage.setItem("accessToken", token);
-      }
+
+      // Access token is held in Redux memory (no localStorage)
       dispatch(setCredentials(res));
 
       try {
         const me = await getMe().unwrap();
         dispatch(setCredentials(me));
       } catch {}
+
+      await syncGuestCart();
 
       toast.success("Your account is verified. Welcome!");
       if (onComplete) {
@@ -131,7 +154,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
     if (resendTimer > 0 || resendCount >= RESEND_LIMIT) return;
     try {
       const response = await sendOtp({ email }).unwrap();
-      setOtpDigits(["", "", "", ""]);
+      setOtpDigits(["", "", "", "", "", ""]);
       verification.reset({ otp: "" });
       otpRefs.current[0]?.focus();
       setResendCount(response.data?.resendCount ?? resendCount + 1);
@@ -161,12 +184,12 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
 
   const pasteOtp = (event: React.ClipboardEvent<HTMLInputElement>) => {
     event.preventDefault();
-    const digits = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
+    const digits = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (!digits) return;
 
-    const next = Array.from({ length: 4 }, (_, index) => digits[index] || "");
+    const next = Array.from({ length: 6 }, (_, index) => digits[index] || "");
     setOtp(next);
-    otpRefs.current[Math.min(digits.length, 4) - 1]?.focus();
+    otpRefs.current[Math.min(digits.length, 6) - 1]?.focus();
   };
 
   const input =
@@ -300,8 +323,8 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
           noValidate
         >
           <div>
-            <p className="text-sm font-medium">4-digit verification code</p>
-            <div className="mt-2 flex justify-center gap-3">
+            <p className="text-sm font-medium">6-digit verification code</p>
+            <div className="mt-2 flex justify-center gap-2 sm:gap-3">
               {otpDigits.map((digit, index) => (
                 <input
                   key={index}
@@ -309,7 +332,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
                     otpRefs.current[index] = element;
                   }}
                   aria-label={`Verification code digit ${index + 1}`}
-                  className="h-12 w-12 rounded-xl border border-[var(--color-border)] bg-white text-center text-xl font-semibold outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  className="h-11 w-10 sm:h-12 sm:w-12 rounded-xl border border-[var(--color-border)] bg-white text-center text-lg sm:text-xl font-semibold outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
                   inputMode="numeric"
                   autoComplete={index === 0 ? "one-time-code" : "off"}
                   maxLength={1}
@@ -349,7 +372,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
             type="button"
             onClick={() => {
               verification.reset({ otp: "" });
-              setOtpDigits(["", "", "", ""]);
+              setOtpDigits(["", "", "", "", "", ""]);
               setResendTimer(0);
               setResendCount(0);
               setStep("register");

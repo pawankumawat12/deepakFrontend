@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -27,6 +28,13 @@ import {
   useAddCartItemMutation,
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
+import {
+  getGuestCart,
+  addGuestCartItem,
+  updateGuestCartItemQty,
+  subscribeGuestCart,
+  GuestCartItem,
+} from "../lib/guestCart";
 import { useGetOffersQuery } from "../redux/services/offerApi";
 import { getProductPrimaryOffer, formatOfferBadge } from "../utils/offerUtils";
 import SkeletonLoader from "./SkeletonLoader";
@@ -53,16 +61,27 @@ export default function PopularProducts() {
   const [addCartItem] = useAddCartItemMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
 
-  const cartItemsMap = React.useMemo(
-    () =>
-      new Map(
+  const [guestCartItems, setGuestCartItems] = React.useState<GuestCartItem[]>([]);
+
+  React.useEffect(() => {
+    setGuestCartItems(getGuestCart());
+    const unsubscribe = subscribeGuestCart((items) => {
+      setGuestCartItems(items);
+    });
+    return unsubscribe;
+  }, []);
+
+  const cartItemsMap = React.useMemo(() => {
+    if (user) {
+      return new Map(
         (cartResponse?.data?.items || []).map((it) => [
           Number(it.id),
           it.quantity,
         ])
-      ),
-    [cartResponse]
-  );
+      );
+    }
+    return new Map(guestCartItems.map((it) => [Number(it.productId), it.quantity]));
+  }, [user, cartResponse, guestCartItems]);
 
   const wishlistedIds = React.useMemo(
     () =>
@@ -100,17 +119,33 @@ export default function PopularProducts() {
   const popularProducts = products.slice(0, 6);
 
   const handleAddToCart = async (product: any) => {
-    if (!user) {
-      toast.error("Please sign in to add items to cart");
-      window.dispatchEvent(new CustomEvent("sfc_open_login"));
-      return;
-    }
-    const isMadeToOrder = product.isMadeToOrder ||
+    const isMadeToOrder =
+      product.isMadeToOrder ||
       String(product.availability_type || "").toUpperCase() === "MADE_TO_ORDER";
     if (!isMadeToOrder && Number(product.stock) <= 0) {
       toast.error("Product is out of stock");
       return;
     }
+
+    if (!user) {
+      const res = addGuestCartItem(
+        Number(product.id),
+        1,
+        Number(product.stock),
+        isMadeToOrder
+      );
+      if (res.success) {
+        setAddedProduct(product.id);
+        toast.success("Added to cart");
+        setTimeout(() => {
+          setAddedProduct(null);
+        }, 1200);
+      } else {
+        toast.error(res.message || "Could not add to cart");
+      }
+      return;
+    }
+
     try {
       await addCartItem({ productId: Number(product.id), quantity: 1 }).unwrap();
       setAddedProduct(product.id);
@@ -129,15 +164,28 @@ export default function PopularProducts() {
     maxStock: number,
     isMadeToOrder?: boolean
   ) => {
-    if (!user) {
-      toast.error("Please sign in to modify cart");
-      window.dispatchEvent(new CustomEvent("sfc_open_login"));
-      return;
-    }
     if (!isMadeToOrder && nextQty > maxStock) {
       toast.error(`Only ${maxStock} items available in stock`);
       return;
     }
+
+    if (!user) {
+      const res = updateGuestCartItemQty(
+        productId,
+        nextQty,
+        maxStock,
+        isMadeToOrder
+      );
+      if (res.success) {
+        if (nextQty === 0) {
+          toast.success("Removed from cart");
+        }
+      } else {
+        toast.error(res.message || "Failed to update quantity");
+      }
+      return;
+    }
+
     try {
       await updateCartItem({ productId, quantity: nextQty }).unwrap();
       if (nextQty === 0) {
@@ -338,19 +386,25 @@ export default function PopularProducts() {
                 `}
               >
                 <div className="relative h-56 overflow-hidden">
-
-                  <img
-                    src={image}
-                    alt={name}
-                    className="
-                      h-full
-                      w-full
-                      object-cover
-                      transition-transform
-                      duration-500
-                      group-hover:scale-105
-                    "
-                  />
+                  {image ? (
+                    <Image
+                      src={image}
+                      alt={name}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="
+                        object-cover
+                        transition-transform
+                        duration-500
+                        group-hover:scale-105
+                      "
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-stone-100 flex items-center justify-center text-stone-400">
+                      <span className="text-xs">No image</span>
+                    </div>
+                  )}
 
                   <div
                     className="

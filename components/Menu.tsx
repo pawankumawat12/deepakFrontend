@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   ChevronRight,
@@ -34,6 +35,13 @@ import {
   useAddCartItemMutation,
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
+import {
+  getGuestCart,
+  addGuestCartItem,
+  updateGuestCartItemQty,
+  subscribeGuestCart,
+  GuestCartItem,
+} from "../lib/guestCart";
 import { useGetOffersQuery } from "../redux/services/offerApi";
 import { getProductPrimaryOffer, formatOfferBadge } from "../utils/offerUtils";
 import SkeletonLoader from "./SkeletonLoader";
@@ -78,18 +86,38 @@ export default function Menu() {
   const [addCartItem] = useAddCartItemMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
 
-  const cartItemsMap = useMemo(
-    () =>
-      new Map(
-        (cartResponse?.data?.items || []).map((it) => [Number(it.id), it.quantity])
-      ),
-    [cartResponse]
-  );
+  const [guestCartItems, setGuestCartItems] = useState<GuestCartItem[]>([]);
 
-  const cartSummary = cartResponse?.data?.summary || {
-    totalItems: 0,
-    grandTotal: 0,
-  };
+  useEffect(() => {
+    setGuestCartItems(getGuestCart());
+    const unsubscribe = subscribeGuestCart((items) => {
+      setGuestCartItems(items);
+    });
+    return unsubscribe;
+  }, []);
+
+  const cartItemsMap = useMemo(() => {
+    if (user) {
+      return new Map(
+        (cartResponse?.data?.items || []).map((it) => [Number(it.id), it.quantity])
+      );
+    }
+    return new Map(guestCartItems.map((it) => [Number(it.productId), it.quantity]));
+  }, [user, cartResponse, guestCartItems]);
+
+  const guestSummary = useMemo(() => {
+    const totalItems = guestCartItems.reduce((sum, it) => sum + it.quantity, 0);
+    const allProducts = productResponse?.data || [];
+    const grandTotal = guestCartItems.reduce((sum, it) => {
+      const prod = allProducts.find((p: any) => Number(p.id) === Number(it.productId));
+      return sum + (prod ? Number(prod.price) * it.quantity : 0);
+    }, 0);
+    return { totalItems, grandTotal };
+  }, [guestCartItems, productResponse]);
+
+  const cartSummary = user
+    ? (cartResponse?.data?.summary || { totalItems: 0, grandTotal: 0 })
+    : guestSummary;
 
   const { data: offersData = [] } = useGetOffersQuery();
   const bogoOffersMap = useMemo(() => {
@@ -133,15 +161,21 @@ export default function Menu() {
   };
 
   const handleAddToCart = async (productId: number, stock: number, isMadeToOrder?: boolean) => {
-    if (!user) {
-      toast.error("Please sign in to add items to cart");
-      window.dispatchEvent(new CustomEvent("sfc_open_login"));
-      return;
-    }
     if (!isMadeToOrder && stock <= 0) {
       toast.error("Product is out of stock");
       return;
     }
+
+    if (!user) {
+      const res = addGuestCartItem(productId, 1, stock, isMadeToOrder);
+      if (res.success) {
+        toast.success("Added to cart");
+      } else {
+        toast.error(res.message || "Could not add to cart");
+      }
+      return;
+    }
+
     try {
       await addCartItem({ productId, quantity: 1 }).unwrap();
       toast.success("Added to cart");
@@ -156,15 +190,23 @@ export default function Menu() {
     maxStock: number,
     isMadeToOrder?: boolean
   ) => {
-    if (!user) {
-      toast.error("Please sign in to modify cart");
-      window.dispatchEvent(new CustomEvent("sfc_open_login"));
-      return;
-    }
     if (!isMadeToOrder && nextQty > maxStock) {
       toast.error(`Only ${maxStock} items available in stock`);
       return;
     }
+
+    if (!user) {
+      const res = updateGuestCartItemQty(productId, nextQty, maxStock, isMadeToOrder);
+      if (res.success) {
+        if (nextQty === 0) {
+          toast.success("Removed from cart");
+        }
+      } else {
+        toast.error(res.message || "Failed to update quantity");
+      }
+      return;
+    }
+
     try {
       await updateCartItem({ productId, quantity: nextQty }).unwrap();
       if (nextQty === 0) {
@@ -462,19 +504,24 @@ export default function Menu() {
                     }
                   `}
                 >
-                  <img
-                    src={c.img}
-                    alt={c.name}
-                    className="
-                      h-9
-                      w-9
-                      rounded-full
-                      object-cover
-                      transition-transform
-                      duration-300
-                      group-hover:scale-110
-                    "
-                  />
+                  {c.img ? (
+                    <Image
+                      src={c.img}
+                      alt={c.name}
+                      width={36}
+                      height={36}
+                      unoptimized
+                      className="
+                        h-9
+                        w-9
+                        rounded-full
+                        object-cover
+                        transition-transform
+                        duration-300
+                        group-hover:scale-110
+                      "
+                    />
+                  ) : null}
 
                   <span>{c.name}</span>
                 </button>
@@ -693,21 +740,27 @@ export default function Menu() {
 
                     <Link
                       href={`/product/${p.id}`}
-                      className="block"
+                      className="relative block h-40 w-full sm:h-48 overflow-hidden"
                     >
-                      <img
-                        src={p.img}
-                        alt={p.name}
-                        className="
-                          h-40
-                          w-full
-                          object-cover
-                          transition-transform
-                          duration-500
-                          group-hover:scale-105
-                          sm:h-48
-                        "
-                      />
+                      {p.img ? (
+                        <Image
+                          src={p.img}
+                          alt={p.name}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="
+                            object-cover
+                            transition-transform
+                            duration-500
+                            group-hover:scale-105
+                          "
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-stone-100 flex items-center justify-center text-stone-400">
+                          <span className="text-xs">No image</span>
+                        </div>
+                      )}
                     </Link>
 
                 
@@ -1135,7 +1188,7 @@ export default function Menu() {
           STICKY CART
       ========================================================= */}
 
-      {user && cartSummary.totalItems > 0 && (
+      {cartSummary.totalItems > 0 && (
         <div
           className="
             cart-bar

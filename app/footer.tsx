@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   MapPin,
   Phone,
@@ -80,7 +81,12 @@ export default function Footer() {
   const { data: footerResponse } = useGetFooterQuery();
   const { data: logoResponse } = useGetLogoQuery();
   const footerSettings = footerResponse?.data;
-  const logoUrl = logoResponse?.data?.logo_url ? toAssetUrl(logoResponse.data.logo_url) : null;
+  const rawLogoUrl = logoResponse?.data?.logo_url ? toAssetUrl(logoResponse.data.logo_url) : "/images/sfcLogo.png";
+  const [logoSrc, setLogoSrc] = React.useState(rawLogoUrl);
+
+  React.useEffect(() => {
+    setLogoSrc(rawLogoUrl);
+  }, [rawLogoUrl]);
 
   return (
     <footer className="app-footer bg-[var(--bg-footer)] text-white">
@@ -91,29 +97,17 @@ export default function Footer() {
               href="/"
               className="inline-flex items-center gap-3"
             >
-              {logoUrl ? (
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white p-1.5 shadow-lg">
-                  <img src={logoUrl} alt="SFC Cafe" className="h-full w-full object-contain" />
-                </div>
-              ) : (
-                <div
-                  className="
-                    flex
-                    h-11
-                    w-11
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-[var(--color-primary)]
-                    text-lg
-                    font-black
-                    text-white
-                    shadow-lg
-                  "
-                >
-                  S
-                </div>
-              )}
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white p-1.5 shadow-lg">
+                <Image
+                  src={logoSrc || "/images/sfcLogo.png"}
+                  alt="SFC Cafe"
+                  width={44}
+                  height={44}
+                  unoptimized
+                  onError={() => setLogoSrc("/images/sfcLogo.png")}
+                  className="h-full w-full object-contain"
+                />
+              </div>
 
               <div>
                 <span className="block text-xl font-black tracking-tight">
@@ -399,9 +393,13 @@ export default function Footer() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
               <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.25)] ring-1 ring-white/20">
-                <img
-                  src={logoUrl || "/images/sfcLogo.png"}
+                <Image
+                  src={logoSrc || "/images/sfcLogo.png"}
                   alt="SFC Cafe app icon"
+                  width={72}
+                  height={72}
+                  unoptimized
+                  onError={() => setLogoSrc("/images/sfcLogo.png")}
                   className="h-full w-full object-contain"
                 />
               </div>
@@ -509,6 +507,7 @@ export default function Footer() {
           </p>
         </div>
       </div>
+      
     </footer>
   );
 }

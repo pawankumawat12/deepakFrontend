@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import NextImage from "next/image";
 import {
   CheckCheck,
   Check,
@@ -592,14 +593,17 @@ export default function OrderChat({
                               )
                             }
                           >
-                            <img
+                            <NextImage
                               src={
                                 item.attachment_url?.startsWith("http")
                                   ? item.attachment_url
                                   : `${API_ORIGIN}${item.attachment_url}`
                               }
                               alt={item.attachment_name || "Image attachment"}
-                              className="w-full h-full object-cover max-h-[200px] transition group-hover:scale-102"
+                              width={320}
+                              height={200}
+                              unoptimized
+                              className="w-full h-auto object-cover max-h-[200px] transition group-hover:scale-102"
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
                           </div>
@@ -744,9 +748,12 @@ export default function OrderChat({
           <div className="bg-[#e9edef] p-2 border-t border-[#d1d7db] flex items-center justify-between gap-3 animate-in fade-in">
             <div className="flex items-center gap-2.5 min-w-0">
               {filePreview ? (
-                <img
+                <NextImage
                   src={filePreview}
                   alt="Preview"
+                  width={48}
+                  height={48}
+                  unoptimized
                   className="h-12 w-12 rounded-lg object-cover border border-stone-300"
                 />
               ) : (
@@ -969,9 +976,12 @@ export default function OrderChat({
             className="relative max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
+            <NextImage
               src={previewLightboxImg}
               alt="Full Preview"
+              width={1200}
+              height={900}
+              unoptimized
               className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl"
             />
             <button

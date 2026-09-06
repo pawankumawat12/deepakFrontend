@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { store } from "../redux/store";
 
 const SOCKET_URL = (
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
@@ -10,12 +11,13 @@ const SOCKET_URL = (
 let socket: Socket | null = null;
 
 export function getSocket(userId?: number | string | null): Socket {
+  const token = store.getState().auth?.accessToken;
+
   if (!socket) {
     socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
-      query: {
-        userId: userId || "",
-        role: "customer",
+      auth: {
+        token: token || "",
       },
       autoConnect: true,
       reconnection: true,
@@ -27,14 +29,16 @@ export function getSocket(userId?: number | string | null): Socket {
       console.log("[Socket.IO] Frontend connected:", socket?.id);
     });
 
+    socket.on("connect_error", (err) => {
+      console.warn("[Socket.IO] Frontend auth/connect error:", err.message);
+    });
+
     socket.on("disconnect", (reason) => {
       console.log("[Socket.IO] Frontend disconnected:", reason);
     });
-  } else if (userId && (!socket.io.opts.query || (socket.io.opts.query as any).userId !== String(userId))) {
-    socket.io.opts.query = {
-      userId: String(userId),
-      role: "customer",
-    };
+  } else if (token && (socket.auth as any)?.token !== token) {
+    // Token updated, refresh socket auth
+    socket.auth = { token };
     if (socket.connected) {
       socket.disconnect().connect();
     }
@@ -43,10 +47,21 @@ export function getSocket(userId?: number | string | null): Socket {
   return socket;
 }
 
+/**
+ * Dynamically update the frontend socket auth token on token refresh
+ */
+export function updateSocketToken(newToken: string) {
+  if (socket && newToken) {
+    socket.auth = { token: newToken };
+    if (socket.connected) {
+      socket.disconnect().connect();
+    }
+  }
+}
+
 export function disconnectSocket() {
   if (socket) {
     socket.disconnect();
     socket = null;
   }
 }
-

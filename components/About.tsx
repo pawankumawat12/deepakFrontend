@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Clock3,
@@ -139,17 +140,16 @@ export default function AboutPage() {
 
               <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-2 shadow-2xl">
 
-                <img
-                  src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1000&q=85"
-                  alt="Food at SFC Cafe"
-                  className="
-                    h-[280px]
-                    w-full
-                    rounded-[1.5rem]
-                    object-cover
-                    sm:h-[350px]
-                  "
-                />
+                <div className="relative h-[280px] w-full sm:h-[350px] overflow-hidden rounded-[1.5rem]">
+                  <Image
+                    src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1000&q=85"
+                    alt="Food at SFC Cafe"
+                    fill
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
 
               </div>
 
@@ -207,22 +207,15 @@ export default function AboutPage() {
 
           <div className="relative order-2 md:order-1">
 
-            <div className="overflow-hidden rounded-[2rem]">
-
-              <img
+            <div className="relative h-[300px] w-full sm:h-[380px] overflow-hidden rounded-[2rem]">
+              <Image
                 src="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1000&q=85"
                 alt="SFC Cafe interior"
-                className="
-                  h-[300px]
-                  w-full
-                  object-cover
-                  transition
-                  duration-500
-                  hover:scale-105
-                  sm:h-[380px]
-                "
+                fill
+                unoptimized
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition duration-500 hover:scale-105"
               />
-
             </div>
 
             {/* Small floating badge */}
@@ -412,24 +405,15 @@ export default function AboutPage() {
             {/* Image */}
 
             <div className="relative min-h-[280px] overflow-hidden">
-
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=1000&q=85"
                 alt="Delicious burger"
-                className="
-                  absolute
-                  inset-0
-                  h-full
-                  w-full
-                  object-cover
-                  transition
-                  duration-700
-                  hover:scale-105
-                "
+                fill
+                unoptimized
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition duration-700 hover:scale-105"
               />
-
               <div className="absolute inset-0 bg-black/10" />
-
             </div>
 
             {/* Content */}

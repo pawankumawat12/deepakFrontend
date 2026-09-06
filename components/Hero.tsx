@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   ChevronLeft,
@@ -135,12 +136,18 @@ export default function Hero() {
 
         {/* Full Background Slider Image */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <img
-            key={slideImage}
-            src={slideImage}
-            alt={currentSlide.highlight}
-            className="h-full w-full object-cover object-center transition-all duration-1000 scale-105"
-          />
+          {slideImage ? (
+            <Image
+              key={slideImage}
+              src={slideImage}
+              alt={currentSlide.highlight || "Hero slider"}
+              fill
+              priority
+              unoptimized
+              sizes="100vw"
+              className="object-cover object-center transition-all duration-1000 scale-105"
+            />
+          ) : null}
 
           {/* Contrast & Depth Overlays */}
           <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/70 to-black/35 sm:to-black/25" />

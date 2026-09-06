@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -253,19 +254,25 @@ export default function PopularPreview() {
                 {/* Image */}
 
                 <div className="relative h-36 overflow-hidden md:h-40">
-
-                  <img
-                    src={category.img}
-                    alt={category.name}
-                    className="
-                      h-full
-                      w-full
-                      object-cover
-                      transition-transform
-                      duration-500
-                      group-hover:scale-110
-                    "
-                  />
+                  {category.img ? (
+                    <Image
+                      src={category.img}
+                      alt={category.name}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 640px) 180px, 225px"
+                      className="
+                        object-cover
+                        transition-transform
+                        duration-500
+                        group-hover:scale-110
+                      "
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-stone-100 flex items-center justify-center text-stone-400">
+                      <span className="text-xs">No image</span>
+                    </div>
+                  )}
 
                   {/* Image overlay */}
 

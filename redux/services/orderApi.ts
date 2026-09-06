@@ -109,6 +109,30 @@ export const orderApi = baseApi.injectEndpoints({
       }),
     }),
 
+    retryPayment: build.mutation<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          orderId: number;
+          orderNumber: string;
+          razorpayOrderId: string;
+          razorpayKeyId: string;
+          amount: number;
+          currency: string;
+          customerName?: string;
+          customerEmail?: string;
+          customerPhone?: string;
+        };
+      },
+      { orderId: number }
+    >({
+      query: ({ orderId }) => ({
+        url: `/orders/${orderId}/retry-payment`,
+        method: "POST",
+      }),
+    }),
+
     cancelOrder: build.mutation<
       OrderResponse<Order>,
       { orderId: number; cancelReason: string }
@@ -128,6 +152,7 @@ export const {
   useGetOrderDetailsQuery,
   useCreateOrderMutation,
   useVerifyPaymentMutation,
+  useRetryPaymentMutation,
   useCancelOrderMutation,
 } = orderApi;
 

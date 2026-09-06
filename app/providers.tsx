@@ -14,20 +14,9 @@ import BlockedAccountScreen from "../components/BlockedAccountScreen";
 function AuthLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
-  const { data, isError, refetch } = useGetMeQuery(undefined, {
+  const { data, isError } = useGetMeQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
-
-  // If accessToken is modified or removed via DevTools/storage, revalidate immediately
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "accessToken" && !e.newValue) {
-        refetch();
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [refetch]);
 
   useEffect(() => {
     if (data?.user) dispatch(setCredentials(data));

@@ -37,9 +37,6 @@ const authSlice = createSlice({
       const token = payload.accessToken || payload.token || user?.token;
       if (token) {
         state.accessToken = token;
-        if (typeof window !== "undefined") {
-          localStorage.setItem("accessToken", token);
-        }
       }
     },
     updateUserStatus: (state, action) => {
@@ -52,9 +49,6 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.accessToken = null;
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("accessToken");
-      }
     },
   },
 });

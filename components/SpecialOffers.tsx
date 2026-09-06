@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Clock3,
@@ -147,10 +148,13 @@ export default function SpecialOffers() {
 
             <div className="relative h-64 min-h-[320px] overflow-hidden sm:h-80 lg:h-full">
               {offer.image && (
-                <img
+                <Image
                   src={offer.image}
                   alt={offer.title}
-                  className="h-full w-full object-cover"
+                  fill
+                  unoptimized
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
                 />
               )}
 
@@ -187,12 +191,15 @@ export default function SpecialOffers() {
                   }
                 `}
               >
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
                   {item.image && (
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.title}
-                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      fill
+                      unoptimized
+                      sizes="64px"
+                      className="object-cover transition duration-300 group-hover:scale-105"
                     />
                   )}
                 </div>

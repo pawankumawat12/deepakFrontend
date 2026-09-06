@@ -10,6 +10,7 @@ export interface ReviewItem {
   comment: string;
   is_hidden: boolean;
   status: "published" | "hidden";
+  is_verified_purchase?: boolean;
   created_at: string;
   updated_at: string;
   user_name?: string;

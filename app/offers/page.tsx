@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -243,10 +244,12 @@ export default function OffersPage() {
                 <div>
                   {/* Image */}
                   <div className="relative h-52 overflow-hidden bg-gray-100">
-                    <img
+                    <Image
                       src={getFallbackBanner(offer)}
                       alt={offer.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition duration-500 group-hover:scale-105"
                     />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

@@ -101,9 +101,16 @@ export default function AddressModal({
       toast.error("Please enter receiver name");
       return;
     }
-    const cleanPhone = phoneNumber.replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      toast.error("Please enter a valid 10-digit mobile number");
+    const rawDigits = phoneNumber.replace(/\D/g, "");
+    const cleanPhone =
+      rawDigits.length === 12 && rawDigits.startsWith("91")
+        ? rawDigits.slice(2)
+        : rawDigits.length === 11 && rawDigits.startsWith("0")
+        ? rawDigits.slice(1)
+        : rawDigits;
+
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      toast.error("Please enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9)");
       return;
     }
     if (!houseNumber.trim()) {

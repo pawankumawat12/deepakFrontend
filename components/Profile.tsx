@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   User,
   Mail,
@@ -53,8 +54,13 @@ export default function Profile() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [emailOtpModalOpen, setEmailOtpModalOpen] = useState(false);
   const [pendingNewEmail, setPendingNewEmail] = useState("");
+  const [imageError, setImageError] = useState(false);
 
   const user = useSelector((state: { auth: { user: any | null } }) => state.auth.user);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.image]);
   const [updateProfile, { isLoading: isSavingProfile }] = useUpdateProfileMutation();
   const [requestEmailChange, { isLoading: isRequestingOtp }] = useRequestEmailChangeMutation();
   const isSaving = isSavingProfile || isRequestingOtp;
@@ -232,10 +238,14 @@ export default function Profile() {
                     sm:w-24
                   "
                 >
-                  {user?.image ? (
-                    <img
+                  {user?.image && !imageError ? (
+                    <Image
                       src={toAssetUrl(user.image)}
                       alt={user?.name || "Profile photo"}
+                      width={96}
+                      height={96}
+                      unoptimized
+                      onError={() => setImageError(true)}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -415,9 +425,11 @@ export default function Profile() {
                   <div className="flex items-center gap-3.5">
                     <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[var(--color-primary)] text-white shadow-sm">
                       {user?.image ? (
-                        <img
+                        <Image
                           src={toAssetUrl(user.image)}
                           alt={user?.name || "Profile"}
+                          width={48}
+                          height={48}
                           className="h-full w-full object-cover"
                         />
                       ) : (

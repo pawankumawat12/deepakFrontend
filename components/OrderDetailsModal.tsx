@@ -1,7 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import toast from "react-hot-toast";
 import {
   X,
   MapPin,
@@ -21,6 +25,8 @@ import {
   Calendar,
   AlertCircle,
   FileText,
+  Download,
+  Loader2,
 } from "lucide-react";
 
 interface OrderItem {
@@ -44,6 +50,8 @@ interface OrderDetailsModalProps {
   order: any | null;
   onClose: () => void;
   onOpenChat?: (order: any) => void;
+  onRetryPayment?: (order: any) => void;
+  retryingOrderId?: number | null;
 }
 
 const backendUrl = (
@@ -92,9 +100,15 @@ function StatusBadge({ status }: { status: string }) {
           Preparing
         </span>
       );
+    case "Pending Payment":
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-black text-amber-900">
+          <CreditCard size={14} />
+          Payment Pending
+        </span>
+      );
     case "Pending":
     case "Order Placed":
-    case "Pending Payment":
     default:
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
@@ -109,7 +123,12 @@ export default function OrderDetailsModal({
   order,
   onClose,
   onOpenChat,
+  onRetryPayment,
+  retryingOrderId,
 }: OrderDetailsModalProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const accessToken = useSelector((state: RootState) => state.auth?.accessToken);
+
   // Close on Escape key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -119,7 +138,49 @@ export default function OrderDetailsModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  const handleDownloadInvoice = async () => {
+    const orderId = order?.dbId || order?.id;
+    if (!orderId) return;
+    try {
+      setIsDownloading(true);
+      const res = await fetch(`/api/v1/orders/${orderId}/invoice`, {
+        credentials: "include",
+        headers: {
+          Authorization: accessToken ? `Bearer ${accessToken}` : "",
+        },
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.message || "Failed to download invoice");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoice-${order.order_number || orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Invoice downloaded successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Unable to download invoice");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   if (!order) return null;
+
+  const isPendingPayment =
+    Boolean(order) &&
+    (order.status === "Pending Payment" ||
+      ((order.payment === "Online Payment" || order.payment_method === "Online Payment") &&
+        order.paymentStatus !== "Paid" &&
+        order.payment_status !== "Paid")) &&
+    order.status !== "Cancelled";
 
   const p = order.pricingJson || {};
   const subtotal = Number(p.subtotal ?? order.subtotal ?? 0);
@@ -277,9 +338,38 @@ export default function OrderDetailsModal({
               </div>
 
               {/* Status explanation notice */}
-              {(order.status === "Pending" ||
-                order.status === "Order Placed" ||
-                order.status === "Pending Payment") && (
+              {isPendingPayment && (
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-left shadow-sm">
+                  <div className="flex items-start sm:items-center gap-2.5">
+                    <span className="relative flex h-2.5 w-2.5 shrink-0 mt-0.5 sm:mt-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                    <div>
+                      <p className="text-xs font-black text-amber-950">Online Payment Incomplete</p>
+                      <p className="text-[11px] text-amber-800 mt-0.5">
+                        Your payment has not been received. Please complete payment so our kitchen can prepare your order.
+                      </p>
+                    </div>
+                  </div>
+                  {onRetryPayment && (
+                    <button
+                      type="button"
+                      onClick={() => onRetryPayment(order)}
+                      disabled={retryingOrderId === (order.dbId || order.id)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-sm transition disabled:opacity-50 shrink-0 cursor-pointer"
+                    >
+                      <CreditCard size={14} />
+                      <span>{retryingOrderId === (order.dbId || order.id) ? "Initializing..." : "Pay Now"}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!isPendingPayment &&
+                (order.status === "Pending" ||
+                  order.status === "Order Placed" ||
+                  order.status === "Pending Payment") && (
                 <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
                   <span className="relative flex h-2.5 w-2.5 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -366,11 +456,22 @@ export default function OrderDetailsModal({
                     key={item.id}
                     className="flex items-center gap-3.5 p-3.5 bg-white transition hover:bg-stone-50/50"
                   >
-                    <img
-                      src={toAssetUrl(img)}
-                      alt={name}
-                      className="h-14 w-14 shrink-0 rounded-xl object-cover bg-stone-100"
-                    />
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-stone-100">
+                      {img ? (
+                        <Image
+                          src={toAssetUrl(img)}
+                          alt={name}
+                          fill
+                          unoptimized
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-[10px] text-stone-400">
+                          No img
+                        </div>
+                      )}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-black text-[var(--color-text-primary)] truncate">
@@ -513,6 +614,18 @@ export default function OrderDetailsModal({
         {/* Modal Footer Actions */}
         <div className="border-t border-[var(--color-border)] px-5 py-3.5 sm:px-6 sm:py-4 bg-stone-50/70 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
+            {isPendingPayment && onRetryPayment && (
+              <button
+                type="button"
+                onClick={() => onRetryPayment(order)}
+                disabled={retryingOrderId === (order.dbId || order.id)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
+              >
+                <CreditCard size={14} />
+                <span>{retryingOrderId === (order.dbId || order.id) ? "Initializing..." : "Pay Now"}</span>
+              </button>
+            )}
+
             {onOpenChat && (
               <button
                 type="button"
@@ -534,6 +647,16 @@ export default function OrderDetailsModal({
               <RotateCcw size={14} />
               <span>Order Again</span>
             </Link>
+
+            <button
+              type="button"
+              onClick={handleDownloadInvoice}
+              disabled={isDownloading}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 px-3.5 py-2 text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
+            >
+              {isDownloading ? <Loader2 size={14} className="animate-spin text-stone-500" /> : <Download size={14} />}
+              <span>{isDownloading ? "Downloading..." : "Download Invoice"}</span>
+            </button>
           </div>
 
           <button

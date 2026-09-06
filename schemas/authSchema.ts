@@ -30,7 +30,7 @@ export const registerSchema = z
   });
 
 export const verifyOtpSchema = z.object({
-  otp: z.string().regex(/^\d{4}$/, "Enter the 4-digit code"),
+  otp: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
 });
 
 export const emailLoginSchema = z.object({

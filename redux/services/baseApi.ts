@@ -2,6 +2,7 @@
 
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout, setCredentials } from "../features/authSlice";
+import { updateSocketToken, disconnectSocket } from "../../lib/socket";
 
 class SimpleMutex {
   private _queue: Promise<void> = Promise.resolve();
@@ -53,11 +54,9 @@ const getNormalizedBaseUrl = () => {
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: getNormalizedBaseUrl(),
   credentials: "include",
-  prepareHeaders: (headers) => {
-    const accessToken =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null;
+  prepareHeaders: (headers, { getState }) => {
+    const state = getState() as any;
+    const accessToken = state?.auth?.accessToken;
     if (accessToken) {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
@@ -99,18 +98,16 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
           const newAccessToken =
             refreshResult.data.accessToken || refreshResult.data.token;
 
-          if (typeof window !== "undefined" && newAccessToken) {
-            localStorage.setItem("accessToken", newAccessToken);
+          if (newAccessToken) {
+            updateSocketToken(newAccessToken);
           }
           api.dispatch(setCredentials(refreshResult.data));
 
           // Retry the original query with the new access token
           result = await rawBaseQuery(args, api, extraOptions);
         } else {
-          // Stop all retries immediately, clear access token and Redux auth state
-          if (typeof window !== "undefined") {
-            localStorage.removeItem("accessToken");
-          }
+          // Stop all retries immediately, clear Redux auth state cleanly
+          disconnectSocket();
           api.dispatch(logout());
         }
       } finally {
@@ -119,11 +116,8 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
     } else {
       // Wait until the active refresh completes
       await mutex.waitForUnlock();
-      const tokenAfterUnlock =
-        typeof window !== "undefined"
-          ? localStorage.getItem("accessToken")
-          : null;
-      if (tokenAfterUnlock) {
+      const state = api.getState() as any;
+      if (state?.auth?.accessToken) {
         result = await rawBaseQuery(args, api, extraOptions);
       }
     }

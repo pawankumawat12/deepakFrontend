@@ -30,6 +30,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
@@ -42,6 +43,13 @@ import {
   useAddCartItemMutation,
   useUpdateCartItemMutation,
 } from "../redux/services/cartApi";
+import {
+  getGuestCart,
+  addGuestCartItem,
+  updateGuestCartItemQty,
+  subscribeGuestCart,
+  GuestCartItem,
+} from "../lib/guestCart";
 import {
   useGetProductReviewsQuery,
   useCreateProductReviewMutation,
@@ -68,9 +76,23 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   const [addCartItem] = useAddCartItemMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
 
-  const inCartItem = (cartResponse?.data?.items || []).find(
-    (c) => Number(c.id) === Number(product.id)
-  );
+  const [guestCartItems, setGuestCartItems] = useState<GuestCartItem[]>([]);
+
+  useEffect(() => {
+    setGuestCartItems(getGuestCart());
+    const unsubscribe = subscribeGuestCart((items) => {
+      setGuestCartItems(items);
+    });
+    return unsubscribe;
+  }, []);
+
+  const inCartItem = user
+    ? (cartResponse?.data?.items || []).find(
+        (c) => Number(c.id) === Number(product.id)
+      )
+    : guestCartItems.find(
+        (c) => Number(c.productId) === Number(product.id)
+      );
   const inCartQty = inCartItem?.quantity || null;
 
   const isWishlisted = Boolean(
@@ -354,15 +376,28 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   }
 
   async function handleAdd() {
-    if (!user) {
-      toast.error("Please sign in to add items to cart");
-      window.dispatchEvent(new CustomEvent("sfc_open_login"));
-      return;
-    }
     if (isOutOfStock) {
       toast.error("Product is out of stock");
       return;
     }
+
+    if (!user) {
+      const res = addGuestCartItem(
+        Number(product.id),
+        qty,
+        Number(product.stock),
+        isMadeToOrder
+      );
+      if (res.success) {
+        setAdded(true);
+        toast.success("Added to cart");
+        setTimeout(() => setAdded(false), 900);
+      } else {
+        toast.error(res.message || "Failed to add to cart");
+      }
+      return;
+    }
+
     try {
       await addCartItem({
         productId: Number(product.id),
@@ -377,15 +412,28 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   }
 
   async function changeQty(newQty: number) {
-    if (!user) {
-      toast.error("Please sign in to modify cart");
-      window.dispatchEvent(new CustomEvent("sfc_open_login"));
-      return;
-    }
     if (!isMadeToOrder && newQty > Number(product.stock)) {
       toast.error(`Only ${product.stock} items available in stock`);
       return;
     }
+
+    if (!user) {
+      const res = updateGuestCartItemQty(
+        Number(product.id),
+        newQty,
+        Number(product.stock),
+        isMadeToOrder
+      );
+      if (res.success) {
+        if (newQty === 0) {
+          toast.success("Removed from cart");
+        }
+      } else {
+        toast.error(res.message || "Failed to update quantity");
+      }
+      return;
+    }
+
     try {
       await updateCartItem({
         productId: Number(product.id),
@@ -447,6 +495,10 @@ export default function ProductDetailsClient({ product }: { product: any }) {
               className="
                 group
                 relative
+                h-[320px]
+                sm:h-[430px]
+                lg:h-[520px]
+                w-full
                 overflow-hidden
                 rounded-3xl
                 border
@@ -455,22 +507,28 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 shadow-sm
               "
             >
-              <img
-                ref={imgRef}
-                src={product.img}
-                alt={product.name}
-                className="
-                  detail-img
-                  h-[320px]
-                  w-full
-                  object-cover
-                  transition-transform
-                  duration-700
-                  group-hover:scale-105
-                  sm:h-[430px]
-                  lg:h-[520px]
-                "
-              />
+              {product.img ? (
+                <Image
+                  ref={imgRef}
+                  src={product.img}
+                  alt={product.name}
+                  fill
+                  priority
+                  unoptimized
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="
+                    detail-img
+                    object-cover
+                    transition-transform
+                    duration-700
+                    group-hover:scale-105
+                  "
+                />
+              ) : (
+                <div className="h-full w-full bg-stone-100 flex items-center justify-center text-stone-400">
+                  <span className="text-sm">No image available</span>
+                </div>
+              )}
 
               {/* Image overlay */}
 
@@ -1817,7 +1875,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                             size={12}
                             className="text-emerald-600"
                           />
-                          <span>Certified Buyer</span>
+                          <span>{rev.is_verified_purchase ? "Verified Purchase" : "Customer Review"}</span>
                         </span>
 
                         <span>·</span>

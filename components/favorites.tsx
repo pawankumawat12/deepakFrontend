@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Heart,
@@ -427,19 +428,26 @@ export default function FavoritesPage() {
                 >
                   {/* IMAGE */}
                   <div className="relative h-56 overflow-hidden bg-stone-100">
-                    <Link href={`/product/${product.id}`} className="block h-full w-full">
-                      <img
-                        src={product.img || "/images/placeholder.png"}
-                        alt={product.name}
-                        className="
-                          h-full
-                          w-full
-                          object-cover
-                          transition-transform
-                          duration-500
-                          group-hover:scale-105
-                        "
-                      />
+                    <Link href={`/product/${product.id}`} className="relative block h-full w-full">
+                      {product.img ? (
+                        <Image
+                          src={product.img}
+                          alt={product.name}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="
+                            object-cover
+                            transition-transform
+                            duration-500
+                            group-hover:scale-105
+                          "
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-stone-100 flex items-center justify-center text-stone-400">
+                          <span className="text-xs">No image</span>
+                        </div>
+                      )}
                     </Link>
 
                     {/* Overlay */}

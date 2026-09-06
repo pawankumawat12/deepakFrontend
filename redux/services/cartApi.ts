@@ -108,6 +108,25 @@ export interface CartData {
   summary: CartSummary;
   pricing?: any;
   deliveryAddress?: any;
+  mergeReport?: {
+    mergedCount: number;
+    adjustedItems: Array<{
+      productId: number;
+      name: string;
+      requestedTotal: number;
+      availableStock: number;
+      cappedQuantity: number;
+    }>;
+    outOfStockItems: Array<{
+      productId: number;
+      name: string;
+      availableStock: number;
+    }>;
+    skippedInactiveItems: Array<{
+      productId: number;
+      name: string;
+    }>;
+  };
 }
 
 export interface CartResponse {
@@ -311,6 +330,7 @@ const transformCartResponse = (response: any): CartResponse => {
       summary,
       pricing: rawPricing,
       deliveryAddress: rawData?.deliveryAddress,
+      mergeReport: rawData?.mergeReport,
     },
   };
 };
@@ -332,6 +352,17 @@ export const cartApi = baseApi.injectEndpoints({
       },
       transformResponse: transformCartResponse,
       providesTags: ["Cart"],
+    }),
+    getGuestCartPreview: build.mutation<
+      CartResponse,
+      { items: { productId: number; quantity: number }[]; offerCode?: string }
+    >({
+      query: (body) => ({
+        url: "/cart/guest-preview",
+        method: "POST",
+        body,
+      }),
+      transformResponse: transformCartResponse,
     }),
     addCartItem: build.mutation<
       CartResponse,
@@ -373,13 +404,27 @@ export const cartApi = baseApi.injectEndpoints({
       transformResponse: transformCartResponse,
       invalidatesTags: ["Cart"],
     }),
+    mergeCart: build.mutation<
+      CartResponse,
+      { items: { productId: number; quantity: number }[] }
+    >({
+      query: (body) => ({
+        url: "/cart/merge",
+        method: "POST",
+        body,
+      }),
+      transformResponse: transformCartResponse,
+      invalidatesTags: ["Cart"],
+    }),
   }),
 });
 
 export const {
   useGetCartQuery,
+  useGetGuestCartPreviewMutation,
   useAddCartItemMutation,
   useUpdateCartItemMutation,
   useDeleteCartItemMutation,
   useClearCartMutation,
+  useMergeCartMutation,
 } = cartApi;

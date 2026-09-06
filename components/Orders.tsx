@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSelector } from "react-redux";
 import {
   ArrowLeft,
@@ -22,6 +23,8 @@ import {
   X,
   Eye,
   FileText,
+  CreditCard,
+  AlertTriangle,
 } from "lucide-react";
 import OrderChat from "./OrderChat";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -30,8 +33,11 @@ import SkeletonLoader from "./SkeletonLoader";
 import {
   useGetOrdersQuery,
   useGetOrderDetailsQuery,
+  useRetryPaymentMutation,
+  useVerifyPaymentMutation,
 } from "../redux/services/orderApi";
 import { getSocket } from "../lib/socket";
+import { loadRazorpayScript } from "../lib/razorpay";
 import toast from "react-hot-toast";
 
 type OrderStatus =
@@ -69,6 +75,14 @@ function StatusIcon({ status }: { status: string }) {
     return <Truck size={17} />;
   }
 
+  if (status === "Preparing") {
+    return <Clock3 size={17} />;
+  }
+
+  if (status === "Pending Payment") {
+    return <CreditCard size={17} />;
+  }
+
   return <Clock3 size={17} />;
 }
 
@@ -86,9 +100,11 @@ function statusClasses(status: string) {
     case "Preparing":
       return "bg-blue-50 text-blue-700 border-blue-200";
 
+    case "Pending Payment":
+      return "bg-amber-100 text-amber-900 border-amber-300 font-black";
+
     case "Pending":
     case "Order Placed":
-    case "Pending Payment":
     default:
       return "bg-amber-50 text-amber-800 border-amber-200";
   }
@@ -103,6 +119,102 @@ export default function Orders() {
   const [page, setPage] = useState(1);
   const [selectedChatOrder, setSelectedChatOrder] = useState<any | null>(null);
   const [selectedDetailsOrder, setSelectedDetailsOrder] = useState<any | null>(null);
+
+  const [retryPayment] = useRetryPaymentMutation();
+  const [verifyPayment] = useVerifyPaymentMutation();
+  const [retryingOrderId, setRetryingOrderId] = useState<number | null>(null);
+
+  const handleRetryPayment = async (order: any) => {
+    const orderDbId = order.dbId || order.id;
+    try {
+      setRetryingOrderId(orderDbId);
+      toast.loading("Preparing payment gateway...", { id: "retry-pay" });
+
+      // 1. Ensure Razorpay checkout script is loaded
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded || !(window as any).Razorpay) {
+        toast.error("Payment gateway is loading. Please try again in a few seconds.", {
+          id: "retry-pay",
+        });
+        setRetryingOrderId(null);
+        return;
+      }
+
+      // 2. Request backend to verify stock and generate Razorpay order
+      const res = await retryPayment({ orderId: orderDbId }).unwrap();
+      const paymentData = res.data;
+
+      toast.dismiss("retry-pay");
+
+      // 3. Open Razorpay modal
+      const options = {
+        key: paymentData.razorpayKeyId,
+        amount: Math.round(Number(paymentData.amount) * 100),
+        currency: paymentData.currency || "INR",
+        name: "SFC Cafe",
+        description: `Payment for Order #${paymentData.orderNumber || order.id}`,
+        order_id: paymentData.razorpayOrderId,
+        prefill: {
+          name: paymentData.customerName || user?.name || "",
+          email: paymentData.customerEmail || user?.email || "",
+          contact: paymentData.customerPhone || user?.phone || "",
+        },
+        notes: {
+          order_number: paymentData.orderNumber,
+          local_order_id: String(orderDbId),
+        },
+        theme: {
+          color: "#4f7d16",
+        },
+        handler: async function (response: any) {
+          try {
+            toast.loading("Verifying payment...", { id: "verify-retry-pay" });
+            await verifyPayment({
+              orderId: orderDbId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }).unwrap();
+
+            toast.success("Payment successful! The kitchen will prepare your order.", {
+              id: "verify-retry-pay",
+              duration: 6000,
+            });
+            refetch();
+          } catch (verifyErr: any) {
+            console.error("Retry payment verification error:", verifyErr);
+            toast.error(
+              verifyErr?.data?.message ||
+                "Payment received but verification had an issue. Please check orders or contact support.",
+              { id: "verify-retry-pay", duration: 8000 }
+            );
+            refetch();
+          } finally {
+            setRetryingOrderId(null);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            toast.error("Payment window closed. Payment remains pending.");
+            setRetryingOrderId(null);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (failRes: any) {
+        toast.error(failRes?.error?.description || "Payment failed. Please try again.");
+        setRetryingOrderId(null);
+      });
+      rzp.open();
+    } catch (err: any) {
+      console.error("Retry payment error:", err);
+      toast.error(err?.data?.message || err?.message || "Failed to initialize payment retry.", {
+        id: "retry-pay",
+      });
+      setRetryingOrderId(null);
+    }
+  };
 
   // Capture the pending chat order ID set by notifications page before navigating here
   const [pendingChatOrderId, setPendingChatOrderId] = useState<number | null>(() => {
@@ -315,7 +427,7 @@ const toAssetUrl = (path?: string | null) => {
   if (!user) {
     return (
       <main className="min-h-screen bg-[var(--bg-body)] flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full text-center bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl">
+        <div className="max-w-md w-full text-center bg-white rounded-3xl p-8 border border-slate-200  shadow-xl">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)] flex items-center justify-center">
             <ShoppingBag size={32} />
           </div>
@@ -330,7 +442,7 @@ const toAssetUrl = (path?: string | null) => {
               type="button"
               onClick={() => {
                 if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("sfc_open_login"));
+                window.dispatchEvent(new CustomEvent("sfc_open_login"));
                 }
               }}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3 text-xs font-bold text-white shadow-md transition hover:bg-[var(--color-primary-dark)]"
@@ -573,20 +685,26 @@ const toAssetUrl = (path?: string | null) => {
           </div>
         ) : (
           <div className="space-y-5">
-            {filteredOrders.map((order) => (
-              <article
-                key={order.id}
-                className="
-                  overflow-hidden
-                  rounded-[1.75rem]
-                  border
-                  border-[var(--color-border)]
-                  bg-white
-                  shadow-sm
-                  transition
-                  hover:shadow-md
-                "
-              >
+            {filteredOrders.map((order) => {
+              const isPendingPayment =
+                (order.status === "Pending Payment" ||
+                  (order.payment === "Online Payment" && order.paymentStatus !== "Paid")) &&
+                order.status !== "Cancelled";
+
+              return (
+                <article
+                  key={order.id}
+                  className="
+                    overflow-hidden
+                    rounded-[1.75rem]
+                    border
+                    border-[var(--color-border)]
+                    bg-white
+                    shadow-sm
+                    transition
+                    hover:shadow-md
+                  "
+                >
                 {/* Order top */}
 
                 <div
@@ -667,17 +785,22 @@ const toAssetUrl = (path?: string | null) => {
                           gap-3
                         "
                       >
-                        <img
-                          src={toAssetUrl(item.img)}
-                          alt={item.name}
-                          className="
-                            h-14
-                            w-14
-                            shrink-0
-                            rounded-xl
-                            object-cover
-                          "
-                        />
+                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-stone-100">
+                          {item.img ? (
+                            <Image
+                              src={toAssetUrl(item.img)}
+                              alt={item.name}
+                              fill
+                              unoptimized
+                              sizes="56px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-[10px] text-stone-400">
+                              No img
+                            </div>
+                          )}
+                        </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -707,20 +830,45 @@ const toAssetUrl = (path?: string | null) => {
                  
 
                   {/* Order Status Notice */}
-                  {(order.status === "Pending" ||
-                    order.status === "Order Placed" ||
-                    order.status === "Pending Payment") && (
-                    <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-xs text-amber-900">
-                      <span className="relative flex h-2.5 w-2.5 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                      </span>
-                      <div>
-                        <span className="font-bold">Waiting for order confirmation</span>
-                        <span className="text-amber-800"> — Your order has been placed and received. Waiting for store confirmation to begin preparation.</span>
+                  {isPendingPayment && (
+                    <div className="mt-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-amber-50 border border-amber-300 p-3.5 text-xs text-amber-900 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="relative flex h-2.5 w-2.5 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                        </span>
+                        <div>
+                          <span className="font-black text-amber-950">Payment Incomplete</span>
+                          <span className="text-amber-800"> — Your online payment was not completed. Please complete payment so our kitchen can prepare your order.</span>
+                        </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRetryPayment(order)}
+                        disabled={retryingOrderId === order.dbId}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-sm transition disabled:opacity-50 shrink-0 cursor-pointer"
+                      >
+                        <CreditCard size={14} />
+                        <span>{retryingOrderId === order.dbId ? "Initializing..." : "Pay Now"}</span>
+                      </button>
                     </div>
                   )}
+
+                  {!isPendingPayment &&
+                    (order.status === "Pending" ||
+                      order.status === "Order Placed" ||
+                      order.status === "Pending Payment") && (
+                      <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-xs text-amber-900">
+                        <span className="relative flex h-2.5 w-2.5 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                        </span>
+                        <div>
+                          <span className="font-bold">Waiting for order confirmation</span>
+                          <span className="text-amber-800"> — Your order has been placed and received. Waiting for store confirmation to begin preparation.</span>
+                        </div>
+                      </div>
+                    )}
 
                   {order.status === "Preparing" && (
                     <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-blue-50 border border-blue-200 px-3.5 py-2.5 text-xs text-blue-900">
@@ -779,6 +927,35 @@ const toAssetUrl = (path?: string | null) => {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
+                      {isPendingPayment && (
+                        <button
+                          type="button"
+                          onClick={() => handleRetryPayment(order)}
+                          disabled={retryingOrderId === order.dbId}
+                          className="
+                            inline-flex
+                            items-center
+                            justify-center
+                            gap-1.5
+                            rounded-xl
+                            bg-emerald-600
+                            hover:bg-emerald-700
+                            px-4
+                            py-2.5
+                            text-[10px]
+                            font-bold
+                            text-white
+                            shadow-sm
+                            transition
+                            disabled:opacity-50
+                            cursor-pointer
+                          "
+                        >
+                          <CreditCard size={14} />
+                          <span>{retryingOrderId === order.dbId ? "Initializing..." : "Pay Now"}</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => setSelectedDetailsOrder(order)}
@@ -858,7 +1035,8 @@ const toAssetUrl = (path?: string | null) => {
                   </div>
                 </div>
               </article>
-            ))}
+            );
+          })}
           </div>
         )}
 
@@ -891,6 +1069,8 @@ const toAssetUrl = (path?: string | null) => {
             setSelectedDetailsOrder(null);
             setSelectedChatOrder(ord);
           }}
+          onRetryPayment={handleRetryPayment}
+          retryingOrderId={retryingOrderId}
         />
       )}
     </main>

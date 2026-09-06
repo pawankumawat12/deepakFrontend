@@ -6,6 +6,7 @@ import "../styles/global.css";
 import Providers from "./providers";
 import { Toaster } from "react-hot-toast";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { getSiteUrl } from "@/utils/backendUrl";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,6 +25,7 @@ const APP_DESCRIPTION =
   "Good Food, Great Vibes — Freshly prepared food delivered fast.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   applicationName: APP_NAME,
   title: {
     default: APP_DEFAULT_TITLE,

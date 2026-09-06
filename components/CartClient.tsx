@@ -11,6 +11,7 @@ declare global {
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -56,12 +57,22 @@ import SkeletonLoader from "./SkeletonLoader";
 
 import {
   useGetCartQuery,
+  useGetGuestCartPreviewMutation,
+  useMergeCartMutation,
   useUpdateCartItemMutation,
   useDeleteCartItemMutation,
   useClearCartMutation,
   CartItem,
   CartSummary,
 } from "../redux/services/cartApi";
+import {
+  getGuestCart,
+  updateGuestCartItemQty,
+  removeGuestCartItem,
+  clearGuestCart,
+  subscribeGuestCart,
+  GuestCartItem,
+} from "../lib/guestCart";
 import { useCreateOrderMutation, useVerifyPaymentMutation } from "../redux/services/orderApi";
 import {
   useGetAddressesQuery,
@@ -118,9 +129,75 @@ export default function CartClient() {
   const { data: availableOffers = [] } = useGetOffersQuery();
   const [validateOffer, { isLoading: isValidatingOffer }] = useValidateOfferMutation();
 
+  // Guest Cart State
+  const [guestCartItems, setGuestCartItems] = useState<GuestCartItem[]>([]);
+  const [guestPreviewResponse, setGuestPreviewResponse] = useState<any>(null);
+  const [getGuestCartPreview, { isLoading: isGuestPreviewLoading }] =
+    useGetGuestCartPreviewMutation();
+  const [mergeCart] = useMergeCartMutation();
+
+  useEffect(() => {
+    setGuestCartItems(getGuestCart());
+    const unsubscribe = subscribeGuestCart((newItems) => {
+      setGuestCartItems(newItems);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Fetch guest cart preview when user is guest and guest items or offerCode change
+  useEffect(() => {
+    if (user) return;
+    if (guestCartItems.length === 0) {
+      setGuestPreviewResponse(null);
+      return;
+    }
+
+    let isMounted = true;
+    getGuestCartPreview({
+      items: guestCartItems,
+      offerCode: appliedOfferCode || undefined,
+    })
+      .unwrap()
+      .then((res) => {
+        if (isMounted) setGuestPreviewResponse(res);
+      })
+      .catch((err) => {
+        console.error("Guest cart preview failed:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, guestCartItems, appliedOfferCode, getGuestCartPreview]);
+
+  // Safeguard: If user logs in and guest cart still has items, auto-merge!
+  useEffect(() => {
+    if (!user) return;
+    const pendingGuestItems = getGuestCart();
+    if (pendingGuestItems.length > 0) {
+      mergeCart({ items: pendingGuestItems })
+        .unwrap()
+        .then((res) => {
+          clearGuestCart();
+          const report = res?.data?.mergeReport;
+          if (report?.adjustedItems?.length) {
+            toast.success(
+              `Cart synced! Some quantities were adjusted due to stock.`,
+              { duration: 4500 }
+            );
+          } else {
+            toast.success("Cart synced to your account!");
+          }
+        })
+        .catch((err) => {
+          console.error("Cart merge safeguard error:", err);
+        });
+    }
+  }, [user, mergeCart]);
+
   const {
     data: cartResponse,
-    isLoading,
+    isLoading: isCartQueryLoading,
     isFetching,
   } = useGetCartQuery(
     {
@@ -131,6 +208,8 @@ export default function CartClient() {
       skip: !user,
     }
   );
+
+  const isLoading = user ? isCartQueryLoading : (isGuestPreviewLoading && guestCartItems.length > 0 && !guestPreviewResponse);
 
   const { data: addressResponse, isLoading: isAddressesLoading } = useGetAddressesQuery(
     undefined,
@@ -181,7 +260,9 @@ export default function CartClient() {
     useVerifyPaymentMutation();
 
 
-  const items: CartItem[] = cartResponse?.data?.items || [];
+  const items: CartItem[] = user
+    ? (cartResponse?.data?.items || [])
+    : (guestPreviewResponse?.data?.items || []);
   const defaultSummary: CartSummary = {
     totalItems: 0,
     itemTypesCount: 0,
@@ -215,18 +296,42 @@ export default function CartClient() {
     hasOutOfStockItems: false,
     outOfStockCount: 0,
   };
-  const summary: CartSummary = cartResponse?.data?.summary || defaultSummary;
+  const summary: CartSummary = user
+    ? (cartResponse?.data?.summary || defaultSummary)
+    : (guestPreviewResponse?.data?.summary || defaultSummary);
 
   const handleUpdateQty = async (
     productId: number,
-    nextQty: number,
+    currentQty: number,
+    delta: number,
     maxStock: number,
     isMadeToOrder?: boolean
   ) => {
+    const nextQty = currentQty + delta;
+    if (nextQty < 0) return;
+
     if (!isMadeToOrder && nextQty > maxStock) {
       toast.error(`Only ${maxStock} items available in stock`);
       return;
     }
+
+    if (!user) {
+      const res = updateGuestCartItemQty(
+        productId,
+        nextQty,
+        maxStock,
+        isMadeToOrder
+      );
+      if (res.success) {
+        if (nextQty === 0) {
+          toast.success("Item removed from cart");
+        }
+      } else {
+        toast.error(res.message || "Failed to update quantity");
+      }
+      return;
+    }
+
     try {
       setUpdatingId(productId);
       await updateCartItem({ productId, quantity: nextQty }).unwrap();
@@ -241,6 +346,12 @@ export default function CartClient() {
   };
 
   const handleDeleteItem = async (productId: number) => {
+    if (!user) {
+      removeGuestCartItem(productId);
+      toast.success("Item removed from cart");
+      return;
+    }
+
     try {
       setDeletingId(productId);
       await deleteCartItem(productId).unwrap();
@@ -253,6 +364,13 @@ export default function CartClient() {
   };
 
   const handleConfirmClearCart = async () => {
+    if (!user) {
+      clearGuestCart();
+      toast.success("Cart cleared successfully");
+      setClearCartModalOpen(false);
+      return;
+    }
+
     try {
       await clearCart().unwrap();
       toast.success("Cart cleared successfully");
@@ -361,6 +479,20 @@ export default function CartClient() {
 
     const shippingAddress = addressParts.join(", ");
 
+    const rawPhone = (selectedAddress.phone_number || user.phone || "").toString();
+    const rawDigits = rawPhone.replace(/\D/g, "");
+    const normalizedPhone =
+      rawDigits.length === 12 && rawDigits.startsWith("91")
+        ? rawDigits.slice(2)
+        : rawDigits.length === 11 && rawDigits.startsWith("0")
+        ? rawDigits.slice(1)
+        : rawDigits;
+
+    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      toast.error("A valid 10-digit Indian mobile number (starts with 6-9) is required for delivery.");
+      return;
+    }
+
     try {
       // 1. CREATE ORDER
       const orderResponse = await createOrder({
@@ -373,10 +505,7 @@ export default function CartClient() {
 
         customerEmail: user.email || "",
 
-        customerPhone:
-          selectedAddress.phone_number ||
-          user.phone ||
-          "",
+        customerPhone: normalizedPhone,
 
         shippingAddress,
 
@@ -569,133 +698,6 @@ export default function CartClient() {
   };
 
 
-  if (!user) {
-    return (
-      <main className="min-h-screen bg-[var(--bg-body)] mt-5">
-        <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center px-4">
-          <div className="w-full rounded-3xl border border-[var(--color-border)] bg-white p-8 text-center shadow-sm sm:p-12">
-            <div
-              className="
-                mx-auto
-                flex
-                h-28
-                w-28
-                items-center
-                justify-center
-                rounded-full
-                bg-[var(--color-primary-50)]
-                text-[var(--color-primary)]
-                shadow-inner
-              "
-            >
-              <ShoppingBag size={48} strokeWidth={1.8} />
-            </div>
-
-            <p className="mt-6 text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
-              Cart
-            </p>
-
-            <h1 className="mt-2 text-2xl font-black tracking-tight text-[var(--color-text-primary)] sm:text-3xl">
-              Missing Cart items?
-            </h1>
-
-            <p className="mx-auto mt-3 max-w-sm text-xs leading-6 text-[var(--color-text-muted)] sm:text-sm">
-              Login to see the items you added previously and manage your delicious orders.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                className="
-                  inline-flex
-                  h-12
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-2xl
-                  bg-[var(--color-primary)]
-                  px-8
-                  text-xs
-                  font-black
-                  text-white
-                  shadow-lg
-                  shadow-[var(--color-primary)]/25
-                  transition-all
-                  duration-200
-                  hover:-translate-y-0.5
-                  hover:bg-[var(--color-primary-dark)]
-                  active:scale-95
-                "
-              >
-                <LogIn size={16} />
-                Login to view Cart
-              </button>
-
-              <Link
-                href="/menu"
-                className="
-                  inline-flex
-                  h-12
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-2xl
-                  border
-                  border-[var(--color-border)]
-                  bg-white
-                  px-6
-                  text-xs
-                  font-bold
-                  text-[var(--color-text-primary)]
-                  transition
-                  hover:bg-[var(--color-primary-50)]
-                  hover:text-[var(--color-primary)]
-                "
-              >
-                <Utensils size={15} />
-                Explore Menu
-              </Link>
-            </div>
-
-            <div className="mt-10 grid grid-cols-3 gap-2 border-t border-[var(--color-border)] pt-8">
-              <div className="p-2 text-center">
-                <div className="flex justify-center text-[var(--color-primary)]"><Leaf size={22} /></div>
-                <p className="mt-1 text-[10px] font-bold text-[var(--color-text-secondary)]">
-                  Fresh Food
-                </p>
-              </div>
-              <div className="p-2 text-center">
-                <div className="flex justify-center text-[var(--color-secondary)]"><Zap size={22} /></div>
-                <p className="mt-1 text-[10px] font-bold text-[var(--color-text-secondary)]">
-                  Quick Service
-                </p>
-              </div>
-              <div className="p-2 text-center">
-                <div className="flex justify-center text-blue-600"><ShieldCheck size={22} /></div>
-                <p className="mt-1 text-[10px] font-bold text-[var(--color-text-secondary)]">
-                  Safe & Secure
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <LoginModal
-          open={authOpen}
-          onClose={() => setAuthOpen(false)}
-          onOpenRegister={() => {
-            setAuthOpen(false);
-            setRegisterOpen(true);
-          }}
-        />
-        <RegisterModal
-          open={registerOpen}
-          onClose={() => setRegisterOpen(false)}
-        />
-      </main>
-    );
-  }
 
   /* ============================================================
      2. LOADING SPINNER
@@ -787,6 +789,19 @@ export default function CartClient() {
               <ArrowRight size={15} />
             </Link>
 
+            {!user && (
+              <p className="mt-5 text-xs text-[var(--color-text-muted)]">
+                Already have an account with saved items?{" "}
+                <button
+                  type="button"
+                  onClick={() => setAuthOpen(true)}
+                  className="font-bold text-[var(--color-primary)] hover:underline"
+                >
+                  Sign In
+                </button>
+              </p>
+            )}
+
             <div className="mt-10 grid grid-cols-3 gap-2 border-t border-[var(--color-border)] pt-6">
               <div className="rounded-xl bg-[var(--color-primary-50)] p-3 text-center">
                 <div className="flex justify-center text-[var(--color-primary)]"><Leaf size={20} /></div>
@@ -809,6 +824,19 @@ export default function CartClient() {
             </div>
           </div>
         </div>
+
+        <LoginModal
+          open={authOpen}
+          onClose={() => setAuthOpen(false)}
+          onOpenRegister={() => {
+            setAuthOpen(false);
+            setRegisterOpen(true);
+          }}
+        />
+        <RegisterModal
+          open={registerOpen}
+          onClose={() => setRegisterOpen(false)}
+        />
       </main>
     );
   }
@@ -935,11 +963,20 @@ export default function CartClient() {
                           sm:w-28
                         "
                       >
-                        <img
-                          src={it.img || "/images/placeholder.png"}
-                          alt={it.name}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
+                        {it.img ? (
+                          <Image
+                            src={it.img}
+                            alt={it.name}
+                            fill
+                            unoptimized
+                            sizes="(max-width: 640px) 96px, 112px"
+                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="h-full w-full bg-stone-100 flex items-center justify-center text-stone-400">
+                            <span className="text-[9px]">No image</span>
+                          </div>
+                        )}
                         {it.isOutOfStock && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] font-black text-white uppercase">
                             Out of Stock
@@ -995,12 +1032,7 @@ export default function CartClient() {
                               <Check size={13} />
                               Maximum stock reached ({it.stock} items).
                             </div>
-                          ) : it.stock <= 5 ? (
-                            <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-amber-600">
-                              <Clock3 size={12} />
-                              Only {it.stock} left in stock — order soon!
-                            </div>
-                          ) : null}
+                          ):null}
 
                           {/* BOGO Offer Eligibility & Breakdown */}
                           {(() => {
@@ -1063,7 +1095,7 @@ export default function CartClient() {
                               type="button"
                               aria-label="Decrease quantity"
                               disabled={isItemUpdating || isItemDeleting}
-                              onClick={() => handleUpdateQty(it.id, it.quantity - 1, it.stock, it.isMadeToOrder)}
+                              onClick={() => handleUpdateQty(it.id, it.quantity, -1, it.stock, it.isMadeToOrder)}
                               className="
                                 flex
                                 h-7
@@ -1101,7 +1133,7 @@ export default function CartClient() {
                               aria-label="Increase quantity"
                               title={!it.isMadeToOrder && it.quantity >= it.stock ? `Only ${it.stock} items available` : "Increase quantity"}
                               disabled={isItemUpdating || isItemDeleting || (!it.isMadeToOrder && it.quantity >= it.stock) || it.isOutOfStock}
-                              onClick={() => handleUpdateQty(it.id, it.quantity + 1, it.stock, it.isMadeToOrder)}
+                              onClick={() => handleUpdateQty(it.id, it.quantity, 1, it.stock, it.isMadeToOrder)}
                               className="
                                 flex
                                 h-7
@@ -1190,39 +1222,86 @@ export default function CartClient() {
                       Delivery Address
                     </h2>
                     <p className="text-[11px] text-[var(--color-text-muted)]">
-                      {addresses.length === 0
+                      {!user
+                        ? "Sign in to choose or add a delivery address"
+                        : addresses.length === 0
                         ? "Please add an address where you want your food delivered"
                         : `${addresses.length} saved address${addresses.length === 1 ? "" : "es"} available`}
                     </p>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleOpenAddAddress}
-                  className="
-                    inline-flex
-                    items-center
-                    gap-1.5
-                    rounded-xl
-                    bg-[var(--color-primary-50)]
-                    px-3.5
-                    py-2
-                    text-xs
-                    font-bold
-                    text-[var(--color-primary)]
-                    transition
-                    hover:bg-[var(--color-primary)]
-                    hover:text-white
-                  "
-                >
-                  <Plus size={15} />
-                  <span>Add New Address</span>
-                </button>
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={handleOpenAddAddress}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-[var(--color-primary-50)]
+                      px-3.5
+                      py-2
+                      text-xs
+                      font-bold
+                      text-[var(--color-primary)]
+                      transition
+                      hover:bg-[var(--color-primary)]
+                      hover:text-white
+                    "
+                  >
+                    <Plus size={15} />
+                    <span>Add New Address</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAuthOpen(true)}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-[var(--color-primary-50)]
+                      px-3.5
+                      py-2
+                      text-xs
+                      font-bold
+                      text-[var(--color-primary)]
+                      transition
+                      hover:bg-[var(--color-primary)]
+                      hover:text-white
+                    "
+                  >
+                    <User size={15} />
+                    <span>Sign In</span>
+                  </button>
+                )}
               </div>
 
               {/* ADDRESSES LIST */}
-              {isAddressesLoading ? (
+              {!user ? (
+                <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 p-5 text-center">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                    <User size={22} />
+                  </div>
+                  <h3 className="mt-2.5 text-xs font-black text-amber-900 sm:text-sm">
+                    Sign in to select delivery address
+                  </h3>
+                  <p className="mx-auto mt-1 max-w-sm text-[11px] leading-5 text-amber-800">
+                    You can manage your cart as a guest. Please sign in to choose or add your delivery address and checkout.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setAuthOpen(true)}
+                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)]"
+                  >
+                    <LogIn size={14} />
+                    Sign In / Register
+                  </button>
+                </div>
+              ) : isAddressesLoading ? (
                 <div className="flex items-center justify-center py-6 text-xs text-[var(--color-text-muted)]">
                   <LoaderCircle size={16} className="mr-2 animate-spin text-[var(--color-primary)]" />
                   Loading saved addresses...
@@ -1760,7 +1839,7 @@ export default function CartClient() {
                       <span>Deliver to</span>
                     </div>
 
-                    {selectedAddress ? (
+                    {user && selectedAddress ? (
                       <button
                         type="button"
                         onClick={handleOpenAddAddress}
@@ -1771,7 +1850,21 @@ export default function CartClient() {
                     ) : null}
                   </div>
 
-                  {selectedAddress ? (
+                  {!user ? (
+                    <div className="mt-2 text-center">
+                      <p className="text-[11px] font-semibold text-[var(--color-text-secondary)]">
+                        Sign in to choose delivery address
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setAuthOpen(true)}
+                        className="mt-2 inline-flex items-center gap-1 rounded-xl bg-[var(--color-primary)] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)]"
+                      >
+                        <LogIn size={13} />
+                        Sign In
+                      </button>
+                    </div>
+                  ) : selectedAddress ? (
                     <div className="mt-2.5">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-[var(--color-text-primary)]">
@@ -1933,13 +2026,15 @@ export default function CartClient() {
                 <button
                   type="button"
                   disabled={
-                    summary.hasOutOfStockItems ||
-                    summary.isBelowMinimumOrder ||
-                    summary.isOutOfRange ||
-                    isPlacingOrder ||
-                    isVerifyingPayment ||
                     items.length === 0 ||
-                    !selectedAddress
+                    summary.hasOutOfStockItems ||
+                    (user ? (
+                      summary.isBelowMinimumOrder ||
+                      summary.isOutOfRange ||
+                      isPlacingOrder ||
+                      isVerifyingPayment ||
+                      !selectedAddress
+                    ) : false)
                   }
                   onClick={handleCheckout}
                   className="
@@ -1967,13 +2062,15 @@ export default function CartClient() {
                   "
                 >
                   <span>
-                    {isPlacingOrder
-                      ? "Creating Order..."
-                      : isVerifyingPayment
-                        ? "Verifying Payment..."
-                        : paymentMethod === "Online Payment"
-                          ? "Pay & Place Order"
-                          : "Place Order"}
+                    {!user
+                      ? "Sign In to Checkout"
+                      : isPlacingOrder
+                        ? "Creating Order..."
+                        : isVerifyingPayment
+                          ? "Verifying Payment..."
+                          : paymentMethod === "Online Payment"
+                            ? "Pay & Place Order"
+                            : "Place Order"}
                   </span>
                   {isPlacingOrder ? (
                     <LoaderCircle size={16} className="animate-spin" />
@@ -2119,6 +2216,19 @@ export default function CartClient() {
           </div>
         </div>
       )}
+
+      <LoginModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onOpenRegister={() => {
+          setAuthOpen(false);
+          setRegisterOpen(true);
+        }}
+      />
+      <RegisterModal
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+      />
     </main>
   );
 }

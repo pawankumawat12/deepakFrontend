@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { useGetCartQuery } from "../redux/services/cartApi";
+import { getGuestCartCount, subscribeGuestCart } from "../lib/guestCart";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import { logout } from "../redux/features/authSlice";
@@ -62,10 +64,31 @@ const Navbar = () => {
   const { data: cartData } = useGetCartQuery(undefined, {
     skip: !user,
   });
-  const cartCount = user ? cartData?.data?.summary?.itemTypesCount || 0 : 0;
+
+  const [guestCartCount, setGuestCartCount] = useState<number>(0);
+
+  useEffect(() => {
+    setGuestCartCount(getGuestCartCount());
+    const unsubscribe = subscribeGuestCart((items) => {
+      setGuestCartCount(items.length);
+    });
+    return unsubscribe;
+  }, []);
+
+  const cartCount = user ? (cartData?.data?.summary?.itemTypesCount || 0) : guestCartCount;
 
   const { data: logoData } = useGetLogoQuery();
-  const logoUrl = logoData?.data?.logo_url ? toAssetUrl(logoData.data.logo_url) : "/images/sfcLogo.png";
+  const rawLogoUrl = logoData?.data?.logo_url ? toAssetUrl(logoData.data.logo_url) : "/images/sfcLogo.png";
+  const [logoSrc, setLogoSrc] = useState(rawLogoUrl);
+  const [userAvatarError, setUserAvatarError] = useState(false);
+
+  useEffect(() => {
+    setLogoSrc(rawLogoUrl);
+  }, [rawLogoUrl]);
+
+  useEffect(() => {
+    setUserAvatarError(false);
+  }, [user?.image]);
 
   const { data: unreadNotifData, refetch: refetchUnreadNotifs } = useGetUnreadNotificationCountQuery(undefined, {
     skip: !user,
@@ -195,7 +218,7 @@ const Navbar = () => {
           DESKTOP NAVBAR
       ========================================================= */}
 
-      <header className="hidden md:block fixed top-0 inset-x-0 z-50">
+      <header className="hidden md:block relative top-0  inset-x-0 z-50">
         <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
           <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6 lg:px-8">
             {/* ---------------- LOGO ---------------- */}
@@ -208,7 +231,16 @@ const Navbar = () => {
                   group-hover:scale-105
                 "
               >
-                <img src={logoUrl} alt="SFC Cafe" />
+                <Image
+                  src={logoSrc || "/images/sfcLogo.png"}
+                  alt="SFC Cafe"
+                  width={60}
+                  height={60}
+                  priority
+                  unoptimized
+                  onError={() => setLogoSrc("/images/sfcLogo.png")}
+                  className="h-full w-full object-contain"
+                />
               </div>
 
             </Link>
@@ -410,11 +442,15 @@ const Navbar = () => {
                       text-white
                     "
                     >
-                      {user?.image ? (
-                        <img
+                      {user?.image && !userAvatarError ? (
+                        <Image
                           src={toAssetUrl(user.image)}
                           alt={user?.name || "User profile"}
-                          className="h-full w-full object-cover"
+                          width={34}
+                          height={34}
+                          unoptimized
+                          onError={() => setUserAvatarError(true)}
+                          className="h-full w-full object-cover rounded-full"
                         />
                       ) : (
                         <User size={17} />
@@ -570,7 +606,7 @@ const Navbar = () => {
       {/* MOBILE / PWA TOP BAR */}
 
       <header
-        className="md:hidden fixed top-0 inset-x-0 z-50"
+        className="md:hidden relative top-0 inset-x-0 z-50"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div
@@ -593,7 +629,16 @@ const Navbar = () => {
                   rounded-xl
                 "
               >
-                <img src={logoUrl} alt="SFC Cafe" />
+                <Image
+                  src={logoSrc || "/images/sfcLogo.png"}
+                  alt="SFC Cafe"
+                  width={48}
+                  height={48}
+                  priority
+                  unoptimized
+                  onError={() => setLogoSrc("/images/sfcLogo.png")}
+                  className="h-full w-full object-contain"
+                />
               </div>
             </Link>
 
@@ -840,7 +885,19 @@ const Navbar = () => {
                   ${mobileProfileOpen ? "bg-[var(--color-primary-50)]" : ""}
                 `}
                 >
-                  <User size={20} strokeWidth={mobileProfileOpen ? 2.5 : 2} />
+                  {user?.image && !userAvatarError ? (
+                    <Image
+                      src={toAssetUrl(user.image)}
+                      alt={user?.name || "Profile"}
+                      width={28}
+                      height={28}
+                      unoptimized
+                      onError={() => setUserAvatarError(true)}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User size={20} strokeWidth={mobileProfileOpen ? 2.5 : 2} />
+                  )}
                 </span>
 
                 <span>Profile</span>
@@ -877,7 +934,19 @@ const Navbar = () => {
                     hover:text-[var(--color-primary)]
                   "
                   >
-                    <User size={17} />
+                    {user?.image && !userAvatarError ? (
+                      <Image
+                        src={toAssetUrl(user.image)}
+                        alt={user?.name || "Profile"}
+                        width={20}
+                        height={20}
+                        unoptimized
+                        onError={() => setUserAvatarError(true)}
+                        className="h-5 w-5 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User size={17} />
+                    )}
                     Profile
                   </Link>
 
