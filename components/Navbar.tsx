@@ -1025,6 +1025,10 @@ const Navbar = () => {
       <RegisterModal
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
+        onOpenLogin={() => {
+          setRegisterOpen(false);
+          setAuthOpen(true);
+        }}
       />
 
       <LogoutModal open={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={handleLogout} />

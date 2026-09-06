@@ -28,6 +28,7 @@ import {
 } from "../schemas/authSchema";
 import { useMergeCartMutation } from "../redux/services/cartApi";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 type ApiError = {
   data?: { message?: string; errors?: Record<string, string> };
@@ -45,7 +46,13 @@ const messageFor = (error: unknown) => {
   );
 };
 
-export default function RegisterForm({ onComplete }: { onComplete?: () => void }) {
+export default function RegisterForm({
+  onComplete,
+  onOpenLogin,
+}: {
+  onComplete?: () => void;
+  onOpenLogin?: () => void;
+}) {
   const router = useRouter();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
@@ -195,7 +202,7 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
   const input =
     "mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2.5 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20";
   return (
-    <div className="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-white p-6 shadow-xl sm:p-8">
+    <div className="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-white p-4 shadow-xl sm:p-8">
       <header className="mb-7 text-center">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
           {step === "register" ? <UserPlus /> : <KeyRound />}
@@ -315,6 +322,35 @@ export default function RegisterForm({ onComplete }: { onComplete?: () => void }
             </span>
           )}
           <Submit busy={isRegistering || isSending} text="Create account" />
+
+          <div className="relative my-3 flex items-center justify-center">
+            <div className="w-full border-t border-[var(--color-border)]" />
+            <span className="absolute bg-white px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+              or
+            </span>
+          </div>
+
+          <GoogleSignInButton
+            mode="signup"
+            onSuccess={() => {
+              if (onComplete) {
+                onComplete();
+              } else {
+                router.replace("/");
+              }
+            }}
+          />
+
+          <p className="pt-2 text-center text-sm text-[var(--color-text-secondary)]">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={onOpenLogin}
+              className="font-semibold text-[var(--color-primary)] hover:underline"
+            >
+              Sign in
+            </button>
+          </p>
         </form>
       ) : (
         <form

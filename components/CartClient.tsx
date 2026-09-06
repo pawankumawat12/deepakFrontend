@@ -836,6 +836,10 @@ export default function CartClient() {
         <RegisterModal
           open={registerOpen}
           onClose={() => setRegisterOpen(false)}
+          onOpenLogin={() => {
+            setRegisterOpen(false);
+            setAuthOpen(true);
+          }}
         />
       </main>
     );
@@ -2228,6 +2232,10 @@ export default function CartClient() {
       <RegisterModal
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
+        onOpenLogin={() => {
+          setRegisterOpen(false);
+          setAuthOpen(true);
+        }}
       />
     </main>
   );

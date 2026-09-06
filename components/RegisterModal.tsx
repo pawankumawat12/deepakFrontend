@@ -7,9 +7,14 @@ import RegisterForm from "./RegisterForm";
 type RegisterModalProps = {
   open: boolean;
   onClose: () => void;
+  onOpenLogin?: () => void;
 };
 
-export default function RegisterModal({ open, onClose }: RegisterModalProps) {
+export default function RegisterModal({
+  open,
+  onClose,
+  onOpenLogin,
+}: RegisterModalProps) {
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -23,7 +28,7 @@ export default function RegisterModal({ open, onClose }: RegisterModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-black/40 p-3 backdrop-blur-[2px] sm:p-4"
+      className="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto bg-black/40 p-3 backdrop-blur-[2px] sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Create an account"
@@ -31,7 +36,7 @@ export default function RegisterModal({ open, onClose }: RegisterModalProps) {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-md py-5">
+      <div className="relative my-3 w-full max-w-md py-5 sm:my-5">
         <button
           type="button"
           onClick={onClose}
@@ -40,7 +45,7 @@ export default function RegisterModal({ open, onClose }: RegisterModalProps) {
         >
           <X size={20} />
         </button>
-        <RegisterForm onComplete={onClose} />
+        <RegisterForm onComplete={onClose} onOpenLogin={onOpenLogin} />
       </div>
     </div>
   );

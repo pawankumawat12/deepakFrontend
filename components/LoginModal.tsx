@@ -4,21 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ChevronLeft,
-  Info,
   KeyRound,
   LoaderCircle,
   Lock,
   LogInIcon,
   Mail,
-  Phone,
   RefreshCcw,
-  ShieldCheck,
   X,
 } from "lucide-react";
 
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import toast from "react-hot-toast";
@@ -33,6 +28,7 @@ import { useDispatch } from "react-redux";
 import { setCredentials } from "../redux/features/authSlice";
 import { useMergeCartMutation } from "../redux/services/cartApi";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 interface LoginModalProps {
   open: boolean;
@@ -40,8 +36,7 @@ interface LoginModalProps {
   onOpenRegister: () => void;
 }
 
-type LoginMethod = "phone" | "email";
-type Step = "welcome" | "phone" | "email" | "verifyOtp";
+type Step = "email" | "verifyOtp";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -50,7 +45,7 @@ export default function LoginModal({
   onClose,
   onOpenRegister,
 }: LoginModalProps) {
-  const [step, setStep] = useState<Step>("welcome");
+  const [step, setStep] = useState<Step>("email");
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
@@ -228,7 +223,7 @@ export default function LoginModal({
 
   useEffect(() => {
     if (!open) {
-      setStep("welcome");
+      setStep("email");
       setError("");
       setPendingEmail("");
       setOtpDigits(["", "", "", ""]);
@@ -255,11 +250,6 @@ export default function LoginModal({
     if (event.target === event.currentTarget) {
       onClose();
     }
-  };
-
-  const handleSelectMethod = (selected: LoginMethod) => {
-    setStep(selected);
-    setError("");
   };
 
   if (!open) return null;
@@ -298,11 +288,11 @@ export default function LoginModal({
         {/* MODAL HEADER */}
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
           <div className="flex items-center gap-3">
-            {step !== "welcome" && (
+            {step === "verifyOtp" && (
               <button
                 type="button"
                 onClick={() => {
-                  setStep("welcome");
+                  setStep("email");
                   setError("");
                 }}
                 className="
@@ -321,17 +311,13 @@ export default function LoginModal({
 
             <div>
               <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
-                {step === "welcome" && "Welcome To SFC Cafe"}
-                {step === "phone" && "Continue With Phone"}
-                {step === "email" && "Sign In With Email"}
+                {step === "email" && "Sign In"}
                 {step === "verifyOtp" && "Verify Your Email"}
               </h2>
 
               <p className="text-xs text-[var(--color-text-muted)]">
-                {step === "welcome" && "Sign in to continue ordering"}
-                {step === "phone" && "We'll send a verification code"}
-                {step === "email" && "Enter your credentials to continue"}
-                {step === "verifyOtp" && `Enter 4-digit code sent to ${pendingEmail}`}
+                {step === "email" && "Welcome back! Enter your credentials to continue"}
+                {step === "verifyOtp" && `Enter 6-digit code sent to ${pendingEmail}`}
               </p>
             </div>
           </div>
@@ -355,182 +341,7 @@ export default function LoginModal({
 
         {/* MODAL BODY */}
         <div className="p-5 sm:p-6">
-          {/* STEP 1: WELCOME */}
-          {step === "welcome" && (
-            <div className="space-y-4">
-              <div className="mb-6 text-center">
-                <div
-                  className="
-                    mx-auto mb-4
-                    flex h-14 w-14
-                    items-center justify-center
-                    rounded-2xl
-                    bg-[var(--color-primary-50)]
-                    text-[var(--color-primary)]
-                  "
-                >
-                  <ShieldCheck size={28} />
-                </div>
-
-                <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-                  Sign in to your account
-                </h3>
-
-                <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                  Save favorites, track orders and checkout faster.
-                </p>
-              </div>
-
-              {/* PHONE */}
-              <button
-                type="button"
-                onClick={() =>
-                  toast("Phone login coming soon. Please use Email login.", {
-                    icon: <Info />,
-                    duration: 2000,
-                  })
-                }
-                className="
-                  group flex w-full
-                  items-center gap-4
-                  rounded-2xl
-                  border border-[var(--color-border)]
-                  bg-white
-                  p-4
-                  text-left
-                  transition
-                  hover:border-[var(--color-primary)]
-                  hover:bg-[var(--color-primary-50)]
-                "
-              >
-                <div
-                  className="
-                    flex h-11 w-11 shrink-0
-                    items-center justify-center
-                    rounded-xl
-                    bg-[var(--color-primary-50)]
-                    text-[var(--color-primary)]
-                  "
-                >
-                  <Phone size={20} />
-                </div>
-
-                <div className="flex-1">
-                  <p className="font-semibold text-[var(--color-text-primary)]">
-                    Continue with Phone
-                  </p>
-
-                  <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-                    Get a quick OTP on your mobile
-                  </p>
-                </div>
-
-                <ChevronLeft
-                  size={18}
-                  className="
-                    rotate-180
-                    text-[var(--color-text-muted)]
-                    transition
-                    group-hover:text-[var(--color-primary)]
-                  "
-                />
-              </button>
-
-              {/* EMAIL */}
-              <button
-                type="button"
-                onClick={() => handleSelectMethod("email")}
-                className="
-                  group flex w-full
-                  items-center gap-4
-                  rounded-2xl
-                  border border-[var(--color-border)]
-                  bg-white
-                  p-4
-                  text-left
-                  transition
-                  hover:border-[var(--color-primary)]
-                  hover:bg-[var(--color-primary-50)]
-                "
-              >
-                <div
-                  className="
-                    flex h-11 w-11 shrink-0
-                    items-center justify-center
-                    rounded-xl
-                    bg-[var(--color-primary-50)]
-                    text-[var(--color-primary)]
-                  "
-                >
-                  <Mail size={20} />
-                </div>
-
-                <div className="flex-1">
-                  <p className="font-semibold text-[var(--color-text-primary)]">
-                    Continue with Email
-                  </p>
-
-                  <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-                    Use your registered email & password
-                  </p>
-                </div>
-
-                <ChevronLeft
-                  size={18}
-                  className="
-                    rotate-180
-                    text-[var(--color-text-muted)]
-                    transition
-                    group-hover:text-[var(--color-primary)]
-                  "
-                />
-              </button>
-
-              <div className="pt-2 text-center text-xs text-[var(--color-text-muted)]">
-                Don't have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onOpenRegister();
-                  }}
-                  className="font-semibold text-[var(--color-primary)] hover:underline"
-                >
-                  Create an account
-                </button>
-              </div>
-
-              <div className="pt-3 border-t border-[var(--color-border)] text-center text-[11px] text-[var(--color-text-muted)]">
-                By continuing, you agree to our{" "}
-                <Link
-                  href="/terms"
-                  onClick={onClose}
-                  className="underline hover:text-[var(--color-primary)]"
-                >
-                  Terms
-                </Link>
-                ,{" "}
-                <Link
-                  href="/privacy-policy"
-                  onClick={onClose}
-                  className="underline hover:text-[var(--color-primary)]"
-                >
-                  Privacy Policy
-                </Link>{" "}
-                &{" "}
-                <Link
-                  href="/refund-policy"
-                  onClick={onClose}
-                  className="underline hover:text-[var(--color-primary)]"
-                >
-                  Refund Policy
-                </Link>
-                .
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2: EMAIL LOGIN FORM */}
+          {/* EMAIL LOGIN FORM */}
           {step === "email" && (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
@@ -659,10 +470,24 @@ export default function LoginModal({
                 ) : (
                   <>
                     <LogInIcon size={18} />
-                    <span>Sign In</span>
+                    <span>Login</span>
                   </>
                 )}
               </button>
+
+              <div className="relative my-3 flex items-center justify-center">
+                <div className="w-full border-t border-[var(--color-border)]" />
+                <span className="absolute bg-white px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  or
+                </span>
+              </div>
+
+              <GoogleSignInButton
+                mode="signin"
+                onSuccess={() => {
+                  onClose();
+                }}
+              />
 
               <div className="pt-2 text-center text-xs text-[var(--color-text-muted)]">
                 Don't have an account?{" "}
