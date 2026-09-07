@@ -12,6 +12,8 @@ export type AuthUser = {
 export type AuthResponse = {
   message?: string;
   user: AuthUser;
+  token?: string;
+  accessToken?: string;
 };
 
 export const authApi = baseApi.injectEndpoints({

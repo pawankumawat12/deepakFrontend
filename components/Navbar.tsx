@@ -92,6 +92,7 @@ const Navbar = () => {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const mobileProfileRef = useRef<HTMLDivElement>(null);
 
   // Live Socket.IO listener for notifications
   useEffect(() => {
@@ -133,21 +134,44 @@ const Navbar = () => {
   /* ---------------- CLOSE PROFILE OUTSIDE ---------------- */
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
       if (
         profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
+        !profileRef.current.contains(target)
       ) {
         setDropdownOpen(false);
+      }
+      if (
+        mobileProfileRef.current &&
+        !mobileProfileRef.current.contains(target)
+      ) {
+        setMobileProfileOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDropdownOpen(false);
+        setMobileProfileOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  useEffect(() => {
+    setDropdownOpen(false);
+    setMobileProfileOpen(false);
+  }, [pathname]);
 
 
   const isActive = (href: string) => {
@@ -843,7 +867,7 @@ const Navbar = () => {
           {/* Profile */}
 
           {user ? (
-            <div className="relative min-w-[62px]">
+            <div ref={mobileProfileRef} className="relative min-w-[62px]">
               <button
                 type="button"
                 onClick={() => setMobileProfileOpen((open) => !open)}
