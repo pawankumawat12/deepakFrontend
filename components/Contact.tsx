@@ -297,7 +297,7 @@ export default function ContactPage() {
             </h3>
 
             <a
-              href="mailto:hello@sfccafe.com"
+              href="mailto:hello@sfcbakers.com"
               className="mt-2 block break-all text-xs leading-6 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
             >
               {settingData?.email}
@@ -446,7 +446,7 @@ export default function ContactPage() {
                       Message Sent Successfully!
                     </h3>
                     <p className="mt-2 text-xs leading-relaxed text-emerald-700">
-                      Thank you for reaching out to SFC Cafe. Our team has received your inquiry and will respond to you shortly via email or phone.
+                      Thank you for reaching out to SFC Bakers. Our team has received your inquiry and will respond to you shortly via email or phone.
                     </p>
                     <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                       <button
@@ -967,7 +967,7 @@ export default function ContactPage() {
                   <div>
 
                     <p className="text-xs font-bold ">
-                      SFC Cafe
+                      SFC Bakers
                     </p>
 
                     <p className="mt-1 text-xs leading-5">

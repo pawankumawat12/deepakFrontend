@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy | SFC Cafe",
-  description: "Read the Privacy Policy of SFC Cafe to understand how we collect, protect, and use your personal information.",
+  title: "Privacy Policy | SFC Bakers",
+  description: "Read the Privacy Policy of SFC Bakers to understand how we collect, protect, and use your personal information.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
       content: (
         <>
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            When you visit our website, register an account, browse the menu, or place an order with SFC Cafe, we collect information necessary to deliver fresh food and an exceptional dining experience:
+            When you visit our website, register an account, browse the menu, or place an order with SFC Bakers, we collect information necessary to deliver fresh food and an exceptional dining experience:
           </p>
           <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
             <li className="flex items-start gap-2.5">
@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
           <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-[var(--color-border)] bg-stone-50/70 p-4">
             <Lock size={16} className="mt-0.5 shrink-0 text-[var(--color-primary)]" />
             <p className="text-xs font-semibold leading-relaxed text-[var(--color-text-primary)]">
-              <strong>Zero Card Credential Storage:</strong> SFC Cafe does not store your debit card, credit card, net banking credentials, or UPI PINs on our servers. All digital payments and UPI QR scans are processed securely via RBI-authorized payment gateways complying with PCI-DSS standards.
+              <strong>Zero Card Credential Storage:</strong> SFC Bakers does not store your debit card, credit card, net banking credentials, or UPI PINs on our servers. All digital payments and UPI QR scans are processed securely via RBI-authorized payment gateways complying with PCI-DSS standards.
             </p>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
@@ -138,7 +138,7 @@ export default function PrivacyPolicyPage() {
       content: (
         <>
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            As a registered customer of SFC Cafe, you retain complete control over your personal information:
+            As a registered customer of SFC Bakers, you retain complete control over your personal information:
           </p>
           <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
             <li className="flex items-start gap-2.5">
@@ -173,8 +173,8 @@ export default function PrivacyPolicyPage() {
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase text-[var(--color-text-muted)]">Email Us</p>
-                <a href="mailto:support@sfccafe.com" className="text-xs font-bold text-[var(--color-primary)] hover:underline">
-                  support@sfccafe.com
+                <a href="mailto:support@sfcbakers.com" className="text-xs font-bold text-[var(--color-primary)] hover:underline">
+                  support@sfcbakers.com
                 </a>
               </div>
             </div>

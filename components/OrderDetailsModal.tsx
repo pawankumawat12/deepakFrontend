@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import toast from "react-hot-toast";
-import { toAssetUrl } from "@/utils/backendUrl";
+import { toAssetUrl, getApiUrl } from "@/utils/backendUrl";
 import {
   X,
   MapPin,
@@ -133,11 +133,19 @@ export default function OrderDetailsModal({
     if (!orderId) return;
     try {
       setIsDownloading(true);
-      const res = await fetch(`/api/v1/orders/${orderId}/invoice`, {
+      const token =
+        accessToken ||
+        (typeof window !== "undefined" ? localStorage.getItem("accessToken") : "") ||
+        "";
+
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${getApiUrl()}/orders/${orderId}/invoice`, {
         credentials: "include",
-        headers: {
-          Authorization: accessToken ? `Bearer ${accessToken}` : "",
-        },
+        headers,
       });
 
       if (!res.ok) {
@@ -149,7 +157,7 @@ export default function OrderDetailsModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `invoice-${order.order_number || orderId}.pdf`;
+      a.download = `invoice-${order.order_number || order.id || orderId}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();

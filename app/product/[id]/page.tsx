@@ -57,7 +57,7 @@ export async function generateMetadata({
     const title = product.name;
     const description =
       product.description?.trim() ||
-      `Discover ${product.name} at SFC Cafe. Freshly made with premium ingredients and fast delivery.`;
+      `Discover ${product.name} at SFC Bakers. Freshly made with premium ingredients and fast delivery.`;
 
     let imageUrl = "";
     if (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) {
@@ -78,7 +78,7 @@ export async function generateMetadata({
         title,
         description,
         url: canonicalUrl,
-        siteName: "SFC Cafe",
+        siteName: "SFC Bakers",
         type: "website",
         images: imageUrl
           ? [
@@ -100,7 +100,7 @@ export async function generateMetadata({
       keywords: [
         product.name,
         categoryName,
-        "SFC Cafe",
+        "SFC Bakers",
         "online food ordering",
         "fresh food",
       ].filter(Boolean) as string[],
@@ -117,7 +117,7 @@ export async function generateMetadata({
     console.error("Error generating product metadata:", error);
     return {
       title: "Product Details",
-      description: "Explore fresh, delicious food and beverages at SFC Cafe.",
+      description: "Explore fresh, delicious food and beverages at SFC Bakers.",
     };
   }
 }

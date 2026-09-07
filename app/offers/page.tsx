@@ -374,7 +374,7 @@ export default function OffersPage() {
               Still hungry?
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/80">
-              Check out the complete SFC Cafe menu and find your next favorite
+              Check out the complete SFC Bakers menu and find your next favorite
               meal.
             </p>
             <Link

@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "Refund & Cancellation Policy | SFC Cafe",
-  description: "Learn about SFC Cafe's transparent refund, cancellation, return, and reimbursement policies.",
+  title: "Refund & Cancellation Policy | SFC Bakers",
+  description: "Learn about SFC Bakers's transparent refund, cancellation, return, and reimbursement policies.",
 };
 
 export default function RefundPolicyPage() {
@@ -81,7 +81,7 @@ export default function RefundPolicyPage() {
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary)]" />
-              <span><strong>Kitchen Cancellation:</strong> If SFC Cafe cancels your order due to unavailable ingredients, kitchen emergencies, or sudden store closure.</span>
+              <span><strong>Kitchen Cancellation:</strong> If SFC Bakers cancels your order due to unavailable ingredients, kitchen emergencies, or sudden store closure.</span>
             </li>
           </ul>
         </>
@@ -185,7 +185,7 @@ export default function RefundPolicyPage() {
           <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-stone-50/70 p-4">
             <p className="text-xs font-bold text-[var(--color-text-primary)]">Direct Customer Care Helpline:</p>
             <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-              Call us directly at <a href="tel:+917680939596" className="font-bold text-[var(--color-primary)] underline">+91 76809 39596</a> or email <a href="mailto:support@sfccafe.com" className="font-bold text-[var(--color-primary)] underline">support@sfccafe.com</a> with your Order Number.
+              Call us directly at <a href="tel:+917680939596" className="font-bold text-[var(--color-primary)] underline">+91 76809 39596</a> or email <a href="mailto:support@sfcbakers.com" className="font-bold text-[var(--color-primary)] underline">support@sfcbakers.com</a> with your Order Number.
             </p>
           </div>
         </>

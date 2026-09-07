@@ -152,7 +152,7 @@ export default function Orders() {
         key: paymentData.razorpayKeyId,
         amount: Math.round(Number(paymentData.amount) * 100),
         currency: paymentData.currency || "INR",
-        name: "SFC Cafe",
+        name: "SFC Bakers",
         description: `Payment for Order #${paymentData.orderNumber || order.id}`,
         order_id: paymentData.razorpayOrderId,
         prefill: {
@@ -478,7 +478,7 @@ export default function Orders() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--color-primary-light)]">
-                SFC Cafe
+                SFC Bakers
               </p>
 
               <h1 className="mt-2 text-3xl font-black sm:text-4xl text-white">
@@ -797,12 +797,7 @@ export default function Orders() {
                             <p className="truncate text-xs font-bold text-[var(--color-text-primary)]">
                               {item.name}
                             </p>
-                            {/* {item.availability_type === "MADE_TO_ORDER" && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-black text-orange-700 border border-orange-200/60">
-                                <Sparkles size={10} />
-                                Made to Order
-                              </span>
-                            )} */}
+                     
                           </div>
 
                           <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">

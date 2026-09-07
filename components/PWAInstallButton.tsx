@@ -106,7 +106,7 @@ export default function PWAInstallButton({
             </li>
             <li className="flex items-start gap-2.5">
               <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[var(--color-primary-light)]" />
-              Open SFC Cafe like a native app
+              Open SFC Bakers like a native app
             </li>
           </ol>
         </div>

@@ -36,6 +36,11 @@ type StoreProductQuery = {
 const normalizeProduct = (product: ApiProduct) => {
   const availabilityType = String(product.availability_type || "IN_STOCK").toUpperCase();
   const isMadeToOrder = availabilityType === "MADE_TO_ORDER";
+  const rawImageList: string[] = Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : (product.img || product.image ? [String(product.img || product.image)] : []);
+  const normalizedImages = rawImageList.map((im) => toAssetUrl(im)).filter(Boolean);
+
   return {
     ...product,
     id: Number(product.id),
@@ -44,8 +49,9 @@ const normalizeProduct = (product: ApiProduct) => {
     price: Number(product.price),
     // MADE_TO_ORDER products have unlimited stock — never treat as 0
     stock: isMadeToOrder ? Infinity : (product.stock !== undefined ? Number(product.stock) : 1),
-    img: toAssetUrl(product.images?.[0]),
-    image: toAssetUrl(product.images?.[0]),
+    img: normalizedImages[0] || "",
+    image: normalizedImages[0] || "",
+    images: normalizedImages,
     isActive: Boolean(product.is_active),
     availability_type: availabilityType,
     isMadeToOrder,

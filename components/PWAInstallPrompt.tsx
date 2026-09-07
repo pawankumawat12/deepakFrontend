@@ -103,7 +103,7 @@ export default function PWAInstallPrompt() {
 
   return (
     <aside
-      aria-label="Install SFC Cafe application"
+      aria-label="Install SFC Bakers application"
       className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300"
     >
       <div className="relative rounded-3xl bg-white/95 dark:bg-slate-900/95 p-5 shadow-2xl backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white transition-all">
@@ -122,7 +122,7 @@ export default function PWAInstallPrompt() {
           <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-md shrink-0 border border-slate-100 dark:border-slate-700/60 bg-[#fff8e8]">
             <Image
               src="/icons/icon-192.png"
-              alt="SFC Cafe Logo"
+              alt="SFC Bakers Logo"
               fill
               sizes="56px"
               className="object-cover"
@@ -136,7 +136,7 @@ export default function PWAInstallPrompt() {
               </span>
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1 leading-tight">
-              Install SFC Cafe App
+              Install SFC Bakers App
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
               Faster checkout, real-time order tracking, and zero storage space.

@@ -58,7 +58,7 @@ export default function AboutPage() {
                 <span className="h-2 w-2 rounded-full bg-[var(--color-primary)]" />
 
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary-light)]">
-                  About SFC Cafe
+                  About SFC Bakers
                 </span>
 
               </div>
@@ -143,7 +143,7 @@ export default function AboutPage() {
                 <div className="relative h-[280px] w-full sm:h-[350px] overflow-hidden rounded-[1.5rem]">
                   <Image
                     src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1000&q=85"
-                    alt="Food at SFC Cafe"
+                    alt="Food at SFC Bakers"
                     fill
                     unoptimized
                     sizes="(max-width: 768px) 100vw, 50vw"
@@ -210,7 +210,7 @@ export default function AboutPage() {
             <div className="relative h-[300px] w-full sm:h-[380px] overflow-hidden rounded-[2rem]">
               <Image
                 src="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1000&q=85"
-                alt="SFC Cafe interior"
+                alt="SFC Bakers interior"
                 fill
                 unoptimized
                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -277,7 +277,7 @@ export default function AboutPage() {
             <div className="mt-5 space-y-4 text-sm leading-7 text-[var(--color-text-secondary)]">
 
               <p>
-                At SFC Cafe, we believe good food should be
+                At SFC Bakers, we believe good food should be
                 simple, fresh and full of flavor.
               </p>
 
@@ -302,7 +302,7 @@ export default function AboutPage() {
                 </p>
 
                 <p className="text-[10px] text-[var(--color-text-muted)]">
-                  That's what SFC Cafe is about.
+                  That's what SFC Bakers is about.
                 </p>
 
               </div>

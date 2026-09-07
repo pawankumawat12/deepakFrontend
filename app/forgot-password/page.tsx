@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
     <div className="page-content flex min-h-[70vh] items-center justify-center">
       <section className="w-full max-w-md rounded-3xl bg-white p-7 shadow-xl">
         <p className="mb-2 text-xs font-bold tracking-[0.2em] text-lime-700">
-          SFC CAFE
+          SFC BAKERS
         </p>
         <h1 className="text-3xl font-bold text-slate-900">Forgot password?</h1>
         <p className="mt-2 text-slate-500">

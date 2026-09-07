@@ -120,7 +120,7 @@ export default function BlockedAccountScreen() {
             </h1>
 
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              Access to your SFC Cafe account has been deactivated by the
+              Access to your SFC Bakers account has been deactivated by the
               administrator. You cannot place orders or access account services
               while blocked.
             </p>
@@ -240,7 +240,7 @@ export default function BlockedAccountScreen() {
 
           <div className="mt-6 flex items-center gap-2 text-xs text-slate-500">
             <HelpCircle size={14} />
-            <span>Need urgent help? Reach us at support@sfccafe.com</span>
+            <span>Need urgent help? Reach us at support@sfcbakers.com</span>
           </div>
         </div>
       </div>

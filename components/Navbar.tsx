@@ -23,6 +23,7 @@ import {
   ChevronDown,
   Bell,
   Star,
+  Truck,
 } from "lucide-react";
 
 import { useGetCartQuery } from "../redux/services/cartApi";
@@ -232,7 +233,7 @@ const Navbar = () => {
           DESKTOP NAVBAR
       ========================================================= */}
 
-      <header className="hidden md:block sticky top-0 inset-x-0 z-50">
+      <header className="hidden md:block fixed top-0 inset-x-0 z-50">
         <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
           <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6 lg:px-8">
             {/* ---------------- LOGO ---------------- */}
@@ -247,7 +248,7 @@ const Navbar = () => {
               >
                 <Image
                   src={logoSrc || "/images/sfcLogo.png"}
-                  alt="SFC Cafe"
+                  alt="SFC Bakers"
                   width={60}
                   height={60}
                   priority
@@ -518,6 +519,30 @@ const Navbar = () => {
                         Profile
                       </Link>
 
+
+                      <Link
+                        href="/orders"
+                        onClick={() => setDropdownOpen(false)}
+                        className="
+                        flex items-center justify-between
+                        rounded-xl
+                        px-4 py-3
+                        text-sm font-semibold
+                        text-[var(--color-text-primary)]
+                        transition
+                        hover:bg-[var(--color-primary-50)]
+                        hover:text-[var(--color-primary)]
+                      "
+                      >
+                        <div className="flex items-center gap-3">
+                          <Truck
+                            size={17}
+                          />
+                          My Orders
+                        </div>
+                   
+                      </Link>
+
                       <Link
                         href="/favorites"
                         onClick={() => setDropdownOpen(false)}
@@ -620,7 +645,7 @@ const Navbar = () => {
       {/* MOBILE / PWA TOP BAR */}
 
       <header
-        className="md:hidden sticky top-0 inset-x-0 z-50"
+        className="md:hidden fixed top-0 inset-x-0 z-50"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div
@@ -645,7 +670,7 @@ const Navbar = () => {
               >
                 <Image
                   src={logoSrc || "/images/sfcLogo.png"}
-                  alt="SFC Cafe"
+                  alt="SFC Bakers"
                   width={48}
                   height={48}
                   priority
@@ -964,6 +989,34 @@ const Navbar = () => {
                     Profile
                   </Link>
 
+
+
+                  <Link
+                    href="/orders"
+                    onClick={() => setMobileProfileOpen(false)}
+                    className="
+                    flex items-center justify-between
+                    rounded-xl
+                    px-3 py-3
+                    text-sm font-semibold
+                    text-[var(--color-text-primary)]
+                    hover:bg-[var(--color-primary-50)]
+                    hover:text-[var(--color-primary)]
+                  "
+                  >
+                    <div className="flex items-center gap-3">
+                      <Truck
+                        size={17}
+                        className="fill-[var(--color-primary)] text-[var(--color-primary)]"
+                      />
+                      My Orders
+                    </div>
+                    {wishlistCount > 0 && (
+                      <span className="rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[10px] font-bold text-white">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
                   <Link
                     href="/favorites"
                     onClick={() => setMobileProfileOpen(false)}

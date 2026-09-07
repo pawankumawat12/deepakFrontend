@@ -412,7 +412,7 @@ export default function OrderChat({
             {/* Title & Status */}
             <div className="min-w-0 flex-1">
               <h2 className="text-[15px] font-semibold text-white leading-tight truncate">
-                SFC Cafe Support
+                SFC Bakers Support
               </h2>
 
               <p className="text-[11.5px] leading-tight text-[#c1eedb] truncate font-normal mt-0.5">
@@ -570,7 +570,7 @@ export default function OrderChat({
                           userSelect: "none",
                         }}
                       >
-                        {item.sender_name || "SFC Cafe Support"}
+                        {item.sender_name || "SFC Bakers Support"}
                       </p>
                     )}
 
@@ -730,7 +730,7 @@ export default function OrderChat({
                   color: "#54656f",
                 }}
               >
-                <span>SFC Cafe is typing</span>
+                <span>SFC Bakers is typing</span>
                 <span className="flex gap-1 items-center">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#008069] animate-bounce" />
                   <span className="h-1.5 w-1.5 rounded-full bg-[#008069] animate-bounce [animation-delay:0.2s]" />

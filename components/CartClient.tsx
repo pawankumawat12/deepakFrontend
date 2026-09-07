@@ -568,7 +568,7 @@ export default function CartClient() {
           currency:
             orderData.paymentCurrency || "INR",
 
-          name: "SFC Cafe",
+          name: "SFC Bakers",
 
           description:
             `Payment for Order #${orderData.order_number

@@ -90,7 +90,7 @@ export default function Footer() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1 shadow-md">
                 <Image
                   src={logoSrc || "/images/sfcLogo.png"}
-                  alt="SFC Cafe"
+                  alt="SFC Bakers"
                   width={36}
                   height={36}
                   unoptimized
@@ -99,7 +99,7 @@ export default function Footer() {
                 />
               </div>
               <div>
-                <span className="block text-base font-black tracking-tight">SFC Cafe</span>
+                <span className="block text-base font-black tracking-tight">SFC Bakers</span>
                 <span className="block text-[8px] font-medium uppercase tracking-[0.16em] text-white/50">
                   Fresh • Fast • Delicious
                 </span>
@@ -168,7 +168,7 @@ export default function Footer() {
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2">
               <div className="flex items-center gap-2">
                 <Zap size={14} className="text-[var(--color-primary-light)] shrink-0" />
-                <span className="text-xs font-bold text-white/90">Install SFC Cafe App</span>
+                <span className="text-xs font-bold text-white/90">Install SFC Bakers App</span>
               </div>
               <PWAInstallButton variant="footer" />
             </div>
@@ -185,7 +185,7 @@ export default function Footer() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white p-1.5 shadow-lg">
                 <Image
                   src={logoSrc || "/images/sfcLogo.png"}
-                  alt="SFC Cafe"
+                  alt="SFC Bakers"
                   width={44}
                   height={44}
                   unoptimized
@@ -196,7 +196,7 @@ export default function Footer() {
 
               <div>
                 <span className="block text-xl font-black tracking-tight">
-                  SFC Cafe
+                  SFC Bakers
                 </span>
 
                 <span className="block text-[9px] font-medium uppercase tracking-[0.2em] text-white/50">
@@ -427,7 +427,7 @@ export default function Footer() {
               {/* Email */}
 
               <a
-                href={`mailto:${footerSettings?.email || "hello@sfccafe.com"}`}
+                href={`mailto:${footerSettings?.email || "hello@sfcbakers.com"}`}
                 className="
                   flex
                   items-center
@@ -444,7 +444,7 @@ export default function Footer() {
                   className="shrink-0 text-[var(--color-primary-light)]"
                 />
 
-                {footerSettings?.email || "hello@sfccafe.com"}
+                {footerSettings?.email || "hello@sfcbakers.com"}
               </a>
 
               {/* Timing */}
@@ -481,7 +481,7 @@ export default function Footer() {
                 <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.25)] ring-1 ring-white/20">
                   <Image
                     src={logoSrc || "/images/sfcLogo.png"}
-                    alt="SFC Cafe app icon"
+                    alt="SFC Bakers app icon"
                     width={72}
                     height={72}
                     unoptimized
@@ -495,10 +495,10 @@ export default function Footer() {
                     Mobile App Experience
                   </p>
                   <h3 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
-                    Install SFC Cafe App
+                    Install SFC Bakers App
                   </h3>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
-                    Add SFC Cafe to your home screen for faster ordering, quick
+                    Add SFC Bakers to your home screen for faster ordering, quick
                     reorders, and an app-like experience — no app store needed.
                   </p>
 
@@ -540,7 +540,7 @@ export default function Footer() {
           "
         >
           <p className="text-xs text-white/40">
-            © {currentYear} SFC Cafe. All rights reserved.
+            © {currentYear} SFC Bakers. All rights reserved.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/40">

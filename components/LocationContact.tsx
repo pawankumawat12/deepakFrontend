@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 
 const location = {
-  name: "SFC Cafe",
+  name: "SFC Bakers",
   address: "123 Main Street, Jaipur, Rajasthan 302017",
   phone: "+91 98765 43210",
   mapUrl:
-    "https://www.google.com/maps/search/?api=1&query=SFC+Cafe+Jaipur",
+    "https://www.google.com/maps/search/?api=1&query=SFC+Bakers+Jaipur",
 };
 
 const timings = [
@@ -339,7 +339,7 @@ export default function LocationContact() {
                   md:text-3xl
                 "
               >
-                Visit SFC Cafe
+                Visit SFC Bakers
               </h3>
 
               <p

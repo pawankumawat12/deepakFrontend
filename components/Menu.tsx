@@ -766,14 +766,7 @@ export default function Menu() {
 
                 
 
-                    {isMadeToOrder && (
-                      <div className="absolute right-2 top-2 z-10">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-600/90 px-2 py-0.5 text-[9px] font-black text-white shadow backdrop-blur-sm">
-                          <Sparkles size={10} />
-                          Made to Order
-                        </span>
-                      </div>
-                    )}
+                  
 
                     {/* Image gradient */}
 

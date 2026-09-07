@@ -175,6 +175,7 @@ export default function FavoritesPage() {
               transition
               hover:text-white
             "
+            style={{color:"white"}}
           >
             <ArrowLeft size={15} />
             Back to Profile

@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_NAME = "SFC Cafe";
-const APP_DEFAULT_TITLE = "SFC Cafe";
-const APP_TITLE_TEMPLATE = "%s | SFC Cafe";
+const APP_NAME = "SFC Bakers";
+const APP_DEFAULT_TITLE = "SFC Bakers";
+const APP_TITLE_TEMPLATE = "%s | SFC Bakers";
 const APP_DESCRIPTION =
   "Good Food, Great Vibes — Freshly prepared food delivered fast.";
 

@@ -79,7 +79,6 @@ export default function GoogleSignInButton({
         credential: response.credential,
       }).unwrap();
 
-      // Access token is held in Redux memory (no localStorage)
       dispatch(setCredentials(res));
 
       try {

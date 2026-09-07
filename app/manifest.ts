@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "SFC Cafe",
-    short_name: "SFC Cafe",
+    name: "SFC Bakers",
+    short_name: "SFC Bakers",
     description: "Good Food, Great Vibes — Freshly prepared food delivered fast.",
     start_url: "/?source=pwa",
     scope: "/",

@@ -29,25 +29,25 @@ export const notificationApi = baseApi.injectEndpoints({
         url: "/notifications",
         params: params || {},
       }),
-      providesTags: ["Notification" as any],
+      providesTags: ["Notification"],
     }),
     getUnreadNotificationCount: build.query<{ success: boolean; data: { unreadCount: number } }, void>({
       query: () => "/notifications/unread-count",
-      providesTags: ["Notification" as any],
+      providesTags: ["Notification"],
     }),
     markNotificationRead: build.mutation<{ success: boolean }, number | string>({
       query: (id) => ({
         url: `/notifications/${id}/read`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Notification" as any],
+      invalidatesTags: ["Notification"],
     }),
     markAllNotificationsRead: build.mutation<{ success: boolean }, void>({
       query: () => ({
         url: "/notifications/read-all",
         method: "PATCH",
       }),
-      invalidatesTags: ["Notification" as any],
+      invalidatesTags: ["Notification"],
     }),
   }),
 });

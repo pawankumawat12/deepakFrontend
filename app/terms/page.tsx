@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "Terms and Conditions | SFC Cafe",
-  description: "Read the Terms and Conditions for ordering food, using our services, promo codes, and dining with SFC Cafe.",
+  title: "Terms and Conditions | SFC Bakers",
+  description: "Read the Terms and Conditions for ordering food, using our services, promo codes, and dining with SFC Bakers.",
 };
 
 export default function TermsAndConditionsPage() {
@@ -30,7 +30,7 @@ export default function TermsAndConditionsPage() {
       content: (
         <>
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Welcome to <strong>SFC Cafe</strong>. By accessing our website, mobile progressive web app (PWA), creating an account, or placing an order for food delivery or takeout, you agree to be bound by these Terms and Conditions and our Privacy Policy.
+            Welcome to <strong>SFC Bakers</strong>. By accessing our website, mobile progressive web app (PWA), creating an account, or placing an order for food delivery or takeout, you agree to be bound by these Terms and Conditions and our Privacy Policy.
           </p>
           <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
             If you do not agree with any portion of these terms, please do not access or use our services. We reserve the right to modify these terms at any time with updated timestamps posted on this page.
@@ -54,7 +54,7 @@ export default function TermsAndConditionsPage() {
             </li>
             <li className="flex items-start gap-2.5">
               <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />
-              <span><strong>Account Confidentiality:</strong> You are responsible for safeguarding your login credentials and OTPs. SFC Cafe will never ask for your password or OTP over the phone.</span>
+              <span><strong>Account Confidentiality:</strong> You are responsible for safeguarding your login credentials and OTPs. SFC Bakers will never ask for your password or OTP over the phone.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />
@@ -102,7 +102,7 @@ export default function TermsAndConditionsPage() {
           <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
             <li className="flex items-start gap-2.5">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary)]" />
-              <span><strong>Delivery Radius:</strong> We deliver within our specified operating radius from the SFC Cafe kitchen in Jaipur.</span>
+              <span><strong>Delivery Radius:</strong> We deliver within our specified operating radius from the SFC Bakers kitchen in Jaipur.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-primary)]" />
@@ -144,7 +144,7 @@ export default function TermsAndConditionsPage() {
       content: (
         <>
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            SFC Cafe offers dynamic promotional deals, percentage discounts, flat rebates, and Buy-One-Get-One (BOGO) offers:
+            SFC Bakers offers dynamic promotional deals, percentage discounts, flat rebates, and Buy-One-Get-One (BOGO) offers:
           </p>
           <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
             <li className="flex items-start gap-2.5">
@@ -173,7 +173,7 @@ export default function TermsAndConditionsPage() {
             We take pride in maintaining strict hygiene and quality standards. However, please note:
           </p>
           <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Our kitchen handles dairy, gluten, soy, nuts, and spices. If you have severe food allergies, please specify in the order notes or contact our cafe staff before placing your order. SFC Cafe cannot guarantee complete absence of airborne cross-contamination in shared preparation areas.
+            Our kitchen handles dairy, gluten, soy, nuts, and spices. If you have severe food allergies, please specify in the order notes or contact our cafe staff before placing your order. SFC Bakers cannot guarantee complete absence of airborne cross-contamination in shared preparation areas.
           </p>
         </>
       ),
@@ -221,7 +221,7 @@ export default function TermsAndConditionsPage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm text-[var(--color-text-secondary)]">
-            Please review these terms and conditions carefully before placing orders or using the SFC Cafe platform.
+            Please review these terms and conditions carefully before placing orders or using the SFC Bakers platform.
           </p>
 
           <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-[var(--color-text-muted)]">

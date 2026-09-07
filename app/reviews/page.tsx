@@ -153,7 +153,7 @@ export default function ReviewsPage() {
           title: title.trim() || undefined,
           comment: comment.trim(),
         }).unwrap();
-        toast.success("Thank you for reviewing SFC Cafe!");
+        toast.success("Thank you for reviewing SFC Bakers!");
       }
       setModalOpen(false);
     } catch (err: any) {
@@ -172,7 +172,7 @@ export default function ReviewsPage() {
               <span>Customer Love & Feedback</span>
             </div>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
-              SFC Cafe Reviews & Ratings
+              SFC Bakers Reviews & Ratings
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-white/80 sm:text-base">
               Discover what our wonderful patrons say about our taste, ambiance,
@@ -327,7 +327,7 @@ export default function ReviewsPage() {
                   No store reviews yet
                 </h3>
                 <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-                  Be the first to share your overall experience with SFC Cafe!
+                  Be the first to share your overall experience with SFC Bakers!
                 </p>
                 <button
                   type="button"
@@ -624,7 +624,7 @@ export default function ReviewsPage() {
                 <h3 className="text-xl font-black text-[var(--color-text-primary)]">
                   {editingReview
                     ? "Edit Your Review"
-                    : "Rate Your SFC Cafe Experience"}
+                    : "Rate Your SFC Bakers Experience"}
                 </h3>
                 <button
                   type="button"
