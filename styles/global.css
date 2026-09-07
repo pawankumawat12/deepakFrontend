@@ -119,12 +119,12 @@ button {
     padding: 1rem 1rem 1.5rem;
   }
 }
-
+/* 
 @media (display-mode: standalone) {
   .app-main {
     padding-top: calc(68px + env(safe-area-inset-top, 0px));
   }
-}
+} */
 
 .shadow-glow {
   box-shadow: 0 0 40px rgba(233, 30, 99, 0.16);

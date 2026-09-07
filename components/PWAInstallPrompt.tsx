@@ -94,40 +94,7 @@ export default function PWAInstallPrompt() {
     }
   };
 
-  // Case 1: App is already installed, but user opened site in a regular browser tab
-  if (isInstalled && !isStandalone) {
-    return (
-      <aside
-        aria-label="Open installed application"
-        className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-auto"
-      >
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-full bg-slate-900/90 dark:bg-black/90 text-white backdrop-blur-md shadow-xl border border-white/10">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="relative w-7 h-7 rounded-lg overflow-hidden shrink-0 shadow-sm">
-              <Image
-                src="/icons/icon-192.png"
-                alt="SFC Cafe App"
-                fill
-                sizes="28px"
-                className="object-cover"
-              />
-            </div>
-            <p className="text-xs font-medium text-slate-200 truncate">
-              SFC Cafe is installed
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={openApp}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-primary,#4f7d16)] hover:brightness-110 text-white text-xs font-bold transition active:scale-95 shrink-0"
-          >
-            <span>Open App</span>
-            <ExternalLink size={12} />
-          </button>
-        </div>
-      </aside>
-    );
-  }
+ 
 
   // Case 2: In standalone mode or prompt not ready/dismissed
   if (!visible || isStandalone) {
