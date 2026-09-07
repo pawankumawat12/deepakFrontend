@@ -582,7 +582,7 @@ export default function LocationContact() {
             >
               <Phone size={17} />
 
-              Call Cafe
+              Call Bakery Owner
             </a>
           </div>
         </div>

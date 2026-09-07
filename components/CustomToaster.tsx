@@ -14,7 +14,7 @@ export default function CustomToaster() {
         right: 20,
       }}
       toastOptions={{
-        duration: 1000,
+        duration: 1500,
         style: {
           background: "var(--bg-surface, #ffffff)",
           color: "var(--color-text-primary, #1c1917)",

@@ -38,7 +38,7 @@ const RATING_LABELS: Record<number, string> = {
   2: "Fair",
   3: "Good",
   4: "Very Good",
-  5: "Exceptional Cafe Experience!",
+  5: "Exceptional Bakery Experience!",
 };
 
 export default function ReviewsPage() {
@@ -274,7 +274,7 @@ export default function ReviewsPage() {
                   ))}
                 </div>
                 <div className="mt-2 text-xs font-black text-[var(--color-text-secondary)]">
-                  Overall Cafe Rating from {siteSummary.totalReviews} reviews
+                  Overall Bakery Rating from {siteSummary.totalReviews} reviews
                 </div>
               </div>
 

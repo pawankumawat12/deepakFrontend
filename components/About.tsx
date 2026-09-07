@@ -558,7 +558,7 @@ export default function AboutPage() {
                 "
               >
                 <MapPin size={14} />
-                Visit Cafe
+                Visit Bakery
               </Link>
 
             </div>
