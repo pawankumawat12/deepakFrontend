@@ -72,22 +72,44 @@ button {
   max-width: 100vw;
 }
 
+:root {
+  --navbar-height: 82px;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --navbar-height: calc(68px + env(safe-area-inset-top, 0px));
+  }
+}
+
+html[data-store-closed="true"] {
+  --navbar-height: 114px;
+}
+
+@media (max-width: 767px) {
+  html[data-store-closed="true"] {
+    --navbar-height: calc(96px + env(safe-area-inset-top, 0px));
+  }
+}
+
 .app-main {
   flex: 1;
   width: 100%;
   min-width: 0;
   overflow-x: hidden;
+  padding-top: var(--navbar-height, 82px);
+  transition: padding-top 0.2s ease-out;
 }
 
 @media (min-width: 768px) {
   .app-main {
-    padding-top: 82px;
+    padding-top: var(--navbar-height, 82px);
   }
 }
 
 @media (max-width: 767px) {
   .app-main {
-    padding-top: calc(68px + env(safe-area-inset-top, 0px));
+    padding-top: var(--navbar-height, calc(68px + env(safe-area-inset-top, 0px)));
   }
 }
 

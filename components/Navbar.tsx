@@ -97,6 +97,46 @@ const Navbar = () => {
   const [logoutModal, setLogoutModal] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const mobileProfileRef = useRef<HTMLDivElement>(null);
+  const desktopHeaderRef = useRef<HTMLElement>(null);
+  const mobileHeaderRef = useRef<HTMLElement>(null);
+
+  // Sync real-time navbar height (including store-closed banner) to CSS variable --navbar-height
+  useEffect(() => {
+    const updateNavbarHeight = () => {
+      const isDesktop = window.innerWidth >= 768;
+      const activeHeader = isDesktop ? desktopHeaderRef.current : mobileHeaderRef.current;
+      if (activeHeader) {
+        const height = activeHeader.offsetHeight;
+        if (height > 0) {
+          document.documentElement.style.setProperty("--navbar-height", `${height}px`);
+        }
+      }
+      if (isStoreClosed) {
+        document.documentElement.setAttribute("data-store-closed", "true");
+      } else {
+        document.documentElement.removeAttribute("data-store-closed");
+      }
+    };
+
+    updateNavbarHeight();
+
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            updateNavbarHeight();
+          })
+        : null;
+
+    if (desktopHeaderRef.current) ro?.observe(desktopHeaderRef.current);
+    if (mobileHeaderRef.current) ro?.observe(mobileHeaderRef.current);
+
+    window.addEventListener("resize", updateNavbarHeight);
+
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", updateNavbarHeight);
+    };
+  }, [isStoreClosed]);
 
   // Live Socket.IO listener for notifications
   useEffect(() => {
@@ -236,7 +276,7 @@ const Navbar = () => {
           DESKTOP NAVBAR
       ========================================================= */}
 
-      <header className="hidden md:block fixed top-0 inset-x-0 z-50">
+      <header ref={desktopHeaderRef} className="hidden md:block fixed top-0 inset-x-0 z-50">
         {isStoreClosed && (
           <div className="bg-red-600 text-white text-xs font-semibold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
             <span className="inline-block h-2 w-2 rounded-full bg-white animate-pulse" />
@@ -654,7 +694,10 @@ const Navbar = () => {
       {/* MOBILE / PWA TOP BAR */}
 
       <header
-        className="md:hidden fixed top-0 inset-x-0 z-50"
+        ref={mobileHeaderRef}
+        className={`md:hidden fixed top-0 inset-x-0 z-50 transition-colors duration-200 ${
+          isStoreClosed ? "bg-red-600" : "bg-[var(--bg-surface)]/95"
+        }`}
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         {isStoreClosed && (
