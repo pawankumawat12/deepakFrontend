@@ -6,25 +6,17 @@ import Image from "next/image";
 import { useSelector } from "react-redux";
 import {
   ArrowLeft,
-  ChevronRight,
   Clock3,
   MapPin,
-  PackageCheck,
   ShoppingBag,
   Truck,
   CheckCircle2,
   XCircle,
   RotateCcw,
   MessageCircle,
-  Sparkles,
-  LoaderCircle,
   Banknote,
-  Check,
-  X,
   Eye,
-  FileText,
   CreditCard,
-  AlertTriangle,
 } from "lucide-react";
 import OrderChat from "./OrderChat";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -370,6 +362,9 @@ export default function Orders() {
         transactionId: (o as any).transaction_id,
         paymentDetailsJson,
         notes: (o as any).notes || "",
+        delivered_at: (o as any).delivered_at,
+        chatStatus: (o as any).chatStatus || (o as any).chat_status,
+        chat_status: (o as any).chat_status || (o as any).chatStatus,
         items: (o.items || []).map((it) => ({
           id: it.id,
           name: it.product_name,
@@ -799,6 +794,7 @@ export default function Orders() {
                             </p>
                      
                           </div>
+                          
 
                           <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                             Qty: {item.qty}
@@ -1016,6 +1012,53 @@ export default function Orders() {
                         <MessageCircle size={14} />
                         Chat with Store
                       </button>
+                      {(() => {
+                        const isChatExpired =
+                          order.chatStatus?.isExpired ??
+                          order.chat_status?.is_expired ??
+                          ((String(order.status) === "Delivered" ||
+                            String(order.status) === "Completed") &&
+                            order.delivered_at &&
+                            Date.now() >
+                              new Date(order.delivered_at).getTime() +
+                                20 * 60 * 1000);
+
+                        return (
+                          <button
+                            type="button"
+                            disabled={isChatExpired}
+                            onClick={() =>
+                              !isChatExpired && setSelectedChatOrder(order)
+                            }
+                            title={
+                              isChatExpired
+                                ? "Chat closed 20 minutes after delivery"
+                                : "Chat with Store"
+                            }
+                            className={`
+                              inline-flex
+                              items-center
+                              justify-center
+                              gap-2
+                              rounded-xl
+                              border
+                              px-4
+                              py-2.5
+                              text-[10px]
+                              font-bold
+                              transition
+                              ${
+                                isChatExpired
+                                  ? "border-stone-300 bg-stone-100 text-stone-400 cursor-not-allowed opacity-60"
+                                  : "border-[var(--color-primary)] bg-[var(--color-primary-50)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white"
+                              }
+                            `}
+                          >
+                            <MessageCircle size={14} />
+                            {isChatExpired ? "Chat Closed" : "Chat with Store"}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1042,6 +1085,8 @@ export default function Orders() {
           dbOrderId={selectedChatOrder.dbId}
           orderNumber={selectedChatOrder.id}
           orderStatus={selectedChatOrder.status}
+          deliveredAt={selectedChatOrder.delivered_at}
+          chatStatus={selectedChatOrder.chatStatus}
           onClose={() => setSelectedChatOrder(null)}
         />
       )}

@@ -46,6 +46,17 @@ export interface LogoSettingsResponse {
   data: LogoSettings;
 }
 
+export interface StoreStatusSettings {
+  is_open: boolean;
+  closed_message: string;
+}
+
+export interface StoreStatusResponse {
+  success: boolean;
+  message?: string;
+  data: StoreStatusSettings;
+}
+
 export const settingsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getTheme: build.query<ThemeSettingsResponse, void>({
@@ -60,6 +71,10 @@ export const settingsApi = baseApi.injectEndpoints({
       query: () => "/settings/logo",
       providesTags: ["Settings"],
     }),
+    getStoreStatus: build.query<StoreStatusResponse, void>({
+      query: () => "/settings/store-status",
+      providesTags: ["Settings"],
+    }),
   }),
 });
 
@@ -67,4 +82,5 @@ export const {
   useGetThemeQuery,
   useGetFooterQuery,
   useGetLogoQuery,
+  useGetStoreStatusQuery,
 } = settingsApi;

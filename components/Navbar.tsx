@@ -33,7 +33,7 @@ import RegisterModal from "./RegisterModal";
 import { logout } from "../redux/features/authSlice";
 import { useLogoutMutation } from "../redux/services/authApi";
 import { useGetWishlistQuery } from "../redux/services/wishlistApi";
-import { useGetLogoQuery } from "../redux/services/settingsApi";
+import { useGetLogoQuery, useGetStoreStatusQuery } from "../redux/services/settingsApi";
 import { useGetUnreadNotificationCountQuery } from "../redux/services/notificationApi";
 import { getSocket } from "../lib/socket";
 import LogoutModal from "@/models/LogoutModel";
@@ -46,6 +46,9 @@ const Navbar = () => {
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
+
+  const { data: storeStatusData } = useGetStoreStatusQuery();
+  const isStoreClosed = storeStatusData?.data?.is_open === false;
 
   const { data: wishlistData } = useGetWishlistQuery(undefined, {
     skip: !user,
@@ -234,6 +237,12 @@ const Navbar = () => {
       ========================================================= */}
 
       <header className="hidden md:block fixed top-0 inset-x-0 z-50">
+        {isStoreClosed && (
+          <div className="bg-red-600 text-white text-xs font-semibold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+            <span className="inline-block h-2 w-2 rounded-full bg-white animate-pulse" />
+            <span>Notice: Store is currently CLOSED for new orders.</span>
+          </div>
+        )}
         <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
           <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-8 px-6 lg:px-8">
             {/* ---------------- LOGO ---------------- */}
@@ -648,6 +657,12 @@ const Navbar = () => {
         className="md:hidden fixed top-0 inset-x-0 z-50"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
+        {isStoreClosed && (
+          <div className="bg-red-600 text-white text-[11px] font-semibold py-1 px-3 text-center flex items-center justify-center gap-1.5 shadow-sm">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+            <span>Store is currently CLOSED for orders</span>
+          </div>
+        )}
         <div
           className="
             border-b

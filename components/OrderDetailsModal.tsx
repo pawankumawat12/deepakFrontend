@@ -637,6 +637,42 @@ export default function OrderDetailsModal({
                 <span>Chat with Store</span>
               </button>
             )}
+            {onOpenChat && (() => {
+              const isChatExpired =
+                order.chatStatus?.isExpired ??
+                order.chat_status?.is_expired ??
+                ((String(order.status) === "Delivered" ||
+                  String(order.status) === "Completed") &&
+                  order.delivered_at &&
+                  Date.now() >
+                    new Date(order.delivered_at).getTime() + 20 * 60 * 1000);
+
+              return (
+                <button
+                  type="button"
+                  disabled={isChatExpired}
+                  onClick={() => {
+                    if (!isChatExpired) {
+                      onClose();
+                      onOpenChat(order);
+                    }
+                  }}
+                  title={
+                    isChatExpired
+                      ? "Chat closed 20 minutes after delivery"
+                      : "Chat with Store"
+                  }
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-bold transition ${
+                    isChatExpired
+                      ? "border-stone-300 bg-stone-100 text-stone-400 cursor-not-allowed opacity-60"
+                      : "border-[var(--color-primary)] bg-[var(--color-primary-50)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white"
+                  }`}
+                >
+                  <MessageCircle size={14} />
+                  <span>{isChatExpired ? "Chat Closed" : "Chat with Store"}</span>
+                </button>
+              );
+            })()}
 
             <Link
               href="/menu"

@@ -27,6 +27,7 @@ import {
   Truck,
   Utensils,
   AlertTriangle,
+  AlertCircle,
   Package,
   ShieldCheck,
   Leaf,
@@ -83,6 +84,7 @@ import {
   useValidateOfferMutation,
   OfferItem,
 } from "../redux/services/offerApi";
+import { useGetStoreStatusQuery } from "../redux/services/settingsApi";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import AddressModal from "./AddressModal";
@@ -259,6 +261,12 @@ export default function CartClient() {
   const [verifyPayment, { isLoading: isVerifyingPayment }] =
     useVerifyPaymentMutation();
 
+  const { data: storeStatusData } = useGetStoreStatusQuery();
+  const isStoreClosed = storeStatusData?.data?.is_open === false;
+  const storeClosedMessage =
+    storeStatusData?.data?.closed_message ||
+    "Store is currently closed. We are not accepting new orders at this moment.";
+
 
   const items: CartItem[] = user
     ? (cartResponse?.data?.items || [])
@@ -428,6 +436,11 @@ export default function CartClient() {
     toast.success("Promo code removed");
   };
   const handleCheckout = async () => {
+    if (isStoreClosed) {
+      toast.error(storeClosedMessage);
+      return;
+    }
+
     if (!user) {
       setAuthOpen(true);
       return;
@@ -2026,10 +2039,24 @@ export default function CartClient() {
                 </div>
 
 
+                {/* Store Closed Warning Banner */}
+                {isStoreClosed && (
+                  <div className="mb-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                    <div>
+                      <p className="font-bold">🔴 Store is Currently Closed</p>
+                      <p className="mt-0.5 text-[11px] font-normal leading-relaxed text-red-700 dark:text-red-400">
+                        {storeClosedMessage}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Checkout Button */}
                 <button
                   type="button"
                   disabled={
+                    isStoreClosed ||
                     items.length === 0 ||
                     summary.hasOutOfStockItems ||
                     (user ? (
@@ -2066,15 +2093,17 @@ export default function CartClient() {
                   "
                 >
                   <span>
-                    {!user
-                      ? "Sign In to Checkout"
-                      : isPlacingOrder
-                        ? "Creating Order..."
-                        : isVerifyingPayment
-                          ? "Verifying Payment..."
-                          : paymentMethod === "Online Payment"
-                            ? "Pay & Place Order"
-                            : "Place Order"}
+                    {isStoreClosed
+                      ? "🔴 Store is Currently Closed"
+                      : !user
+                        ? "Sign In to Checkout"
+                        : isPlacingOrder
+                          ? "Creating Order..."
+                          : isVerifyingPayment
+                            ? "Verifying Payment..."
+                            : paymentMethod === "Online Payment"
+                              ? "Pay & Place Order"
+                              : "Place Order"}
                   </span>
                   {isPlacingOrder ? (
                     <LoaderCircle size={16} className="animate-spin" />

@@ -43,6 +43,16 @@ interface OrderChatProps {
   dbOrderId?: number;
   orderNumber?: string;
   orderStatus?: string;
+  deliveredAt?: string | null;
+  chatStatus?: {
+    isExpired?: boolean;
+    is_expired?: boolean;
+    canChat?: boolean;
+    can_chat?: boolean;
+    expiresAt?: string | null;
+    expires_at?: string | null;
+    remainingMinutes?: number | null;
+  } | null;
   onClose: () => void;
 }
 
@@ -105,6 +115,8 @@ export default function OrderChat({
   dbOrderId,
   orderNumber,
   orderStatus = "Pending",
+  deliveredAt = null,
+  chatStatus = null,
   onClose,
 }: OrderChatProps) {
   const user = useSelector(
@@ -143,6 +155,16 @@ export default function OrderChat({
   } = useGetOrderMessagesQuery(effectiveOrderId, {
     skip: !open || !effectiveOrderId,
   });
+
+  const queryChatStatus = (historyData as any)?.chatStatus;
+  const isExpired =
+    queryChatStatus?.isExpired ??
+    queryChatStatus?.is_expired ??
+    chatStatus?.isExpired ??
+    chatStatus?.is_expired ??
+    ((orderStatus === "Delivered" || orderStatus === "Completed") &&
+      deliveredAt &&
+      Date.now() > new Date(deliveredAt).getTime() + 20 * 60 * 1000);
 
   const [postMessageMutation, { isLoading: isSending }] =
     usePostOrderMessageMutation();
@@ -302,6 +324,10 @@ export default function OrderChat({
   };
 
   const handleSendMessage = async () => {
+    if (isExpired) {
+      toast.error("Chat support for this order expired 20 minutes after delivery.");
+      return;
+    }
     const trimmed = inputText.trim();
     if (!trimmed && !selectedFile) return;
     if (isSending) return;
@@ -347,9 +373,12 @@ export default function OrderChat({
           });
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to send chat message:", err);
-      toast.error("Failed to send message");
+      // Restore input text on error
+      setInputText(textToSend);
+      if (fileToSend) setSelectedFile(fileToSend);
+      toast.error(err?.data?.message || "Failed to send message");
     }
   };
 
@@ -357,6 +386,9 @@ export default function OrderChat({
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSendMessage();
+      if (!isExpired) {
+        handleSendMessage();
+      }
     }
   };
 
@@ -494,6 +526,15 @@ export default function OrderChat({
               <span>Messages to SFC Kitchen are end-to-end encrypted.</span>
             </div>
           </div>
+
+          {/* Chat Expired Notice */}
+          {isExpired && (
+            <div className="flex justify-center my-1 w-full">
+              <div className="flex items-center justify-center gap-1.5 rounded-[8px] bg-red-100 border border-red-300 px-3.5 py-1.5 text-[11px] font-semibold text-red-800 text-center max-w-[420px] leading-tight shadow-xs">
+                <span>⚠️ Chat support for this order closed 20 minutes after delivery.</span>
+              </div>
+            </div>
+          )}
 
           {/* Date Separator */}
           <div className="flex justify-center my-1 w-full">
@@ -893,19 +934,30 @@ export default function OrderChat({
         <div className="bg-[#f0f2f5] p-2 border-t border-[#d1d7db] z-10">
           <div className="flex items-center gap-1.5">
             {/* Input Box Capsule */}
-            <div className="flex flex-1 items-center gap-2 rounded-full bg-white px-3 py-2 shadow-2xs border border-[#e9edef]">
+            <div
+              className={`flex flex-1 items-center gap-2 rounded-full px-3 py-2 shadow-2xs border ${
+                isExpired
+                  ? "bg-stone-100 border-stone-200 opacity-70"
+                  : "bg-white border-[#e9edef]"
+              }`}
+            >
               <button
                 type="button"
+                disabled={isExpired}
                 className={`transition ${
-                  showEmojiPicker
+                  isExpired
+                    ? "text-stone-400 cursor-not-allowed"
+                    : showEmojiPicker
                     ? "text-[#008069] scale-110"
                     : "text-[#54656f] hover:text-[#111b21]"
                 }`}
                 onClick={() => {
-                  setShowEmojiPicker((prev) => !prev);
-                  setShowAttachMenu(false);
+                  if (!isExpired) {
+                    setShowEmojiPicker((prev) => !prev);
+                    setShowAttachMenu(false);
+                  }
                 }}
-                title="Choose Emoji"
+                title={isExpired ? "Chat closed" : "Choose Emoji"}
               >
                 <Smile size={21} />
               </button>
@@ -917,26 +969,37 @@ export default function OrderChat({
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder={
-                  selectedFile
+                  isExpired
+                    ? "Chat closed (20m after delivery)"
+                    : selectedFile
                     ? `Add caption for ${selectedFile.name}...`
                     : "Type a message"
                 }
-                disabled={isSending}
-                className="flex-1 bg-transparent text-[14px] text-[#111b21] outline-none placeholder:text-[#8696a0]"
+                disabled={isSending || isExpired}
+                className={`flex-1 bg-transparent text-[14px] outline-none ${
+                  isExpired
+                    ? "text-stone-400 placeholder:text-stone-400 cursor-not-allowed"
+                    : "text-[#111b21] placeholder:text-[#8696a0]"
+                }`}
               />
 
               <button
                 type="button"
+                disabled={isExpired}
                 onClick={() => {
-                  setShowAttachMenu((prev) => !prev);
-                  setShowEmojiPicker(false);
+                  if (!isExpired) {
+                    setShowAttachMenu((prev) => !prev);
+                    setShowEmojiPicker(false);
+                  }
                 }}
                 className={`transition ${
-                  showAttachMenu
+                  isExpired
+                    ? "text-stone-400 cursor-not-allowed"
+                    : showAttachMenu
                     ? "text-[#008069] scale-110"
                     : "text-[#54656f] hover:text-[#111b21]"
                 }`}
-                title="Attach photo or document"
+                title={isExpired ? "Chat closed" : "Attach photo or document"}
               >
                 <Paperclip size={19} />
               </button>
@@ -946,10 +1009,21 @@ export default function OrderChat({
             <button
               type="button"
               onClick={handleSendMessage}
-              disabled={isSending}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#008069] text-white shadow-md transition hover:bg-[#006e5a] active:scale-95 disabled:opacity-50"
+              disabled={isSending || isExpired}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md transition ${
+                isExpired
+                  ? "bg-stone-400 cursor-not-allowed opacity-60"
+                  : "bg-[#008069] hover:bg-[#006e5a] active:scale-95 disabled:opacity-50"
+              }`}
+              title={
+                isExpired
+                  ? "Chat closed 20 minutes after delivery"
+                  : "Send message"
+              }
               aria-label={
-                inputText.trim() || selectedFile
+                isExpired
+                  ? "Chat closed"
+                  : inputText.trim() || selectedFile
                   ? "Send message"
                   : "Voice message"
               }
@@ -957,6 +1031,8 @@ export default function OrderChat({
               {isSending ? (
                 <LoaderCircle size={18} className="animate-spin" />
               ) : inputText.trim() || selectedFile ? (
+                <Send size={16} className="translate-x-0.5" />
+              ) : isExpired ? (
                 <Send size={16} className="translate-x-0.5" />
               ) : (
                 <Mic size={18} />

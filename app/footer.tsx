@@ -151,10 +151,10 @@ export default function Footer() {
               Menu
             </Link>
             <Link href="/offers" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
-              Offers
+              Contact
             </Link>
             <Link href="/orders" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
-              Orders
+              About Us
             </Link>
             <Link href="/privacy-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
               Privacy
