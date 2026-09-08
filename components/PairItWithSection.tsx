@@ -19,6 +19,7 @@ import {
   subscribeGuestCart,
   GuestCartItem,
 } from "../lib/guestCart";
+import { toAssetUrl } from "../utils/backendUrl";
 
 interface PairItWithSectionProps {
   currentProductId: number | string;
@@ -171,10 +172,11 @@ export default function PairItWithSection({
           );
           const isOut = !isMadeToOrder && Number(rel.stock) <= 0;
           const inCartCount = getInCartQty(Number(rel.id));
-          const displayImg =
+          const displayImg = toAssetUrl(
             (Array.isArray(rel.images) && rel.images[0]) ||
             rel.img ||
-            rel.image;
+            rel.image
+          );
 
           const offer = getProductPrimaryOffer(rel, offersData);
           const badgeText = offer ? formatOfferBadge(offer) : "";
