@@ -17,6 +17,7 @@ import {
 import PWAInstallButton from "@/components/PWAInstallButton";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useGetFooterQuery, useGetLogoQuery } from "../redux/services/settingsApi";
+import { useGetCmsPagesQuery } from "../redux/services/cmsApi";
 import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 import { toAssetUrl } from "@/utils/backendUrl";
 
@@ -72,9 +73,47 @@ export default function Footer() {
   const isAppInstalled = Boolean(isInstalled || isStandalone);
   const { data: footerResponse } = useGetFooterQuery();
   const { data: logoResponse } = useGetLogoQuery();
+  const { data: cmsPagesResponse } = useGetCmsPagesQuery();
   const footerSettings = footerResponse?.data;
+  const cmsPages = cmsPagesResponse?.data || [];
   const rawLogoUrl = logoResponse?.data?.logo_url ? toAssetUrl(logoResponse.data.logo_url) : "/images/sfcLogo.png";
   const [logoSrc, setLogoSrc] = React.useState(rawLogoUrl);
+
+  const dynamicHelpLinks = React.useMemo(() => {
+    const base = [
+      { label: "My Orders", href: "/orders" },
+      { label: "Cart", href: "/cart" },
+    ];
+    if (cmsPages.length > 0) {
+      // Exclude 'about' since it's already under Quick Links
+      const policyPages = cmsPages.filter((p) => p.slug !== "about");
+      return [
+        ...base,
+        ...policyPages.map((p) => ({
+          label: p.title,
+          href: `/${p.slug}`,
+        })),
+      ];
+    }
+    return helpLinks;
+  }, [cmsPages]);
+
+  const bottomPolicyLinks = React.useMemo(() => {
+    if (cmsPages.length > 0) {
+      return cmsPages
+        .filter((p) => p.slug !== "about")
+        .slice(0, 4)
+        .map((p) => ({
+          label: p.title,
+          href: `/${p.slug}`,
+        }));
+    }
+    return [
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      { label: "Terms & Conditions", href: "/terms" },
+      { label: "Refund Policy", href: "/refund-policy" },
+    ];
+  }, [cmsPages]);
 
   React.useEffect(() => {
     setLogoSrc(rawLogoUrl);
@@ -341,7 +380,7 @@ export default function Footer() {
 
             <ul className="mt-5 space-y-3">
 
-              {helpLinks.map((link) => (
+              {dynamicHelpLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -544,17 +583,14 @@ export default function Footer() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/40">
-            <Link href="/privacy-policy" className="hover:text-white transition">
-              Privacy Policy
-            </Link>
-            <span>•</span>
-            <Link href="/terms" className="hover:text-white transition">
-              Terms & Conditions
-            </Link>
-            <span>•</span>
-            <Link href="/refund-policy" className="hover:text-white transition">
-              Refund Policy
-            </Link>
+            {bottomPolicyLinks.map((link, idx) => (
+              <React.Fragment key={link.href}>
+                <Link href={link.href} className="hover:text-white transition">
+                  {link.label}
+                </Link>
+                {idx < bottomPolicyLinks.length - 1 && <span>•</span>}
+              </React.Fragment>
+            ))}
           </div>
 
           <p

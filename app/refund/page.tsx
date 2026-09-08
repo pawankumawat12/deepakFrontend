@@ -1,2 +1,1 @@
-export { default, metadata } from "../refund-policy/page";
-
+export { default, generateMetadata } from "../refund-policy/page";

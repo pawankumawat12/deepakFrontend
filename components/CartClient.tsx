@@ -2040,17 +2040,17 @@ export default function CartClient() {
 
 
                 {/* Store Closed Warning Banner */}
-                {isStoreClosed && (
-                  <div className="mb-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
-                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                {/* {isStoreClosed && (
+                  <div className="mb-4 flex items-start gap-3 rounded-2xl   p-4 text-xs font-semibold">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 " />
                     <div>
                       <p className="font-bold">Store is Currently Closed</p>
-                      <p className="mt-0.5 text-[11px] font-normal leading-relaxed text-red-700 dark:text-red-400">
+                      <p className="mt-0.5 text-[11px] font-normal leading-relaxed ">
                         {storeClosedMessage}
                       </p>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* Checkout Button */}
                 <button
