@@ -252,13 +252,22 @@ export default function OrderDetailsModal({
               <div>
                 <span>Payment: </span>
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${order.paymentStatus === "Paid"
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    order.paymentStatus === "Paid"
                       ? "bg-emerald-100 text-emerald-800"
-                      : "bg-amber-100 text-amber-800"
-                    }`}
+                      : order.paymentStatus === "Refunded"
+                        ? "bg-stone-200 text-stone-800"
+                        : order.paymentStatus === "Partially Refunded" || order.paymentStatus === "PARTIALLY_REFUNDED"
+                          ? "bg-purple-100 text-purple-800"
+                          : order.paymentStatus === "Failed"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-amber-100 text-amber-800"
+                  }`}
                 >
                   <ShieldCheck size={11} />
-                  {order.paymentStatus || "Pending"}
+                  {order.paymentStatus === "PARTIALLY_REFUNDED"
+                    ? "Partially Refunded"
+                    : order.paymentStatus || "Pending"}
                 </span>
               </div>
               <p className="text-[11px] text-[var(--color-text-muted)] flex items-center gap-1 mt-0.5">
@@ -605,6 +614,24 @@ export default function OrderDetailsModal({
                   {formatRupee(grandTotal)}
                 </span>
               </div>
+
+              {(order.paymentStatus === "Refunded" ||
+                order.paymentStatus === "Partially Refunded" ||
+                order.paymentStatus === "PARTIALLY_REFUNDED") && (
+                <div className="mt-3 rounded-xl border border-purple-200 bg-purple-50/80 p-3 text-xs">
+                  <div className="flex justify-between font-bold text-purple-950">
+                    <span>
+                      {order.paymentStatus === "Refunded" ? "Refund Status" : "Partial Refund Status"}
+                    </span>
+                    <span className="text-purple-700">
+                      {order.paymentStatus === "Refunded" ? "Full Refund Processed" : "Partially Refunded"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-purple-800 leading-relaxed">
+                    Refund has been initiated to your original payment method via Razorpay. It typically reflects in your bank account or card within 5–7 business days.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -624,19 +651,7 @@ export default function OrderDetailsModal({
               </button>
             )}
 
-            {onOpenChat && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenChat(order);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-50)] px-3.5 py-2 text-xs font-bold text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition"
-              >
-                <MessageCircle size={14} />
-                <span>Chat with Store</span>
-              </button>
-            )}
+       
             {onOpenChat && (() => {
               const isChatExpired =
                 order.chatStatus?.isExpired ??

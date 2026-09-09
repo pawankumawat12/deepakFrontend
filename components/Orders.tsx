@@ -903,6 +903,16 @@ export default function Orders() {
         ? "Online Payment"
         : "Cash on Delivery"}
     </p>
+    {order.paymentStatus === "Refunded" && (
+      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold text-stone-700 border border-stone-300">
+        Refunded
+      </span>
+    )}
+    {order.paymentStatus === "Partially Refunded" && (
+      <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[9px] font-bold text-purple-700 border border-purple-200">
+        Partially Refunded
+      </span>
+    )}
   </div>
 </div>
                     </div>
@@ -986,32 +996,6 @@ export default function Orders() {
                         <RotateCcw size={14} />
                         Order Again
                       </Link>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedChatOrder(order)}
-                        className="
-                          inline-flex
-                          items-center
-                          justify-center
-                          gap-2
-                          rounded-xl
-                          border
-                          border-[var(--color-primary)]
-                          bg-[var(--color-primary-50)]
-                          px-4
-                          py-2.5
-                          text-[10px]
-                          font-bold
-                          text-[var(--color-primary)]
-                          transition
-                          hover:bg-[var(--color-primary)]
-                          hover:text-white
-                        "
-                      >
-                        <MessageCircle size={14} />
-                        Chat with Store
-                      </button>
                       {(() => {
                         const isChatExpired =
                           order.chatStatus?.isExpired ??

@@ -179,6 +179,33 @@ export default function Footer() {
                   <FaTwitter size={14} />
                 </a>
               )}
+              <a
+                href={footerSettings?.facebook || "#"}
+                target={footerSettings?.facebook ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+              >
+                <FaFacebook size={14} />
+              </a>
+              <a
+                href={footerSettings?.instagram || "#"}
+                target={footerSettings?.instagram ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+              >
+                <FaInstagram size={14} />
+              </a>
+              <a
+                href={footerSettings?.twitter || "#"}
+                target={footerSettings?.twitter ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                aria-label="Twitter"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+              >
+                <FaTwitter size={14} />
+              </a>
             </div>
           </div>
 

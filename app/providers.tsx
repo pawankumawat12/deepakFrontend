@@ -10,6 +10,8 @@ import { useGetMeQuery } from "../redux/services/authApi";
 import { baseApi } from "../redux/services/baseApi";
 import { ThemeProvider } from "../context/ThemeContext";
 import BlockedAccountScreen from "../components/BlockedAccountScreen";
+import StoreStatusListener from "../components/StoreStatusListener";
+import { updateSocketToken } from "../lib/socket";
 
 function AuthLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
@@ -24,6 +26,12 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
       dispatch(setCredentials(data));
     }
   }, [data, dispatch]);
+
+  useEffect(() => {
+    if (accessToken) {
+      updateSocketToken(accessToken);
+    }
+  }, [accessToken]);
 
   useEffect(() => {
     // Only logout if an active authenticated session fails verification.
@@ -42,7 +50,12 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
     return <BlockedAccountScreen />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <StoreStatusListener />
+      {children}
+    </>
+  );
 }
 
 export default function Providers({ children }: { children: ReactNode }) {
