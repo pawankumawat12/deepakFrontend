@@ -274,7 +274,6 @@ export default function RatingsAndReviewsSection({
               </h2>
             </div>
             <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-              Real customer feedback from guests who ordered {productName}
             </p>
           </div>
 
@@ -357,7 +356,7 @@ export default function RatingsAndReviewsSection({
                         </div>
 
                         {/* Headline / Title */}
-                        <h4 className="text-sm font-black text-[var(--color-text-primary)]">
+                        <h4 className="text-sm font-black text-[var(--color-text-primary)] break-words [overflow-wrap:anywhere]">
                           {rev.title ||
                             (rev.rating >= 4
                               ? "Delicious & Fresh"
@@ -423,7 +422,7 @@ export default function RatingsAndReviewsSection({
                     )}
 
                     {/* Review Body Comment */}
-                    <p className="mt-3 text-xs leading-5 text-[var(--color-text-secondary)] whitespace-pre-line">
+                    <p className="mt-3 text-xs leading-5 text-[var(--color-text-secondary)] whitespace-pre-line break-words [overflow-wrap:anywhere]">
                       {rev.comment}
                     </p>
 
@@ -513,7 +512,13 @@ export default function RatingsAndReviewsSection({
                       ? "Edit Your Review"
                       : "Rate & Review Dish"}
                   </h3>
-                  <p className="text-xs text-[var(--color-text-muted)] line-clamp-1">
+                  <p className="text-xs text-[var(--color-text-muted)] line-clamp-1
+                  
+    leading-tight
+    tracking-tight
+    overflow-hidden"
+  style={{ maxWidth: "200px" }}
+  >
                     {productName}
                   </p>
                 </div>

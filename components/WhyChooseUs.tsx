@@ -165,7 +165,7 @@ export default function WhyChooseUs() {
             FEATURES
         ===================================================== */}
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
           {features.map((feature) => {
             const Icon = feature.icon;
@@ -181,9 +181,10 @@ export default function WhyChooseUs() {
                   border
                   border-[var(--color-border)]
                   bg-white
-                  p-6
+                  p-3.5
+                  sm:p-6
                   text-center
-                  shadow-sm
+                  shadow-xs
                   transition-all
                   duration-300
                   hover:-translate-y-2
@@ -197,9 +198,12 @@ export default function WhyChooseUs() {
                 <span
                   className="
                     absolute
-                    right-4
-                    top-4
-                    text-4xl
+                    right-3
+                    top-3
+                    sm:right-4
+                    sm:top-4
+                    text-2xl
+                    sm:text-4xl
                     font-black
                     text-[var(--color-primary)]/[0.05]
                   "
@@ -214,11 +218,14 @@ export default function WhyChooseUs() {
                     relative
                     mx-auto
                     flex
-                    h-16
-                    w-16
+                    h-12
+                    w-12
+                    sm:h-16
+                    sm:w-16
                     items-center
                     justify-center
-                    rounded-2xl
+                    rounded-xl
+                    sm:rounded-2xl
                     ${feature.color}
                     transition-transform
                     duration-300
@@ -226,15 +233,17 @@ export default function WhyChooseUs() {
                     group-hover:rotate-3
                   `}
                 >
-                  <Icon size={28} />
+                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
 
                 {/* Title */}
 
                 <h3
                   className="
-                    mt-5
-                    text-lg
+                    mt-3
+                    sm:mt-5
+                    text-sm
+                    sm:text-lg
                     font-extrabold
                     text-[var(--color-text-primary)]
                   "
@@ -246,10 +255,15 @@ export default function WhyChooseUs() {
 
                 <p
                   className="
-                    mt-2
-                    text-sm
-                    leading-6
+                    mt-1.5
+                    sm:mt-2
+                    text-[11px]
+                    sm:text-sm
+                    leading-relaxed
+                    sm:leading-6
                     text-[var(--color-text-muted)]
+                    line-clamp-3
+                    sm:line-clamp-none
                   "
                 >
                   {feature.description}

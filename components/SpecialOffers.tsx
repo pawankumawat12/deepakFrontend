@@ -140,6 +140,7 @@ export default function SpecialOffers() {
                 <Link
                   href="/offers"
                   className="inline-flex items-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-5 py-4 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/20"
+                  style={{color:"white"}}
                 >
                   View All Offers
                 </Link>

@@ -310,14 +310,15 @@ export default function PopularProducts() {
           <SkeletonLoader
             variant="product"
             count={6}
-            gridClassName="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            gridClassName="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3"
           />
         ) : (
           <div
             className="
               grid
-              grid-cols-1
-              gap-5
+              grid-cols-2
+              gap-3
+              sm:gap-5
               sm:grid-cols-2
               lg:grid-cols-3
             "
@@ -360,13 +361,16 @@ export default function PopularProducts() {
                 className={`
                   group
                   cursor-pointer
-               
+                  flex
+                  flex-col
+                  justify-between
+                  h-full
                   overflow-hidden
                   rounded-2xl
                   border
                   border-[var(--color-border)]
                   bg-white
-                  shadow-sm
+                  shadow-xs
                   transition-all
                   duration-300
                   hover:-translate-y-1
@@ -374,14 +378,14 @@ export default function PopularProducts() {
                   hover:shadow-[0_18px_40px_rgba(79,125,22,0.13)]
                 `}
               >
-                <div className="relative h-56 overflow-hidden">
+                <div className="relative aspect-square sm:aspect-[4/3] md:aspect-square w-full overflow-hidden bg-stone-50">
                   {image ? (
                     <Image
                       src={image}
                       alt={name}
                       fill
                       unoptimized
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                       className="
                         object-cover
                         transition-transform
@@ -408,9 +412,6 @@ export default function PopularProducts() {
                     "
                   />
 
-              
-                
-
                   {/* Applicable Offer Badge */}
                   {(() => {
                     const offer = getProductPrimaryOffer(product, offersData);
@@ -425,16 +426,15 @@ export default function PopularProducts() {
 
                     return (
                       <div
-                        className={`absolute left-3 bottom-3 z-10 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-md backdrop-blur-xs ${
+                        className={`absolute left-2.5 bottom-2.5 sm:left-3 sm:bottom-3 z-10 flex items-center gap-1 sm:gap-1.5 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-black uppercase tracking-wide text-white shadow-md backdrop-blur-xs ${
                           isProductSpecific ? "bg-amber-500" : "bg-emerald-600"
                         }`}
                       >
-                        <Gift size={11} />
-                        {badgeText}
+                        <Gift size={10} />
+                        <span className="truncate max-w-[80px] sm:max-w-none">{badgeText}</span>
                       </div>
                     );
                   })()}
-
 
                   {/* Wishlist Button */}
                   <button
@@ -443,12 +443,16 @@ export default function PopularProducts() {
                     aria-label="Save to favorites"
                     className="
                       absolute
-                      right-3
-                      top-3
+                      right-2
+                      top-2
+                      sm:right-3
+                      sm:top-3
                       z-20
                       flex
-                      h-9
-                      w-9
+                      h-7
+                      w-7
+                      sm:h-9
+                      sm:w-9
                       items-center
                       justify-center
                       rounded-full
@@ -461,7 +465,7 @@ export default function PopularProducts() {
                     "
                   >
                     <Heart
-                      size={16}
+                      size={14}
                       className={
                         wishlistedIds.has(Number(product.id))
                           ? "fill-red-500 text-red-500"
@@ -494,16 +498,22 @@ export default function PopularProducts() {
                   <div
                     className="
                       absolute
-                      bottom-3
-                      left-3
+                      bottom-2
+                      left-2
+                      sm:bottom-3
+                      sm:left-3
                       flex
                       items-center
-                      gap-1.5
+                      gap-1
+                      sm:gap-1.5
                       rounded-full
                       bg-white/95
-                      px-2.5
-                      py-1
-                      text-xs
+                      px-2
+                      py-0.5
+                      sm:px-2.5
+                      sm:py-1
+                      text-[10px]
+                      sm:text-xs
                       font-bold
                       text-[var(--color-text-primary)]
                       shadow-sm
@@ -511,7 +521,7 @@ export default function PopularProducts() {
                     "
                   >
                     <Star
-                      size={12}
+                      size={11}
                       fill="currentColor"
                       className="text-[var(--color-star)] shrink-0"
                     />
@@ -520,54 +530,68 @@ export default function PopularProducts() {
                       {ratingInfo.displayRating}
                     </span>
 
-                    <span className="text-[10px] font-medium text-[var(--color-text-muted)]">
+                    <span className="text-[9px] sm:text-[10px] font-medium text-[var(--color-text-muted)]">
                       ({ratingInfo.totalReviews})
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4">
+                <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3
+                      className="
+                        line-clamp-1
+                        text-sm
+                        sm:text-lg
+                        font-extrabold
+                        text-[var(--color-text-primary)]
+                      "
+                      title={name}
+                    >
+                      {name}
+                    </h3>
 
-                  <h3
-                    className="
-                      line-clamp-1
-                      text-lg
-                      font-extrabold
-                      text-[var(--color-text-primary)]
-                    "
-                  >
-                    {name}
-                  </h3>
-
-                  <p
-                    className="
-                      mt-1
-                      line-clamp-2
-                      min-h-[40px]
-                      text-xs
-                      leading-5
-                      text-[var(--color-text-muted)]
-                    "
-                  >
-                    {product.description ||
-                      "Freshly prepared with quality ingredients and delicious flavors."}
-                  </p>
+                    <p
+                      className="
+                        mt-1
+                        line-clamp-2
+                        min-h-[32px]
+                        sm:min-h-[40px]
+                        text-[10px]
+                        sm:text-xs
+                        leading-4
+                        sm:leading-5
+                        text-[var(--color-text-muted)]
+                      "
+                      title={product.description ||
+                        "Freshly prepared with quality ingredients and delicious flavors."}
+                    >
+                      {product.description ||
+                        "Freshly prepared with quality ingredients and delicious flavors."}
+                    </p>
+                  </div>
 
                   <div
                     className="
-                      mt-4
+                      mt-3
+                      sm:mt-4
+                      border-t
+                      border-[var(--color-border)]/50
+                      pt-2.5
                       flex
                       items-center
                       justify-between
-                      gap-3
+                      gap-2
+                      sm:gap-3
                     "
                   >
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
 
                       <span
                         className="
-                          text-xl
+                          text-base
+                          sm:text-xl
                           font-black
                           text-[var(--color-primary)]
                         "
@@ -579,7 +603,8 @@ export default function PopularProducts() {
                         product.originalPrice > price && (
                           <span
                             className="
-                              text-xs
+                              text-[10px]
+                              sm:text-xs
                               font-medium
                               text-[var(--color-text-muted)]
                               line-through
@@ -598,12 +623,15 @@ export default function PopularProducts() {
                         onClick={(e) => e.stopPropagation()}
                         className="
                           flex
-                          h-10
+                          h-8
+                          sm:h-10
                           items-center
-                          gap-1
+                          gap-0.5
+                          sm:gap-1
                           rounded-xl
                           bg-[var(--color-primary-50)]
-                          p-1
+                          p-0.5
+                          sm:p-1
                           ring-1
                           ring-[var(--color-primary)]/15
                         "
@@ -622,8 +650,10 @@ export default function PopularProducts() {
                           }}
                           className="
                             flex
-                            h-8
-                            w-8
+                            h-7
+                            w-7
+                            sm:h-8
+                            sm:w-8
                             items-center
                             justify-center
                             rounded-lg
@@ -636,14 +666,16 @@ export default function PopularProducts() {
                             active:scale-90
                           "
                         >
-                          <Minus size={14} strokeWidth={3} />
+                          <Minus size={13} strokeWidth={3} />
                         </button>
 
                         <span
                           className="
-                            min-w-[26px]
+                            min-w-[20px]
+                            sm:min-w-[26px]
                             text-center
-                            text-xs
+                            text-[11px]
+                            sm:text-xs
                             font-black
                             text-[var(--color-primary)]
                           "
@@ -671,8 +703,10 @@ export default function PopularProducts() {
                           }}
                           className="
                             flex
-                            h-8
-                            w-8
+                            h-7
+                            w-7
+                            sm:h-8
+                            sm:w-8
                             items-center
                             justify-center
                             rounded-lg
@@ -686,7 +720,7 @@ export default function PopularProducts() {
                             active:scale-90
                           "
                         >
-                          <Plus size={14} strokeWidth={3} />
+                          <Plus size={13} strokeWidth={3} />
                         </button>
                       </div>
                     ) : (
@@ -700,13 +734,17 @@ export default function PopularProducts() {
                         }}
                         className={`
                           flex
-                          h-10
+                          h-8
+                          sm:h-10
                           items-center
                           justify-center
-                          gap-2
+                          gap-1.5
+                          sm:gap-2
                           rounded-xl
-                          px-4
-                          text-xs
+                          px-2.5
+                          sm:px-4
+                          text-[11px]
+                          sm:text-xs
                           font-bold
                           text-white
                           shadow-sm
@@ -722,16 +760,17 @@ export default function PopularProducts() {
                         `}
                       >
                         {outOfStock ? (
-                          "Out of stock"
+                          <span className="text-[10px] sm:text-xs">Out of stock</span>
                         ) : isAdded ? (
                           <>
-                            <Check size={15} />
-                            Added
+                            <Check size={14} />
+                            <span>Added</span>
                           </>
                         ) : (
                           <>
-                            <Plus size={16} />
-                            Add to Cart
+                            <Plus size={14} />
+                            <span>Add</span>
+                            <span className="hidden sm:inline">&nbsp;to Cart</span>
                           </>
                         )}
                       </button>
@@ -762,7 +801,7 @@ export default function PopularProducts() {
               transition
               hover:bg-[var(--color-primary-dark)]
             "
-           
+            style={{color:"white"}}
           >
             View Full Menu
             <ArrowRight size={16} />

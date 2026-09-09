@@ -398,11 +398,12 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   return (
     <main className="min-h-screen bg-[var(--bg-body)] pb-20">
       <div className="border-b border-[var(--color-border)] bg-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 text-xs md:px-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 text-xs md:px-8 min-w-0">
           <Link
             href="/menu"
             className="
               flex
+              shrink-0
               items-center
               gap-1.5
               font-semibold
@@ -415,15 +416,21 @@ export default function ProductDetailsClient({ product }: { product: any }) {
             Menu
           </Link>
 
-          <ChevronRight size={13} className="text-[var(--color-text-muted)]" />
+          <ChevronRight size={13} className="shrink-0 text-[var(--color-text-muted)]" />
 
-          <span className="truncate font-bold capitalize text-[var(--color-text-secondary)]">
+          <span
+            title={product.categoryName || product.category}
+            className="truncate max-w-[120px] sm:max-w-[200px] shrink-0 font-bold capitalize text-[var(--color-text-secondary)]"
+          >
             {product.categoryName || product.category}
           </span>
 
-          <ChevronRight size={13} className="text-[var(--color-text-muted)]" />
+          <ChevronRight size={13} className="shrink-0 text-[var(--color-text-muted)]" />
 
-          <span className="hidden truncate font-semibold text-[var(--color-text-primary)] sm:block">
+          <span
+            title={product.name}
+            className="truncate min-w-0 flex-1 font-semibold text-[var(--color-text-primary)]"
+          >
             {product.name}
           </span>
         </div>
@@ -453,6 +460,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                     shrink-0
                     no-scrollbar
                   "
+                  style={{scrollbarWidth:"none"}}
                 >
                   {productImages.map((imgUrl, idx) => {
                     const isActive = idx === activeImageIndex;
@@ -738,21 +746,23 @@ export default function ProductDetailsClient({ product }: { product: any }) {
             </div>
 
             {/* Product title */}
-
             <h1
-              className="
-                mt-3
-                text-3xl
-                font-black
-                leading-tight
-                tracking-tight
-                text-[var(--color-text-primary)]
-                sm:text-4xl
-                lg:text-5xl
-              "
-            >
-              {product.name}
-            </h1>
+  className="
+    mt-3
+    text-3xl
+    font-black
+    leading-tight
+    tracking-tight
+    text-[var(--color-text-primary)]
+    sm:text-4xl
+    lg:text-5xl
+    line-clamp-2
+    overflow-hidden
+  "
+  style={{ maxWidth: "600px" }}
+>
+  {product.name}
+</h1>
 
             {/* Dynamic Rating & Review Count (Flipkart Style) */}
 
@@ -979,6 +989,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                   text-sm
                   leading-7
                   text-[var(--color-text-secondary)]
+                  break-words
+                  [overflow-wrap:anywhere]
                 "
               >
                 {product.description ||
@@ -1079,205 +1091,203 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 sm:p-5
               "
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-black text-[var(--color-text-primary)]">
-                    Quantity
-                  </p>
+              {!isOutOfStock && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black text-[var(--color-text-primary)]">
+                      Quantity
+                    </p>
 
-                  <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
-                    Choose how many you want
-                  </p>
-                </div>
+                    <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
+                      Choose how many you want
+                    </p>
+                  </div>
 
-                {/* Quantity */}
+                  {/* Quantity */}
 
-                {inCartQty ? (
-                  <div className="flex flex-col items-end gap-1">
-                    <div
-                      className="
-                        flex
-                        items-center
-                        gap-1
-                        rounded-full
-                        bg-[var(--color-primary-50)]
-                        p-1
-                        ring-1
-                        ring-[var(--color-primary)]/10
-                      "
-                    >
-                      <button
-                        type="button"
-                        onClick={() => changeQty(Math.max(0, inCartQty - 1))}
+                  {inCartQty ? (
+                    <div className="flex flex-col items-end gap-1">
+                      <div
                         className="
                           flex
-                          h-9
-                          w-9
                           items-center
-                          justify-center
+                          gap-1
                           rounded-full
-                          bg-white
-                          text-[var(--color-primary)]
-                          shadow-sm
-                          transition
-                          active:scale-90
+                          bg-[var(--color-primary-50)]
+                          p-1
+                          ring-1
+                          ring-[var(--color-primary)]/10
                         "
                       >
-                        <Minus size={15} strokeWidth={3} />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => changeQty(Math.max(0, inCartQty - 1))}
+                          className="
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-white
+                            text-[var(--color-primary)]
+                            shadow-sm
+                            transition
+                            active:scale-90
+                          "
+                        >
+                          <Minus size={15} strokeWidth={3} />
+                        </button>
 
-                      <span
-                        className="
-                          min-w-[34px]
-                          text-center
-                          text-sm
-                          font-black
-                          text-[var(--color-primary)]
-                        "
-                      >
-                        {inCartQty}
-                      </span>
+                        <span
+                          className="
+                            min-w-[34px]
+                            text-center
+                            text-sm
+                            font-black
+                            text-[var(--color-primary)]
+                          "
+                        >
+                          {inCartQty}
+                        </span>
 
-                      <button
-                        type="button"
-                        title={
-                          product.availability_type !== "MADE_TO_ORDER" &&
+                        <button
+                          type="button"
+                          title={
+                            product.availability_type !== "MADE_TO_ORDER" &&
+                              inCartQty >= Number(product.stock)
+                              ? `Only ${product.stock} items available in stock`
+                              : "Increase quantity"
+                          }
+                          disabled={
+                            product.availability_type !== "MADE_TO_ORDER" &&
                             inCartQty >= Number(product.stock)
-                            ? `Only ${product.stock} items available in stock`
-                            : "Increase quantity"
-                        }
-                        disabled={
-                          product.availability_type !== "MADE_TO_ORDER" &&
-                          inCartQty >= Number(product.stock)
-                        }
-                        onClick={() => changeQty(inCartQty + 1)}
-                        className="
-                          flex
-                          h-9
-                          w-9
-                          items-center
-                          justify-center
-                          rounded-full
-                          bg-[var(--color-primary)]
-                          text-white
-                          shadow-sm
-                          transition
-                          disabled:cursor-not-allowed
-                          disabled:opacity-40
-                          active:scale-90
-                        "
-                      >
-                        <Plus size={15} strokeWidth={3} />
-                      </button>
+                          }
+                          onClick={() => changeQty(inCartQty + 1)}
+                          className="
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-[var(--color-primary)]
+                            text-white
+                            shadow-sm
+                            transition
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40
+                            active:scale-90
+                          "
+                        >
+                          <Plus size={15} strokeWidth={3} />
+                        </button>
+                      </div>
+
+                      { inCartQty >= Number(product.stock) ? (
+                        <span className="text-[10px] font-bold text-amber-600">
+                          Max stock ({product.stock}) reached
+                        </span>
+                      ) : null}
                     </div>
-
-                    {product.availability_type === "MADE_TO_ORDER" ? (
-                      <span className="text-[10px] font-bold text-orange-600">
-                        Freshly Made to Order
-                      </span>
-                    ) : inCartQty >= Number(product.stock) ? (
-                      <span className="text-[10px] font-bold text-amber-600">
-                        Max stock ({product.stock}) reached
-                      </span>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-end gap-1">
-                    <div
-                      className="
-                        flex
-                        items-center
-                        gap-1
-                        rounded-full
-                        bg-[var(--color-primary-50)]
-                        p-1
-                      "
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setQty(Math.max(1, qty - 1))}
+                  ) : (
+                    <div className="flex flex-col items-end gap-1">
+                      <div
                         className="
                           flex
-                          h-9
-                          w-9
                           items-center
-                          justify-center
+                          gap-1
                           rounded-full
-                          bg-white
-                          text-[var(--color-primary)]
-                          shadow-sm
-                          transition
-                          active:scale-90
+                          bg-[var(--color-primary-50)]
+                          p-1
                         "
                       >
-                        <Minus size={15} strokeWidth={3} />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setQty(Math.max(1, qty - 1))}
+                          className="
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-white
+                            text-[var(--color-primary)]
+                            shadow-sm
+                            transition
+                            active:scale-90
+                          "
+                        >
+                          <Minus size={15} strokeWidth={3} />
+                        </button>
 
-                      <span
-                        className="
-                          min-w-[34px]
-                          text-center
-                          text-sm
-                          font-black
-                          text-[var(--color-primary)]
-                        "
-                      >
-                        {qty}
-                      </span>
+                        <span
+                          className="
+                            min-w-[34px]
+                            text-center
+                            text-sm
+                            font-black
+                            text-[var(--color-primary)]
+                          "
+                        >
+                          {qty}
+                        </span>
 
-                      <button
-                        type="button"
-                        title={
-                          product.availability_type !== "MADE_TO_ORDER" &&
+                        <button
+                          type="button"
+                          title={
+                            product.availability_type !== "MADE_TO_ORDER" &&
+                              qty >= Number(product.stock)
+                              ? `Only ${product.stock} items available in stock`
+                              : "Increase quantity"
+                          }
+                          disabled={
+                            product.availability_type !== "MADE_TO_ORDER" &&
                             qty >= Number(product.stock)
-                            ? `Only ${product.stock} items available in stock`
-                            : "Increase quantity"
-                        }
-                        disabled={
-                          product.availability_type !== "MADE_TO_ORDER" &&
-                          qty >= Number(product.stock)
-                        }
-                        onClick={() => setQty(qty + 1)}
-                        className="
-                          flex
-                          h-9
-                          w-9
-                          items-center
-                          justify-center
-                          rounded-full
-                          bg-[var(--color-primary)]
-                          text-white
-                          shadow-sm
-                          transition
-                          disabled:cursor-not-allowed
-                          disabled:opacity-40
-                          active:scale-90
-                        "
-                      >
-                        <Plus size={15} strokeWidth={3} />
-                      </button>
-                    </div>
+                          }
+                          onClick={() => setQty(qty + 1)}
+                          className="
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-[var(--color-primary)]
+                            text-white
+                            shadow-sm
+                            transition
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40
+                            active:scale-90
+                          "
+                        >
+                          <Plus size={15} strokeWidth={3} />
+                        </button>
+                      </div>
 
-                    {product.availability_type === "MADE_TO_ORDER" ? (
-                      <span className="text-[10px] font-bold text-orange-600">
-                        Cooked on demand
-                      </span>
-                    ) : Number(product.stock) <= 5 &&
-                      Number(product.stock) > 0 ? (
-                      <span className="text-[10px] font-bold text-amber-600">
-                        Only {product.stock} left in stock
-                      </span>
-                    ) : null}
-                  </div>
-                )}
-              </div>
+                      {product.availability_type === "MADE_TO_ORDER" ? (
+                        <span className="text-[10px] font-bold text-orange-600">
+                          Cooked on demand
+                        </span>
+                      ) : Number(product.stock) <= 5 &&
+                        Number(product.stock) > 0 ? (
+                        <span className="text-[10px] font-bold text-amber-600">
+                          Only {product.stock} left in stock
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 type="button"
                 disabled={isOutOfStock}
                 onClick={handleAdd}
                 className={`
-                    mt-4
+                    ${!isOutOfStock ? "mt-4" : ""}
                     flex
                     h-14
                     w-full

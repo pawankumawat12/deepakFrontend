@@ -1009,10 +1009,14 @@ export default function CartClient() {
                               <Link
                                 href={`/product/${it.id}`}
                                 className="line-clamp-1 text-sm font-black text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition sm:text-base"
+                                title={it.name}
                               >
                                 {it.name}
                               </Link>
-                              <p className="mt-0.5 text-[10px] font-medium text-[var(--color-text-muted)] capitalize">
+                              <p
+                                className="mt-0.5 text-[10px] font-medium text-[var(--color-text-muted)] capitalize truncate"
+                                title={it.category_name}
+                              >
                                 {it.category_name}
                               </p>
                             </div>

@@ -385,13 +385,13 @@ export default function ProductReviewSection({
                 <div className="mt-3.5">
                   {rev.title && (
                     <h5
-                      className="font-black text-[var(--color-text-primary)] break-words"
+                      className="font-black text-[var(--color-text-primary)] break-words [overflow-wrap:anywhere]"
                       title={rev.title}
                     >
                       {rev.title}
                     </h5>
                   )}
-                  <div className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)] break-words">
+                  <div className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)] break-words [overflow-wrap:anywhere]">
                     {rev.comment.length > 250 && !expandedReviews[rev.id] ? (
                       <>
                         <span>{rev.comment.slice(0, 250)}...</span>

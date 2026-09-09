@@ -394,8 +394,9 @@ export default function FavoritesPage() {
           <div
             className="
               grid
-              grid-cols-1
-              gap-5
+              grid-cols-2
+              gap-3
+              sm:gap-5
               sm:grid-cols-2
               lg:grid-cols-3
             "
@@ -415,12 +416,17 @@ export default function FavoritesPage() {
                   key={product.id}
                   className="
                     group
+                    flex
+                    flex-col
+                    justify-between
+                    h-full
                     overflow-hidden
-                    rounded-[1.75rem]
+                    rounded-2xl
+                    sm:rounded-3xl
                     border
                     border-[var(--color-border)]
                     bg-white
-                    shadow-sm
+                    shadow-xs
                     transition-all
                     duration-300
                     hover:-translate-y-1
@@ -428,7 +434,7 @@ export default function FavoritesPage() {
                   "
                 >
                   {/* IMAGE */}
-                  <div className="relative h-56 overflow-hidden bg-stone-100">
+                  <div className="relative aspect-square sm:aspect-[4/3] md:aspect-square w-full overflow-hidden bg-stone-100">
                     <Link href={`/product/${product.id}`} className="relative block h-full w-full">
                       {product.img ? (
                         <Image
@@ -436,7 +442,7 @@ export default function FavoritesPage() {
                           alt={product.name}
                           fill
                           unoptimized
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                           className="
                             object-cover
                             transition-transform
@@ -473,17 +479,21 @@ export default function FavoritesPage() {
                       aria-label={`Remove ${product.name} from favorites`}
                       className="
                         absolute
-                        right-4
-                        top-4
+                        right-2.5
+                        top-2.5
+                        sm:right-4
+                        sm:top-4
                         flex
-                        h-10
-                        w-10
+                        h-8
+                        w-8
+                        sm:h-10
+                        sm:w-10
                         items-center
                         justify-center
                         rounded-full
                         bg-white/95
                         text-red-500
-                        shadow-lg
+                        shadow-md
                         backdrop-blur
                         transition
                         hover:scale-105
@@ -492,57 +502,68 @@ export default function FavoritesPage() {
                       "
                     >
                       {isItemRemoving ? (
-                        <LoaderCircle size={18} className="animate-spin text-red-500" />
+                        <LoaderCircle size={15} className="animate-spin text-red-500" />
                       ) : (
-                        <Heart size={18} fill="currentColor" />
+                        <Heart size={15} fill="currentColor" />
                       )}
                     </button>
                   </div>
 
                   {/* CONTENT */}
-                  <div className="p-5">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--color-primary)]">
-                      {product.category || product.category_name || "Food"}
-                    </p>
+                  <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <p
+                        className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--color-primary)] truncate"
+                        title={product.category || product.category_name || "Food"}
+                      >
+                        {product.category || product.category_name || "Food"}
+                      </p>
 
-                    <Link href={`/product/${product.id}`}>
-                      <h2 className="mt-1.5 line-clamp-1 text-base font-black text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition">
-                        {product.name}
-                      </h2>
-                    </Link>
+                      <Link href={`/product/${product.id}`}>
+                        <h2
+                          className="mt-1 line-clamp-1 text-xs sm:text-base font-black text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition"
+                          title={product.name}
+                        >
+                          {product.name}
+                        </h2>
+                      </Link>
 
-                    <div className="mt-2.5 flex items-center justify-between">
-                      <span className="text-lg font-black text-[var(--color-text-primary)]">
-                        {formatRupee(product.price)}
-                      </span>
-
-                      <div className="flex items-center gap-1 rounded-full bg-[var(--color-star)]/10 px-2 py-0.5 text-xs font-bold text-[var(--color-text-primary)]">
-                        <Star size={11} fill="currentColor" className="text-[var(--color-star)]" />
-                        <span>
-                          {Number(product.total_reviews || 0) > 0 && Number(product.rating || 0) > 0
-                            ? Number(product.rating).toFixed(1)
-                            : "New"}
+                      <div className="mt-2 sm:mt-2.5 flex items-center justify-between">
+                        <span className="text-sm sm:text-lg font-black text-[var(--color-text-primary)]">
+                          {formatRupee(product.price)}
                         </span>
-                        <span className="text-[10px] text-[var(--color-text-muted)] font-normal">
-                          ({Number(product.total_reviews || 0)})
-                        </span>
+
+                        <div className="flex items-center gap-1 rounded-full bg-[var(--color-star)]/10 px-1.5 py-0.5 sm:px-2 text-[10px] sm:text-xs font-bold text-[var(--color-text-primary)]">
+                          <Star size={10} fill="currentColor" className="text-[var(--color-star)]" />
+                          <span>
+                            {Number(product.total_reviews || 0) > 0 && Number(product.rating || 0) > 0
+                              ? Number(product.rating).toFixed(1)
+                              : "New"}
+                          </span>
+                          <span className="text-[9px] sm:text-[10px] text-[var(--color-text-muted)] font-normal">
+                            ({Number(product.total_reviews || 0)})
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* ACTIONS */}
-                    <div className="mt-5 flex gap-2">
+                    <div className="mt-3 sm:mt-5 border-t border-[var(--color-border)]/50 pt-2.5 flex gap-1.5 sm:gap-2">
                       {inCart ? (
                         <div
                           className="
                             flex
                             flex-1
-                            h-11
+                            h-8
+                            sm:h-11
                             items-center
                             justify-between
-                            gap-1.5
+                            gap-1
+                            sm:gap-1.5
                             rounded-xl
                             bg-[var(--color-primary-50)]
-                            p-1
+                            p-0.5
+                            sm:p-1
                             ring-1
                             ring-[var(--color-primary)]/20
                           "
@@ -560,8 +581,10 @@ export default function FavoritesPage() {
                             }
                             className="
                               flex
-                              h-9
-                              w-9
+                              h-7
+                              w-7
+                              sm:h-9
+                              sm:w-9
                               items-center
                               justify-center
                               rounded-lg
@@ -574,17 +597,18 @@ export default function FavoritesPage() {
                               active:scale-90
                             "
                           >
-                            <Minus size={14} strokeWidth={3} />
+                            <Minus size={12} className="sm:w-3.5 sm:h-3.5" strokeWidth={3} />
                           </button>
 
                           <span
                             className="
-                              text-xs
+                              text-[11px]
+                              sm:text-xs
                               font-black
                               text-[var(--color-primary)]
                             "
                           >
-                            {inCartQty} in cart
+                            {inCartQty} <span className="hidden sm:inline">in cart</span>
                           </span>
 
                           <button
@@ -605,8 +629,10 @@ export default function FavoritesPage() {
                             }
                             className="
                               flex
-                              h-9
-                              w-9
+                              h-7
+                              w-7
+                              sm:h-9
+                              sm:w-9
                               items-center
                               justify-center
                               rounded-lg
@@ -620,7 +646,7 @@ export default function FavoritesPage() {
                               active:scale-90
                             "
                           >
-                            <Plus size={14} strokeWidth={3} />
+                            <Plus size={12} className="sm:w-3.5 sm:h-3.5" strokeWidth={3} />
                           </button>
                         </div>
                       ) : (
@@ -630,14 +656,19 @@ export default function FavoritesPage() {
                           className={`
                             flex
                             flex-1
-                            h-11
+                            h-8
+                            sm:h-11
                             items-center
                             justify-center
-                            gap-2
+                            gap-1
+                            sm:gap-2
                             rounded-xl
-                            px-4
-                            py-3
+                            px-2
+                            sm:px-4
+                            py-1.5
+                            sm:py-3
                             text-[10px]
+                            sm:text-xs
                             font-black
                             text-white
                             shadow-sm
@@ -652,13 +683,14 @@ export default function FavoritesPage() {
                         >
                           {added ? (
                             <>
-                              <Check size={15} />
-                              Added
+                              <Check size={13} className="sm:w-3.5 sm:h-3.5" />
+                              <span>Added</span>
                             </>
                           ) : (
                             <>
-                              <Plus size={15} />
-                              Add to Cart
+                              <Plus size={13} className="sm:w-3.5 sm:h-3.5" />
+                              <span>Add</span>
+                              <span className="hidden sm:inline">&nbsp;to Cart</span>
                             </>
                           )}
                         </button>
@@ -671,8 +703,10 @@ export default function FavoritesPage() {
                         aria-label={`Delete ${product.name}`}
                         className="
                           flex
-                          h-11
-                          w-11
+                          h-8
+                          w-8
+                          sm:h-11
+                          sm:w-11
                           shrink-0
                           items-center
                           justify-center
@@ -687,7 +721,7 @@ export default function FavoritesPage() {
                           disabled:opacity-50
                         "
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </div>

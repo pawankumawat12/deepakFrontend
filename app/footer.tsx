@@ -146,39 +146,6 @@ export default function Footer() {
             </Link>
 
             <div className="flex items-center gap-2">
-              {footerSettings?.facebook && (
-                <a
-                  href={footerSettings.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white"
-                >
-                  <FaFacebook size={14} />
-                </a>
-              )}
-              {footerSettings?.instagram && (
-                <a
-                  href={footerSettings.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white"
-                >
-                  <FaInstagram size={14} />
-                </a>
-              )}
-              {footerSettings?.twitter && (
-                <a
-                  href={footerSettings.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white"
-                >
-                  <FaTwitter size={14} />
-                </a>
-              )}
               <a
                 href={footerSettings?.facebook || "#"}
                 target={footerSettings?.facebook ? "_blank" : undefined}

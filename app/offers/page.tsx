@@ -232,76 +232,74 @@ export default function OffersPage() {
           <SkeletonLoader
             variant="card"
             count={6}
-            gridClassName="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            gridClassName="mt-6 sm:mt-8 grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
           />
         ) : (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 sm:mt-8 grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredOffers.map((offer) => (
               <article
                 key={offer.id}
-                className="group overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(45,27,15,0.12)] flex flex-col justify-between"
+                className="group overflow-hidden rounded-2xl sm:rounded-3xl border border-[var(--color-border)] bg-white shadow-xs transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(45,27,15,0.12)] flex flex-col justify-between h-full"
               >
-                <div>
+                <div className="flex flex-col flex-1">
                   {/* Image */}
-                  <div className="relative h-52 overflow-hidden bg-gray-100">
+                  <div className="relative h-32 sm:h-52 overflow-hidden bg-gray-100">
                     <Image
                       src={getFallbackBanner(offer)}
                       alt={offer.title}
                       fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover transition duration-500 group-hover:scale-105"
                     />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
                     {/* Badge */}
-                    <div className="absolute left-4 top-4 rounded-full bg-[var(--color-secondary)] px-3 py-1.5 text-[10px] font-black text-white shadow-lg">
+                    <div className="absolute left-2.5 top-2.5 sm:left-4 sm:top-4 rounded-full bg-[var(--color-secondary)] px-2 py-0.5 sm:px-3 sm:py-1.5 text-[9px] sm:text-[10px] font-black text-white shadow-md">
                       {offer.badge ||
                         (offer.auto_apply ? "AUTO APPLIED" : "SPECIAL DEAL")}
                     </div>
 
                     {/* Discount Circle */}
-                    <div className="absolute bottom-4 right-4 flex h-16 w-16 rotate-[-6deg] flex-col items-center justify-center rounded-full bg-white text-center shadow-xl">
-                      <span className="text-sm font-black text-[var(--color-secondary)]">
+                    <div className="absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 flex h-11 w-11 sm:h-16 sm:w-16 rotate-[-6deg] flex-col items-center justify-center rounded-full bg-white text-center shadow-lg">
+                      <span className="text-[11px] sm:text-sm font-black text-[var(--color-secondary)] leading-none">
                         {formatDiscountPill(offer)}
                       </span>
-                      <span className="text-[8px] font-bold uppercase text-[var(--color-text-muted)]">
+                      <span className="text-[7px] sm:text-[8px] font-bold uppercase text-[var(--color-text-muted)] mt-0.5">
                         Save
                       </span>
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-xl font-black text-[var(--color-text-primary)]">
-                          {offer.title}
-                        </h3>
-                        {offer.min_order_amount > 0 && (
-                          <p className="mt-1 text-xs font-semibold text-[var(--color-primary)]">
-                            Min. Order: ₹{offer.min_order_amount}
-                            {offer.max_discount_amount
-                              ? ` (Up to ₹${offer.max_discount_amount})`
-                              : ""}
-                          </p>
-                        )}
-                      </div>
+                  <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-sm sm:text-xl font-black text-[var(--color-text-primary)] line-clamp-1 sm:line-clamp-none">
+                        {offer.title}
+                      </h3>
+                      {offer.min_order_amount > 0 && (
+                        <p className="mt-1 text-[11px] sm:text-xs font-semibold text-[var(--color-primary)]">
+                          Min. Order: ₹{offer.min_order_amount}
+                          {offer.max_discount_amount
+                            ? ` (Up to ₹${offer.max_discount_amount})`
+                            : ""}
+                        </p>
+                      )}
+
+                      <p className="mt-2 sm:mt-3 text-xs sm:text-sm leading-relaxed text-[var(--color-text-secondary)] line-clamp-2 sm:line-clamp-none">
+                        {offer.description ||
+                          `Use promo code ${offer.code} at checkout to claim this special offer.`}
+                      </p>
                     </div>
 
-                    <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">
-                      {offer.description ||
-                        `Use promo code ${offer.code} at checkout to claim this special offer.`}
-                    </p>
-
                     {/* Coupon Box */}
-                    <div className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-[var(--color-primary)]/40 bg-[var(--color-primary-50)]/50 p-3">
-                      <div className="flex items-center gap-2">
+                    <div className="mt-3 sm:mt-4 flex items-center justify-between rounded-xl border border-dashed border-[var(--color-primary)]/40 bg-[var(--color-primary-50)]/50 p-2 sm:p-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                         <Tag
-                          size={16}
-                          className="text-[var(--color-primary)]"
+                          size={14}
+                          className="text-[var(--color-primary)] shrink-0 sm:w-4 sm:h-4"
                         />
-                        <span className="font-mono text-sm font-black uppercase tracking-wider text-[var(--color-text-primary)]">
+                        <span className="font-mono text-xs sm:text-sm font-black uppercase tracking-wider text-[var(--color-text-primary)] truncate">
                           {offer.code}
                         </span>
                       </div>
@@ -309,17 +307,17 @@ export default function OffersPage() {
                       <button
                         type="button"
                         onClick={() => handleCopyCode(offer.code)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-[var(--color-primary)] shadow-sm transition hover:bg-[var(--color-primary)] hover:text-white"
+                        className="inline-flex items-center gap-1 shrink-0 rounded-lg bg-white px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-bold text-[var(--color-primary)] shadow-xs transition hover:bg-[var(--color-primary)] hover:text-white"
                       >
                         {copiedCode === offer.code ? (
                           <>
-                            <Check size={13} className="text-green-600" />
-                            <span>Copied</span>
+                            <Check size={12} className="text-green-600" />
+                            <span className="hidden sm:inline">Copied</span>
                           </>
                         ) : (
                           <>
-                            <Copy size={13} />
-                            <span>Copy</span>
+                            <Copy size={12} />
+                            <span className="hidden sm:inline">Copy</span>
                           </>
                         )}
                       </button>
@@ -328,15 +326,15 @@ export default function OffersPage() {
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="p-5 pt-0">
-                  <div className="flex items-center gap-3">
+                <div className="p-3 pt-0 sm:p-5 sm:pt-0 mt-auto">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <Link
                       href="/menu"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-primary-dark)]"
-                    style={{color: "white"}}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[var(--color-primary)] px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-bold text-white transition hover:bg-[var(--color-primary-dark)]"
+                      style={{color: "white"}}
                     >
                       Order Now
-                      <ArrowRight size={16} />
+                      <ArrowRight size={14} className="sm:w-4 sm:h-4" />
                     </Link>
                   </div>
                 </div>

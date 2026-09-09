@@ -195,7 +195,7 @@ export default function SimilarProductsSection({
             </h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
               {currentProductName
-                ? `Customers who viewed ${currentProductName} also loved these items.`
+                ? `Customers who viewed`
                 : "Handcrafted selections you might like."}
             </p>
           </div>

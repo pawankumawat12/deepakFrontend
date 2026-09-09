@@ -694,14 +694,14 @@ export default function Menu() {
             <SkeletonLoader
               variant="product"
               count={8}
-              gridClassName="grid grid-cols-1 gap-4 pb-8 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4"
+              gridClassName="grid grid-cols-2 gap-3 pb-8 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4"
             />
           ) : (
             <div
               className="
                 grid
-                grid-cols-1
-                gap-4
+                grid-cols-2
+                gap-3
                 pb-8
                 sm:grid-cols-2
                 sm:gap-5
@@ -724,24 +724,28 @@ export default function Menu() {
                   className="
                     product-card
                     group
+                    flex
+                    flex-col
+                    justify-between
+                    h-full
                     overflow-hidden
                     rounded-2xl
                     border
                     border-[var(--color-border)]
                     bg-white
-                    shadow-sm
+                    shadow-xs
                     transition-all
                     duration-300
                     hover:-translate-y-1
-                    hover:shadow-xl
+                    hover:shadow-lg
                   "
                 >
 
-                  <div className="relative overflow-hidden">
+                  <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden bg-stone-50">
 
                     <Link
                       href={`/product/${p.id}`}
-                      className="relative block h-48 w-full overflow-hidden"
+                      className="relative block h-full w-full overflow-hidden"
                     >
                       {p.img ? (
                         <Image
@@ -749,7 +753,7 @@ export default function Menu() {
                           alt={p.name}
                           fill
                           unoptimized
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
                           className="
                             object-cover
                             transition-transform
@@ -886,6 +890,7 @@ export default function Menu() {
                         text-white
                         backdrop-blur-md
                       "
+                      title={p.categoryName}
                     >
                       {p.categoryName}
                     </div>
@@ -896,89 +901,93 @@ export default function Menu() {
                       PRODUCT INFO
                   ================================================= */}
 
-                  <div className="p-3.5 sm:p-4">
-
-                    <Link
-                      href={`/product/${p.id}`}
-                      className="block"
-                    >
-                      <h3
-                        className="
-                          line-clamp-1
-                          text-sm
-                          font-black
-                          text-[var(--color-text-primary)]
-                          transition-colors
-                          group-hover:text-[var(--color-primary)]
-                          sm:text-base
-                          break-words
-                        "
-                        title={p.name}
+                  <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <Link
+                        href={`/product/${p.id}`}
+                        className="block"
                       >
-                        {p.name}
-                      </h3>
+                        <h3
+                          className="
+                            line-clamp-1
+                            text-xs
+                            font-black
+                            text-[var(--color-text-primary)]
+                            transition-colors
+                            group-hover:text-[var(--color-primary)]
+                            sm:text-base
+                            break-words
+                          "
+                          title={p.name}
+                        >
+                          {p.name}
+                        </h3>
 
-                      <p
-                        className="
-                          mt-1
-                          line-clamp-2
-                          min-h-[32px]
-                          text-[10px]
-                          leading-4
-                          text-[var(--color-text-muted)]
-                          sm:text-xs
-                          break-words
-                        "
-                        title={p.description || `Handcrafted — ${p.categoryName}`}
-                      >
-                        {p.description || `Handcrafted — ${p.categoryName}`}
-                      </p>
-                    </Link>
+                        <p
+                          className="
+                            mt-1
+                            line-clamp-2
+                            min-h-[28px]
+                            sm:min-h-[32px]
+                            text-[10px]
+                            leading-3.5
+                            sm:leading-4
+                            text-[var(--color-text-muted)]
+                            sm:text-xs
+                            break-words
+                          "
+                          title={p.description || `Handcrafted — ${p.categoryName}`}
+                        >
+                          {p.description || `Handcrafted — ${p.categoryName}`}
+                        </p>
+                      </Link>
 
-                    {/* Dynamic Rating & Review Count */}
+                      {/* Dynamic Rating & Review Count */}
 
-                    <div className="mt-3 flex items-center gap-1.5">
+                      <div className="mt-2.5 flex items-center gap-1.5">
 
-                      <div
-                        className="
-                          flex
-                          items-center
-                          gap-1
-                          rounded-full
-                          bg-[var(--color-star)]/10
-                          px-2.5
-                          py-1
-                        "
-                      >
-                        <Star
-                          size={11}
-                          fill="currentColor"
-                          className="text-[var(--color-star)]"
-                        />
+                        <div
+                          className="
+                            flex
+                            items-center
+                            gap-1
+                            rounded-full
+                            bg-[var(--color-star)]/10
+                            px-2
+                            py-0.5
+                          "
+                        >
+                          <Star
+                            size={10}
+                            fill="currentColor"
+                            className="text-[var(--color-star)]"
+                          />
 
-                        <span className="text-[10px] font-black text-[var(--color-text-primary)]">
-                          {Number(p.total_reviews || 0) > 0 && Number(p.rating || 0) > 0
-                            ? Number(p.rating).toFixed(1)
-                            : "New"}
+                          <span className="text-[10px] font-black text-[var(--color-text-primary)]">
+                            {Number(p.total_reviews || 0) > 0 && Number(p.rating || 0) > 0
+                              ? Number(p.rating).toFixed(1)
+                              : "New"}
+                          </span>
+                        </div>
+
+                        <span className="text-[9px] sm:text-[10px] font-medium text-[var(--color-text-muted)]">
+                          ({Number(p.total_reviews || 0)})
                         </span>
+
                       </div>
-
-                      <span className="text-[10px] font-medium text-[var(--color-text-muted)]">
-                        ({Number(p.total_reviews || 0)} {Number(p.total_reviews || 0) === 1 ? "review" : "reviews"})
-                      </span>
-
                     </div>
 
                     {/* Price + Cart */}
 
-                    <div className="mt-4 flex items-center justify-between gap-2">
+                    <div className="mt-3 sm:mt-4">
+                      <div className="flex items-center justify-between gap-2 border-t border-[var(--color-border)]/50 pt-2.5">
 
-                      <div>
-                        <p className="text-[9px] font-medium text-[var(--color-text-muted)]">
-                          Price
-                        </p>
+                        <div>
+                          <p className="text-[8px] sm:text-[9px] font-medium text-[var(--color-text-muted)]">
+                            Price
+                          </p>
 
-                        <div className="text-base font-black text-[var(--color-text-primary)] sm:text-lg">
+                          <div className="text-sm font-black text-[var(--color-text-primary)] sm:text-base">
                           ₹{formatRupee(p.price)}
                         </div>
                       </div>
@@ -1157,6 +1166,8 @@ export default function Menu() {
                     </Link>
 
                   </div>
+
+                </div>
 
                 </article>
               );

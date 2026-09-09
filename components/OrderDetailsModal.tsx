@@ -481,7 +481,10 @@ export default function OrderDetailsModal({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-xs font-black text-[var(--color-text-primary)] truncate">
+                        <p
+                          className="text-xs font-black text-[var(--color-text-primary)] truncate"
+                          title={name}
+                        >
                           {name}
                         </p>
                         {freeQty > 0 && (
