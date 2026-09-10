@@ -45,13 +45,17 @@ export default function Profile() {
   const [pendingNewEmail, setPendingNewEmail] = useState("");
   const [imageError, setImageError] = useState(false);
 
-  const user = useSelector((state: { auth: { user: any | null } }) => state.auth.user);
+  const user = useSelector(
+    (state: { auth: { user: any | null } }) => state.auth.user
+  );
 
   useEffect(() => {
     setImageError(false);
   }, [user?.image]);
-  const [updateProfile, { isLoading: isSavingProfile }] = useUpdateProfileMutation();
-  const [requestEmailChange, { isLoading: isRequestingOtp }] = useRequestEmailChangeMutation();
+  const [updateProfile, { isLoading: isSavingProfile }] =
+    useUpdateProfileMutation();
+  const [requestEmailChange, { isLoading: isRequestingOtp }] =
+    useRequestEmailChangeMutation();
   const isSaving = isSavingProfile || isRequestingOtp;
 
   const {
@@ -136,15 +140,21 @@ export default function Profile() {
       // 2. If email changed, trigger email change OTP flow
       if (isEmailChanged) {
         try {
-          const otpRes = await requestEmailChange({ newEmail: trimmedEmail }).unwrap();
+          const otpRes = await requestEmailChange({
+            newEmail: trimmedEmail,
+          }).unwrap();
           setPendingNewEmail(trimmedEmail);
           setEmailOtpModalOpen(true);
-          toast.success(otpRes?.message || `Verification code sent to ${trimmedEmail}`);
+          toast.success(
+            otpRes?.message || `Verification code sent to ${trimmedEmail}`
+          );
         } catch (otpErr: any) {
           const msg =
             otpErr?.data?.message ||
             "Failed to send email verification code. Please check email address.";
-          toast.error(typeof msg === "string" ? msg : "Failed to send verification code");
+          toast.error(
+            typeof msg === "string" ? msg : "Failed to send verification code"
+          );
         }
       } else {
         toast.success(response?.message || "Profile updated successfully!");
@@ -162,7 +172,7 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="min-h-screen bg-[var(--bg-body)] flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full text-center bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl">
+        <div className="max-w-md w-full text-center bg-white rounded-3xl p-8 border border-slate-200 shadow-xl">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)] flex items-center justify-center">
             <User size={32} />
           </div>
@@ -170,7 +180,8 @@ export default function Profile() {
             Sign in to view profile
           </h2>
           <p className="mt-2 text-xs text-[var(--color-text-muted)] leading-relaxed">
-            Please log in to manage your profile, delivery addresses, and account details.
+            Please log in to manage your profile, delivery addresses, and
+            account details.
           </p>
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
             <button
@@ -198,19 +209,13 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-body)]">
-
       <section className="bg-[var(--color-primary-dark)]">
-
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 md:py-14">
-
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-
             {/* User */}
 
             <div className="flex items-center gap-4">
-
               <div className="relative">
-
                 <div
                   className="
                     flex
@@ -242,7 +247,10 @@ export default function Profile() {
                   )}
                   {isUploadingImage && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[1.5rem]">
-                      <LoaderCircle size={24} className="animate-spin text-white" />
+                      <LoaderCircle
+                        size={24}
+                        className="animate-spin text-white"
+                      />
                     </div>
                   )}
                 </div>
@@ -282,11 +290,9 @@ export default function Profile() {
                 >
                   <Camera size={14} />
                 </button>
-
               </div>
 
               <div>
-
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-primary-50)]">
                   My Account
                 </p>
@@ -300,11 +306,8 @@ export default function Profile() {
                     Welcome back to SFC Bakers
                   </p>
                 </div>
-
               </div>
-
             </div>
-
 
             <Link
               href="/menu"
@@ -324,28 +327,22 @@ export default function Profile() {
                 hover:-translate-y-0.5
                 hover:bg-[var(--color-primary-dark)]
               "
-              style={{color: "white"}}
+              style={{ color: "white" }}
             >
               Order Something
               <ShoppingBag size={15} />
             </Link>
-
           </div>
-
         </div>
-
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-8 sm:px-8 md:py-12">
-
         <div className="grid gap-6 lg:grid-cols-3">
-
           {/* =====================================================
               LEFT - PROFILE INFORMATION
           ===================================================== */}
 
           <div className="lg:col-span-2">
-
             <div
               className="
                 overflow-hidden
@@ -356,13 +353,10 @@ export default function Profile() {
                 shadow-sm
               "
             >
-
               {/* Header */}
 
               <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-5 sm:px-8">
-
                 <div>
-
                   <h2 className="text-lg font-black text-[var(--color-text-primary)]">
                     Personal Information
                   </h2>
@@ -370,7 +364,6 @@ export default function Profile() {
                   <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                     Manage your account details
                   </p>
-
                 </div>
 
                 <button
@@ -402,13 +395,14 @@ export default function Profile() {
 
                   {editing ? "Cancel" : "Edit"}
                 </button>
-
               </div>
 
               {/* Form */}
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6 sm:p-8">
-
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-5 p-6 sm:p-8"
+              >
                 {/* Profile Photo Row */}
                 <div className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-[var(--bg-body)] p-4">
                   <div className="flex items-center gap-3.5">
@@ -426,7 +420,10 @@ export default function Profile() {
                       )}
                       {isUploadingImage && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                          <LoaderCircle size={18} className="animate-spin text-white" />
+                          <LoaderCircle
+                            size={18}
+                            className="animate-spin text-white"
+                          />
                         </div>
                       )}
                     </div>
@@ -466,14 +463,17 @@ export default function Profile() {
                     "
                   >
                     <Camera size={13} />
-                    {isUploadingImage ? "Uploading..." : user?.image ? "Change Photo" : "Upload Photo"}
+                    {isUploadingImage
+                      ? "Uploading..."
+                      : user?.image
+                      ? "Change Photo"
+                      : "Upload Photo"}
                   </button>
                 </div>
 
                 {/* Name */}
 
                 <div>
-
                   <label
                     htmlFor="name"
                     className="mb-2 block text-xs font-bold text-[var(--color-text-primary)]"
@@ -482,7 +482,6 @@ export default function Profile() {
                   </label>
 
                   <div className="relative">
-
                     <User
                       size={17}
                       className="
@@ -520,14 +519,12 @@ export default function Profile() {
                         focus:ring-[var(--color-primary)]/10
                       "
                     />
-
                   </div>
                   {errors.name && (
                     <p className="mt-1 text-xs text-red-500 font-medium">
                       {errors.name.message}
                     </p>
                   )}
-
                 </div>
 
                 {/* Email */}
@@ -590,7 +587,10 @@ export default function Profile() {
 
                   {editing && (
                     <p className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-[var(--color-text-muted)]">
-                      <span>Changing email will send a 4-digit verification code to the new email.</span>
+                      <span>
+                        Changing email will send a 4-digit verification code to
+                        the new email.
+                      </span>
                     </p>
                   )}
 
@@ -604,7 +604,6 @@ export default function Profile() {
                 {/* Phone */}
 
                 <div>
-
                   <label
                     htmlFor="phone"
                     className="mb-2 block text-xs font-bold text-[var(--color-text-primary)]"
@@ -613,7 +612,6 @@ export default function Profile() {
                   </label>
 
                   <div className="relative">
-
                     <Phone
                       size={17}
                       className="
@@ -651,14 +649,12 @@ export default function Profile() {
                         focus:ring-[var(--color-primary)]/10
                       "
                     />
-
                   </div>
                   {errors.phone && (
                     <p className="mt-1 text-xs text-red-500 font-medium">
                       {errors.phone.message}
                     </p>
                   )}
-
                 </div>
 
                 {/* Save & Cancel */}
@@ -722,16 +718,11 @@ export default function Profile() {
                     </button>
                   </div>
                 )}
-
               </form>
-
             </div>
-
           </div>
 
-
           <div className="space-y-4">
-
             <h2 className="px-1 text-sm font-black text-[var(--color-text-primary)]">
               Quick Access
             </h2>
@@ -756,7 +747,6 @@ export default function Profile() {
                 hover:shadow-md
               "
             >
-
               <div
                 className="
                   flex
@@ -774,7 +764,6 @@ export default function Profile() {
               </div>
 
               <div className="flex-1">
-
                 <p className="text-xs font-black text-[var(--color-text-primary)]">
                   My Orders
                 </p>
@@ -782,14 +771,12 @@ export default function Profile() {
                 <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                   View your order history
                 </p>
-
               </div>
 
               <ChevronRight
                 size={17}
                 className="text-[var(--color-text-muted)] transition group-hover:translate-x-1"
               />
-
             </Link>
 
             {/* Favorites */}
@@ -812,7 +799,6 @@ export default function Profile() {
                 hover:shadow-md
               "
             >
-
               <div
                 className="
                   flex
@@ -830,7 +816,6 @@ export default function Profile() {
               </div>
 
               <div className="flex-1">
-
                 <p className="text-xs font-black text-[var(--color-text-primary)]">
                   Favorites
                 </p>
@@ -838,14 +823,12 @@ export default function Profile() {
                 <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                   Your favorite food items
                 </p>
-
               </div>
 
               <ChevronRight
                 size={17}
                 className="text-[var(--color-text-muted)] transition group-hover:translate-x-1"
               />
-
             </Link>
 
             {/* Notifications */}
@@ -868,7 +851,6 @@ export default function Profile() {
                 hover:shadow-md
               "
             >
-
               <div
                 className="
                   flex
@@ -886,7 +868,6 @@ export default function Profile() {
               </div>
 
               <div className="flex-1">
-
                 <p className="text-xs font-black text-[var(--color-text-primary)]">
                   Notifications
                 </p>
@@ -894,20 +875,15 @@ export default function Profile() {
                 <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
                   Offers and order updates
                 </p>
-
               </div>
 
               <ChevronRight
                 size={17}
                 className="text-[var(--color-text-muted)] transition group-hover:translate-x-1"
               />
-
             </Link>
-
           </div>
-
         </div>
-
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-12 sm:px-8">

@@ -124,6 +124,12 @@ export interface CartResponse {
   data: CartData;
 }
 
+function roundCurrency(val: any): number {
+  const num = Number(val);
+  if (isNaN(num) || !isFinite(num)) return 0;
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
 const transformCartResponse = (response: any): CartResponse => {
   const rawData = response?.data;
 
@@ -135,7 +141,7 @@ const transformCartResponse = (response: any): CartResponse => {
     : [];
 
   const items: CartItem[] = rawItems.map((item: any) => {
-    const price = Number(item.price) || 0;
+    const price = roundCurrency(item.price);
     const quantity = Number(item.quantity) || 0;
     const stock = Number(item.stock) || 0;
     const availabilityType: "IN_STOCK" | "MADE_TO_ORDER" =
@@ -150,7 +156,7 @@ const transformCartResponse = (response: any): CartResponse => {
     const paidQuantity = item.paid_quantity != null ? Number(item.paid_quantity) : quantity;
     const freeQuantity = item.free_quantity != null ? Number(item.free_quantity) : 0;
     const totalQuantity = item.total_quantity != null ? Number(item.total_quantity) : (paidQuantity + freeQuantity);
-    const itemTotal = item.itemTotal != null ? Number(item.itemTotal) : price * paidQuantity;
+    const itemTotal = item.itemTotal != null ? roundCurrency(item.itemTotal) : roundCurrency(price * paidQuantity);
 
     return {
       id: Number(item.product_id || item.id),
@@ -208,52 +214,52 @@ const transformCartResponse = (response: any): CartResponse => {
       (paidItemsCount + freeItemsCount)
   );
   const totalItems = totalProductsDelivered;
-  const bogoSavings = Number(
+  const bogoSavings = roundCurrency(
     rawSummary.bogoSavings ?? rawPricing.bogo_savings ?? 0
   );
 
   const subtotal =
     rawSummary.subtotal !== undefined
-      ? Number(rawSummary.subtotal)
-      : items.reduce((sum, it) => sum + it.itemTotal, 0);
+      ? roundCurrency(rawSummary.subtotal)
+      : roundCurrency(items.reduce((sum, it) => sum + it.itemTotal, 0));
 
   const discountPercent = Number(rawSummary.discountPercent ?? rawPricing.discount_percent ?? 0);
-  const discount = Number(rawSummary.discount ?? rawPricing.discount ?? 0);
-  const discountedSubtotal = Number(rawSummary.discountedSubtotal ?? rawPricing.discounted_subtotal ?? (subtotal - discount));
+  const discount = roundCurrency(rawSummary.discount ?? rawPricing.discount ?? 0);
+  const discountedSubtotal = roundCurrency(rawSummary.discountedSubtotal ?? rawPricing.discounted_subtotal ?? (subtotal - discount));
 
   const gstPercent = Number(rawSummary.gstPercent ?? rawPricing.gst_percent ?? 0);
   const taxInclusive = Boolean(rawSummary.taxInclusive ?? rawPricing.tax_inclusive ?? false);
-  const taxAmount = Number(rawSummary.taxAmount ?? rawPricing.tax_amount ?? 0);
-  const taxAddedToTotal = Number(rawSummary.taxAddedToTotal ?? rawPricing.tax_added_to_total ?? 0);
+  const taxAmount = roundCurrency(rawSummary.taxAmount ?? rawPricing.tax_amount ?? 0);
+  const taxAddedToTotal = roundCurrency(rawSummary.taxAddedToTotal ?? rawPricing.tax_added_to_total ?? 0);
   const taxLabel = rawSummary.taxLabel || rawPricing.tax_label || (taxInclusive ? "Inclusive of all taxes" : `GST (${gstPercent}%)`);
 
   const deliveryChargeType = rawSummary.deliveryChargeType || rawPricing.delivery_charge_type || "fixed";
-  const deliveryChargeValue = Number(rawSummary.deliveryChargeValue ?? rawPricing.delivery_charge_value ?? 0);
-  const deliveryFee = Number(rawSummary.deliveryFee ?? rawPricing.delivery_fee ?? 0);
+  const deliveryChargeValue = roundCurrency(rawSummary.deliveryChargeValue ?? rawPricing.delivery_charge_value ?? 0);
+  const deliveryFee = roundCurrency(rawSummary.deliveryFee ?? rawPricing.delivery_fee ?? 0);
   const isFreeDelivery = Boolean(rawSummary.isFreeDelivery ?? rawPricing.is_free_delivery ?? false);
-  const freeDeliveryThreshold = Number(rawSummary.freeDeliveryThreshold ?? rawPricing.free_delivery_threshold ?? 0);
-  const freeDeliverySavings = Number(rawSummary.freeDeliverySavings ?? rawPricing.free_delivery_savings ?? 0);
-  const freeDeliveryShortfall = Number(rawSummary.freeDeliveryShortfall ?? rawPricing.free_delivery_shortfall ?? 0);
+  const freeDeliveryThreshold = roundCurrency(rawSummary.freeDeliveryThreshold ?? rawPricing.free_delivery_threshold ?? 0);
+  const freeDeliverySavings = roundCurrency(rawSummary.freeDeliverySavings ?? rawPricing.free_delivery_savings ?? 0);
+  const freeDeliveryShortfall = roundCurrency(rawSummary.freeDeliveryShortfall ?? rawPricing.free_delivery_shortfall ?? 0);
 
   const distanceKm = rawSummary.distanceKm ?? rawPricing.distance_km ?? null;
   const maxDeliveryDistance = Number(rawSummary.maxDeliveryDistance ?? rawPricing.max_delivery_distance ?? 0);
   const isOutOfRange = Boolean(rawSummary.isOutOfRange ?? rawPricing.is_out_of_range ?? false);
 
-  const packagingFee = Number(rawSummary.packagingFee ?? rawPricing.packaging_fee ?? 0);
-  const platformFee = Number(rawSummary.platformFee ?? rawPricing.platform_fee ?? 0);
-  const codFee = Number(rawSummary.codFee ?? rawPricing.cod_fee ?? 0);
+  const packagingFee = roundCurrency(rawSummary.packagingFee ?? rawPricing.packaging_fee ?? 0);
+  const platformFee = roundCurrency(rawSummary.platformFee ?? rawPricing.platform_fee ?? 0);
+  const codFee = roundCurrency(rawSummary.codFee ?? rawPricing.cod_fee ?? 0);
   const isCod = Boolean(rawSummary.isCod ?? rawPricing.is_cod ?? true);
 
-  const minimumOrderAmount = Number(rawSummary.minimumOrderAmount ?? rawPricing.minimum_order_amount ?? 0);
+  const minimumOrderAmount = roundCurrency(rawSummary.minimumOrderAmount ?? rawPricing.minimum_order_amount ?? 0);
   const isBelowMinimumOrder = Boolean(rawSummary.isBelowMinimumOrder ?? rawPricing.is_below_minimum_order ?? false);
-  const minimumOrderShortfall = Number(rawSummary.minimumOrderShortfall ?? rawPricing.minimum_order_shortfall ?? 0);
+  const minimumOrderShortfall = roundCurrency(rawSummary.minimumOrderShortfall ?? rawPricing.minimum_order_shortfall ?? 0);
 
   const grandTotal =
     rawSummary.grandTotal !== undefined
-      ? Number(rawSummary.grandTotal)
+      ? roundCurrency(rawSummary.grandTotal)
       : rawPricing.grand_total !== undefined
-      ? Number(rawPricing.grand_total)
-      : Math.max(0, subtotal + deliveryFee - discount);
+      ? roundCurrency(rawPricing.grand_total)
+      : Math.max(0, roundCurrency(subtotal + deliveryFee - discount));
 
   const summary: CartSummary = {
     totalItems,

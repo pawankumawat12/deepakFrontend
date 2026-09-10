@@ -57,37 +57,38 @@ interface OrderDetailsModalProps {
 
 
 function formatRupee(value: number) {
-  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
+  const num = Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+  return `₹${num.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "Delivered":
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-          <CheckCircle2 size={14} />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">
+          <CheckCircle2 size={13} />
           Delivered
-        </span>
-      );
-    case "Cancelled":
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
-          <XCircle size={14} />
-          Cancelled
-        </span>
-      );
-    case "Out for Delivery":
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
-          <Truck size={14} />
-          Out for Delivery
         </span>
       );
     case "Preparing":
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-          <Clock3 size={14} />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-700">
+          <Clock3 size={13} />
           Preparing
+        </span>
+      );
+    case "Out for Delivery":
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-bold text-blue-700">
+          <Truck size={13} />
+          Out for Delivery
+        </span>
+      );
+    case "Cancelled":
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-3 py-1 text-xs font-bold text-red-700">
+          <XCircle size={13} />
+          Cancelled
         </span>
       );
     case "Pending Payment":
@@ -181,14 +182,14 @@ export default function OrderDetailsModal({
     order.status !== "Cancelled";
 
   const p = order.pricingJson || {};
-  const subtotal = Number(p.subtotal ?? order.subtotal ?? 0);
-  const discount = Number(p.discount ?? order.discount ?? 0);
-  const deliveryFee = Number(p.delivery_fee ?? order.deliveryFee ?? 0);
-  const packagingFee = Number(p.packaging_fee ?? 0);
-  const platformFee = Number(p.platform_fee ?? 0);
-  const codFee = Number(p.cod_fee ?? 0);
-  const taxAmount = Number(p.tax_amount ?? order.taxAmount ?? 0);
-  const grandTotal = Number(p.grand_total ?? order.total ?? 0);
+  const subtotal = Math.round((Number(p.subtotal ?? order.subtotal ?? 0) + Number.EPSILON) * 100) / 100;
+  const discount = Math.round((Number(p.discount ?? order.discount ?? 0) + Number.EPSILON) * 100) / 100;
+  const deliveryFee = Math.round((Number(p.delivery_fee ?? order.deliveryFee ?? 0) + Number.EPSILON) * 100) / 100;
+  const packagingFee = Math.round((Number(p.packaging_fee ?? 0) + Number.EPSILON) * 100) / 100;
+  const platformFee = Math.round((Number(p.platform_fee ?? 0) + Number.EPSILON) * 100) / 100;
+  const codFee = Math.round((Number(p.cod_fee ?? 0) + Number.EPSILON) * 100) / 100;
+  const taxAmount = Math.round((Number(p.tax_amount ?? order.taxAmount ?? 0) + Number.EPSILON) * 100) / 100;
+  const grandTotal = Math.round((Number(p.grand_total ?? order.total ?? 0) + Number.EPSILON) * 100) / 100;
   const isFreeDelivery = Boolean(p.is_free_delivery || (deliveryFee === 0 && subtotal > 0));
 
   const isCancelled = order.status === "Cancelled";
@@ -454,8 +455,8 @@ export default function OrderDetailsModal({
                 const freeQty = Number(item.free_quantity || 0);
                 const lineTotal =
                   item.total != null
-                    ? Number(item.total)
-                    : Number(item.price) * paidQty;
+                    ? Math.round((Number(item.total) + Number.EPSILON) * 100) / 100
+                    : Math.round(((Number(item.price) * paidQty) + Number.EPSILON) * 100) / 100;
                 const img = item.image || item.img;
 
                 return (

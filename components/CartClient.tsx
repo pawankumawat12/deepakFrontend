@@ -89,6 +89,7 @@ import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import AddressModal from "./AddressModal";
 import DeleteAddressDialog from "./DeleteAddressDialog";
+import { loadRazorpayScript } from "../lib/razorpay";
 
 const API_ORIGIN = (
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
@@ -98,7 +99,8 @@ const API_ORIGIN = (
 ).replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
 
 function formatRupee(v: number) {
-  return Number(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  const num = Math.round((Number(v || 0) + Number.EPSILON) * 100) / 100;
+  return num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
 
 export default function CartClient() {
@@ -117,7 +119,8 @@ export default function CartClient() {
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [deletingAddress, setDeletingAddress] = useState<Address | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<string>("Online Payment")
+  const [paymentMethod, setPaymentMethod] = useState<string>("Online Payment");
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
 
   // Dynamic Offers & Promo Code State
   const [appliedOfferCode, setAppliedOfferCode] = useState<string>("");
@@ -234,18 +237,11 @@ export default function CartClient() {
 
 
 
-  // razor pay script run 
+  // Preload Razorpay script on mount
   useEffect(() => {
-    const script = document.createElement("script");
-
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
+    loadRazorpayScript().catch((err) => {
+      console.warn("Failed to preload Razorpay script:", err);
+    });
   }, []);
 
 
@@ -506,7 +502,31 @@ export default function CartClient() {
       return;
     }
 
+    if (isProcessingPayment || isPlacingOrder || isVerifyingPayment) {
+      return;
+    }
+
     try {
+      setIsProcessingPayment(true);
+
+      // 0. ENSURE RAZORPAY SCRIPT IS LOADED BEFORE CREATING ORDER
+      // This prevents creating duplicate unpaid orders in the database when Razorpay isn't ready.
+      if (paymentMethod === "Online Payment") {
+        if (typeof window !== "undefined" && !window.Razorpay) {
+          toast.loading("Preparing secure payment gateway...", { id: "razorpay-init" });
+        }
+        const isLoaded = await loadRazorpayScript();
+        toast.dismiss("razorpay-init");
+
+        if (!isLoaded || !window.Razorpay) {
+          toast.error(
+            "Payment gateway could not be loaded. Please check your internet connection and try again."
+          );
+          setIsProcessingPayment(false);
+          return;
+        }
+      }
+
       // 1. CREATE ORDER
       const orderResponse = await createOrder({
         addressId: selectedAddress.id,
@@ -542,6 +562,7 @@ export default function CartClient() {
 
       // 2. COD
       if (paymentMethod === "Cash on Delivery") {
+        setIsProcessingPayment(false);
         toast.success(
           "Order placed successfully! Fresh food is being prepared."
         );
@@ -564,11 +585,13 @@ export default function CartClient() {
           );
         }
 
-        // Check Razorpay script
+        // Safety check for Razorpay SDK
         if (!window.Razorpay) {
           toast.error(
-            "Payment gateway is still loading. Please try again."
+            "Payment gateway is not available. Please try again from My Orders."
           );
+          setIsProcessingPayment(false);
+          router.push("/orders");
           return;
         }
 
@@ -576,7 +599,7 @@ export default function CartClient() {
           key: orderData.razorpayKeyId,
 
           amount:
-            Number(orderData.paymentAmount) * 100,
+            Math.round((Number(orderData.paymentAmount) + Number.EPSILON) * 100),
 
           currency:
             orderData.paymentCurrency || "INR",
@@ -650,8 +673,10 @@ export default function CartClient() {
                 }
               );
 
+              setIsProcessingPayment(false);
               router.push("/orders");
             } catch (error: any) {
+              setIsProcessingPayment(false);
               console.error(
                 "Payment verification error:",
                 error
@@ -664,14 +689,17 @@ export default function CartClient() {
                   id: "payment-verification",
                 }
               );
+              router.push("/orders");
             }
           },
 
           modal: {
             ondismiss: function () {
+              setIsProcessingPayment(false);
               toast.error(
-                "Payment cancelled. Your order is still pending payment."
+                "Payment cancelled. Your order has been placed and is pending payment. You can complete it from My Orders."
               );
+              router.push("/orders");
             },
           },
         };
@@ -682,6 +710,7 @@ export default function CartClient() {
         razorpay.on(
           "payment.failed",
           function (response: any) {
+            setIsProcessingPayment(false);
             console.error(
               "Razorpay payment failed:",
               response
@@ -689,14 +718,16 @@ export default function CartClient() {
 
             toast.error(
               response?.error?.description ||
-              "Payment failed. Please try again."
+              "Payment failed. You can retry from My Orders."
             );
+            router.push("/orders");
           }
         );
 
         razorpay.open();
       }
     } catch (err: any) {
+      setIsProcessingPayment(false);
       console.error(
         "Checkout error:",
         err
@@ -2064,6 +2095,7 @@ export default function CartClient() {
                     isStoreClosed ||
                     items.length === 0 ||
                     summary.hasOutOfStockItems ||
+                    isProcessingPayment ||
                     (user ? (
                       summary.isBelowMinimumOrder ||
                       summary.isOutOfRange ||
@@ -2102,15 +2134,17 @@ export default function CartClient() {
                       ? "Store is Currently Closed"
                       : !user
                         ? "Sign In to Checkout"
-                        : isPlacingOrder
-                          ? "Creating Order..."
-                          : isVerifyingPayment
-                            ? "Verifying Payment..."
-                            : paymentMethod === "Online Payment"
-                              ? "Pay & Place Order"
-                              : "Place Order"}
+                        : isProcessingPayment && !isPlacingOrder && !isVerifyingPayment
+                          ? "Preparing Payment..."
+                          : isPlacingOrder
+                            ? "Creating Order..."
+                            : isVerifyingPayment
+                              ? "Verifying Payment..."
+                              : paymentMethod === "Online Payment"
+                                ? "Pay & Place Order"
+                                : "Place Order"}
                   </span>
-                  {isPlacingOrder ? (
+                  {isPlacingOrder || isVerifyingPayment || isProcessingPayment ? (
                     <LoaderCircle size={16} className="animate-spin" />
                   ) : (
                     <ArrowRight size={16} />
