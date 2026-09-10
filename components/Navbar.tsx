@@ -522,9 +522,7 @@ const Navbar = () => {
                     </span>
 
                     <span>{user?.name?.split(" ")[0] ?? "Profile"}</span>
-                    <span className="max-w-[90px] truncate" title={user?.name || "Profile"}>
-                      {user?.name?.split(" ")[0] ?? "Profile"}
-                    </span>
+               
 
                     <ChevronDown
                       size={15}

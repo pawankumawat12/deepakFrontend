@@ -119,7 +119,38 @@ export default function RegisterForm({
       password: values.password,
     };
     try {
-      await registerAccount(account).unwrap();
+      const res = (await registerAccount(account).unwrap()) as {
+        success?: boolean;
+        accessToken?: string;
+        token?: string;
+        user?: unknown;
+        requiresVerification?: boolean;
+        data?: {
+          requiresVerification?: boolean;
+          accessToken?: string;
+          token?: string;
+        };
+      };
+      if (
+        res?.data?.requiresVerification === false ||
+        res?.requiresVerification === false ||
+        (!res?.data?.requiresVerification && (res?.accessToken || res?.token || res?.user))
+      ) {
+        dispatch(setCredentials(res));
+        try {
+          const me = await getMe().unwrap();
+          dispatch(setCredentials(me));
+        } catch {}
+        await syncGuestCart();
+        toast.success("Account created successfully! Welcome to SFC Cafe.");
+        if (onComplete) {
+          onComplete();
+        } else {
+          router.replace("/");
+        }
+        return;
+      }
+
       setEmail(account.email);
       setOtpDigits(["", "", "", "", "", ""]);
       verification.reset({ otp: "" });
