@@ -795,6 +795,7 @@ export default function CartClient() {
                 hover:bg-[var(--color-primary-dark)]
                 active:scale-95
               "
+              style={{color: "white"}}
             >
               <Utensils size={16} style={{ color: "white" }}
               />

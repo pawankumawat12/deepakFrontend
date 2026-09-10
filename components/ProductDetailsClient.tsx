@@ -1567,6 +1567,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 hover:-translate-y-0.5
                 active:scale-95
               "
+              style={{color: "white"}}
             >
               Explore Menu
               <ArrowRight size={16} />
