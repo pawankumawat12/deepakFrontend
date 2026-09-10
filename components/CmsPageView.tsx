@@ -99,7 +99,7 @@ export default function CmsPageView({ slug, initialData }: CmsPageViewProps) {
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)] py-8 sm:py-12">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto  px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb Navigation */}
         <nav
           aria-label="Breadcrumb"

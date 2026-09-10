@@ -1,5 +1,5 @@
 "use client";
-
+import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import React, { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
@@ -17,6 +17,8 @@ import {
   AlertCircle,
   ShieldCheck,
   RefreshCw,
+  Navigation,
+  ExternalLink,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGetFooterQuery } from "@/redux/services/settingsApi";
@@ -27,6 +29,59 @@ import {
 import { getSocket } from "@/lib/socket";
 
 export default function ContactPage() {
+  // const mapRef = React.useRef<HTMLDivElement | null>(null);
+  // useEffect(() => {
+  //   let cancelled = false;
+  
+  //   const initMap = async () => {
+  //     try {
+  //       setOptions({
+  //         key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+  //         v: "weekly",
+  //       });
+  
+  //       const { Map } = (await importLibrary("maps")) as google.maps.MapsLibrary;
+  
+  //       if (cancelled || !mapRef.current) return;
+  
+  //       const defaultLocation = {
+  //         lat: 26.9124,
+  //         lng: 75.7873,
+  //       };
+  
+
+        
+  //       const map = new Map(mapRef.current, {
+  //         center: defaultLocation,
+  //         zoom: 14,
+  //         mapTypeControl: false,
+  //         streetViewControl: false,
+  //         fullscreenControl: false,
+  //       });
+  
+  //       // Marker library load
+  //       const { AdvancedMarkerElement } =
+  //         (await importLibrary("marker")) as google.maps.MarkerLibrary;
+  
+  //       if (cancelled) return;
+  
+  //       new AdvancedMarkerElement({
+  //         map,
+  //         position: defaultLocation,
+  //         title: "SFC Bakers",
+  //       });
+  //     } catch (error) {
+  //       console.error("Google Maps initialization failed:", error);
+  //     }
+  //   };
+  
+  //   initMap();
+  
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, []);
+
   const user = useSelector((state: any) => state.auth?.user);
   const { data: settings } = useGetFooterQuery();
   const settingData = settings?.data;
@@ -860,123 +915,125 @@ export default function ContactPage() {
               </div>
             )}
           </div>
-          <div className="relative min-h-[520px]">
-            <div
-              className="
-                absolute
-                inset-0
-                opacity-20
-                [background-image:linear-gradient(to_right,rgba(255,255,255,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.15)_1px,transparent_1px)]
-                [background-size:50px_50px]
-              "
-            />
-
-            {/* Location content */}
-
-            <div className="relative flex h-full flex-col justify-between p-7 sm:p-10">
-
-              <div>
-
-                <span className="text-[10px] py-1 px-3 rounded-full font-bold uppercase tracking-[0.2em] text-[var(--color-primary-light)] bg-[var(--color-primary-50)]">
-                  Find Us
+          {/* RIGHT - LOCATION & VISIT INFO (Matching Home Page Find Us UI) */}
+          <div className="flex flex-col justify-between border-t border-[var(--color-border)] bg-[var(--color-cream)] p-6 sm:p-8 lg:border-l lg:border-t-0 lg:p-12">
+            <div>
+              {/* Badge & Heading */}
+              <div className="mb-6">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-50)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary)]">
+                  <MapPin size={12} />
+                  Our Location
                 </span>
 
-                <h2 className="mt-3 text-3xl font-black ">
-                  Come say
-                  <br />
-                  <span className="text-[var(--color-primary-light)]">
-                    hello
-                  </span>
-                </h2>
+                <h3 className="mt-4 text-2xl font-black text-[var(--color-text-primary)] md:text-3xl">
+                  Visit SFC Bakers
+                </h3>
 
-                <p className="mt-4 max-w-sm text-sm leading-6 ">
-                  We're always happy to welcome you. Drop by for
-                  some delicious food and good vibes.
+                <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Come enjoy your favorite freshly prepared food and handcrafted bakery delights. We would love to serve you!
                 </p>
-
               </div>
 
-              {/* Map pin */}
+              {/* Interactive Google Map */}
+              {/* <div className="mb-6 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-stone-100 shadow-md">
+                <div
+                  ref={mapRef}
+                  className="h-[220px] w-full"
+                />
+              </div> */}
 
-              <div className="flex flex-1 items-center justify-center">
-
-                <div className="relative">
-
-                  <div
-                    className="
-                      absolute
-                      -inset-8
-                      animate-pulse
-                      rounded-full
-                      bg-[var(--color-primary)]/10
-                    "
-                  />
-
-                  <div
-                    className="
-                      relative
-                      flex
-                      h-20
-                      w-20
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-[var(--color-primary)]
-                      text-white
-                      shadow-[0_15px_40px_rgba(0,0,0,0.3)]
-                    "
-                  >
-                    <MapPin size={34} />
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Address card */}
-
-              <div
-                className="
-                  rounded-2xl
-                  border
-                  border-white/10
-                  bg-white/5
-                  p-5
-                  backdrop-blur-md
-                "
-              >
-
+              {/* Location details */}
+              <div className="space-y-5">
+                {/* Address */}
                 <div className="flex gap-4">
-
-                  <div
-                    className="
-                      flex
-                      h-10
-                      w-10
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-xl
-                      bg-[var(--color-primary)]
-                      text-white
-                    "
-                  >
-                    <MapPin size={18} />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                    <MapPin size={20} />
                   </div>
-
                   <div>
-
-                    <p className="text-xs font-bold ">
-                      SFC Bakers
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+                      Address
                     </p>
-
-                    <p className="mt-1 text-xs leading-5">
-                      {settingData?.location}
+                    <p className="mt-1 text-sm font-semibold leading-6 text-[var(--color-text-primary)]">
+                      {settingData?.location || "123 Main Street, Jaipur, Rajasthan 302017"}
                     </p>
+                  </div>
+                </div>
 
+                {/* Phone */}
+                <div className="flex gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]">
+                    <Phone size={19} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+                      Phone
+                    </p>
+                    <a
+                      href={`tel:${(settingData?.phone_number || "+91 98765 43210").replace(/\s/g, "")}`}
+                      className="mt-1 block text-sm font-bold text-[var(--color-text-primary)] transition hover:text-[var(--color-primary)]"
+                    >
+                      {settingData?.phone_number || "+91 98765 43210"}
+                    </a>
+                  </div>
+                </div>
+
+                {/* Opening Hours */}
+                <div className="flex gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                    <Clock3 size={19} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+                      Opening Hours
+                    </p>
+                    <div className="mt-2 space-y-1.5">
+                      <div className="flex items-center justify-between gap-5 text-sm">
+                        <span className="font-medium text-[var(--color-text-secondary)]">
+                          Monday - Friday
+                        </span>
+                        <span className="whitespace-nowrap font-bold text-[var(--color-text-primary)]">
+                          {settingData?.working_hours || "10:00 AM - 11:00 PM"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-5 text-sm">
+                        <span className="font-medium text-[var(--color-text-secondary)]">
+                          Saturday - Sunday
+                        </span>
+                        <span className="whitespace-nowrap font-bold text-[var(--color-text-primary)]">
+                          9:00 AM - 11:00 PM
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="mt-9 grid gap-3 sm:grid-cols-2">
+              <a
+                href={
+                  settingData?.location
+                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`SFC Bakers ${settingData.location}`)}`
+                    : "https://www.google.com/maps/search/?api=1&query=SFC+Bakers+Jaipur"
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-[var(--color-primary)] bg-white px-5 text-sm font-bold text-[var(--color-primary)] transition-all hover:-translate-y-0.5 hover:bg-[var(--color-primary-50)] shadow-xs"
+              >
+                <Navigation size={17} />
+                Get Directions
+                <ExternalLink size={13} />
+              </a>
+
+              <Link
+                href="/menu"
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[var(--color-primary-dark)]"
+              style={{color:"white"}}
+              >
+                Order Online
+                <ArrowRight size={17} />
+              </Link>
             </div>
           </div>
         </div>

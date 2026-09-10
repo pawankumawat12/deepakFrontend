@@ -10,27 +10,32 @@ import {
   ArrowRight,
   ExternalLink,
 } from "lucide-react";
-
-const location = {
-  name: "SFC Bakers",
-  address: "123 Main Street, Jaipur, Rajasthan 302017",
-  phone: "+91 98765 43210",
-  mapUrl:
-    "https://www.google.com/maps/search/?api=1&query=SFC+Bakers+Jaipur",
-};
-
-const timings = [
-  {
-    day: "Monday - Friday",
-    time: "10:00 AM - 11:00 PM",
-  },
-  {
-    day: "Saturday - Sunday",
-    time: "9:00 AM - 11:30 PM",
-  },
-];
+import { useGetFooterQuery } from "@/redux/services/settingsApi";
 
 export default function LocationContact() {
+  const { data: settings } = useGetFooterQuery();
+  const settingData = settings?.data;
+
+  const location = {
+    name: "SFC Bakers",
+    address: settingData?.location || "123 Main Street, Jaipur, Rajasthan 302017",
+    phone: settingData?.phone_number || "+91 98765 43210",
+    mapUrl: settingData?.location
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`SFC Bakers ${settingData.location}`)}`
+      : "https://www.google.com/maps/search/?api=1&query=SFC+Bakers+Jaipur",
+  };
+
+  const timings = [
+    {
+      day: "Monday - Friday",
+      time: settingData?.working_hours || "10:00 AM - 11:00 PM",
+    },
+    {
+      day: "Saturday - Sunday",
+      time: "9:00 AM - 11:30 PM",
+    },
+  ];
+
   return (
     <section className="bg-white px-4 py-14 md:px-8 md:py-20">
       <div className="mx-auto max-w-7xl">
