@@ -148,6 +148,7 @@ export default function OrderChat({
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const docInputRef = useRef<HTMLInputElement | null>(null);
   const inputFieldRef = useRef<HTMLInputElement | null>(null);
+  const isSendingRef = useRef(false);
 
   const {
     data: historyData,
@@ -196,7 +197,7 @@ export default function OrderChat({
     }) => {
       if (String(payload.orderId) === String(effectiveOrderId)) {
         setLiveMessages((prev) => {
-          if (prev.some((m) => m.id === payload.message.id)) {
+          if (prev.some((m) => String(m.id) === String(payload.message.id))) {
             return prev;
           }
           return [...prev, payload.message];
@@ -330,7 +331,8 @@ export default function OrderChat({
     }
     const trimmed = inputText.trim();
     if (!trimmed && !selectedFile) return;
-    if (isSending) return;
+    if (isSending || isSendingRef.current) return;
+    isSendingRef.current = true;
 
     const socket = getSocket(user?.id);
     socket.emit("typing_stop", {
@@ -356,7 +358,7 @@ export default function OrderChat({
         const res = await postMessageMutation(formData).unwrap();
         if (res.data) {
           setLiveMessages((prev) => {
-            if (prev.some((m) => m.id === res.data.id)) return prev;
+            if (prev.some((m) => String(m.id) === String(res.data.id))) return prev;
             return [...prev, res.data];
           });
         }
@@ -368,7 +370,7 @@ export default function OrderChat({
 
         if (res.data) {
           setLiveMessages((prev) => {
-            if (prev.some((m) => m.id === res.data.id)) return prev;
+            if (prev.some((m) => String(m.id) === String(res.data.id))) return prev;
             return [...prev, res.data];
           });
         }
@@ -379,6 +381,8 @@ export default function OrderChat({
       setInputText(textToSend);
       if (fileToSend) setSelectedFile(fileToSend);
       toast.error(err?.data?.message || "Failed to send message");
+    } finally {
+      isSendingRef.current = false;
     }
   };
 
@@ -386,9 +390,6 @@ export default function OrderChat({
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSendMessage();
-      if (!isExpired) {
-        handleSendMessage();
-      }
     }
   };
 

@@ -36,13 +36,11 @@ export default function CmsPageView({ slug, initialData }: CmsPageViewProps) {
           {/* Breadcrumb Skeleton */}
           <div className="h-4 w-48 rounded bg-gray-200 skeleton-pulse mb-6" />
 
-          {/* Header Skeleton */}
           <div className="rounded-3xl border border-[var(--color-border)] bg-white p-6 sm:p-10 shadow-sm mb-6">
             <div className="h-8 w-3/4 rounded-lg bg-gray-200 skeleton-pulse mb-4" />
             <div className="h-4 w-40 rounded bg-gray-100 skeleton-pulse" />
           </div>
 
-          {/* Content Body Skeleton */}
           <div className="rounded-3xl border border-[var(--color-border)] bg-white p-6 sm:p-10 shadow-sm space-y-4">
             <div className="h-5 w-full rounded bg-gray-100 skeleton-pulse" />
             <div className="h-5 w-5/6 rounded bg-gray-100 skeleton-pulse" />
