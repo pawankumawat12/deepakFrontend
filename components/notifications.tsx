@@ -270,7 +270,16 @@ export default function NotificationsPage() {
 
       {/* FILTERS */}
       <section className="mx-auto max-w-5xl px-5 pt-6 sm:px-8">
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div className="
+          flex
+          gap-2
+          overflow-x-auto
+          scroll-smooth
+          snap-x
+          snap-mandatory
+          py-3
+          scrollbar-x
+        ">
           {filters.map((filter) => {
             const active = activeFilter === filter.value;
             return (
@@ -279,7 +288,7 @@ export default function NotificationsPage() {
                 type="button"
                 onClick={() => setActiveFilter(filter.value)}
                 className={`
-                  shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold transition
+                  shrink-0 snap-start rounded-full border px-4 py-2 text-[11px] font-bold transition
                   ${
                     active
                       ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-sm"

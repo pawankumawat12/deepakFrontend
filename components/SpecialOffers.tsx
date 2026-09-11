@@ -73,7 +73,7 @@ export default function SpecialOffers() {
             </div>
 
             <h2 className="text-3xl font-black tracking-tight text-[var(--color-text-primary)] md:text-4xl">
-              Special Dynamic Offers
+              Special Offers
             </h2>
 
             <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--color-text-secondary)] md:text-base">

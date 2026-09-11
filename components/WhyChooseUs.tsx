@@ -9,52 +9,92 @@ import {
   ShieldCheck,
   Clock3,
   ArrowRight,
+  Star,
+  Award,
+  Sparkles,
+  Utensils,
+  Flame,
+  Coffee,
+  Smile,
+  ThumbsUp,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
+import { useGetWhyChooseUsQuery } from "../redux/services/whyChooseUsApi";
+import { toAssetUrl } from "../utils/backendUrl";
 
-const features = [
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+  Leaf,
+  Zap,
+  Truck,
+  Heart,
+  ShieldCheck,
+  Clock3,
+  Star,
+  Award,
+  Sparkles,
+  Utensils,
+  Flame,
+  Coffee,
+  Smile,
+  ThumbsUp,
+  CheckCircle2,
+};
+
+const FALLBACK_FEATURES = [
   {
     id: 1,
-    icon: Leaf,
+    icon: "Leaf",
     title: "Fresh Ingredients",
     description:
       "We use fresh and carefully selected ingredients to make every meal delicious.",
-    color:
-      "bg-[var(--color-primary-50)] text-[var(--color-primary)]",
+    color_class: "bg-[var(--color-primary-50)] text-[var(--color-primary)]",
   },
   {
     id: 2,
-    icon: Zap,
+    icon: "Zap",
     title: "Made Fresh & Fast",
     description:
       "Your food is prepared fresh when you order, without compromising on taste.",
-    color:
-      "bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]",
+    color_class: "bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]",
   },
   {
     id: 3,
-    icon: Truck,
+    icon: "Truck",
     title: "Quick Delivery",
     description:
       "Hot and fresh food delivered quickly and safely right to your doorstep.",
-    color:
-      "bg-[var(--color-primary-50)] text-[var(--color-primary)]",
+    color_class: "bg-[var(--color-primary-50)] text-[var(--color-primary)]",
   },
   {
     id: 4,
-    icon: Heart,
+    icon: "Heart",
     title: "Made With Love",
     description:
       "Every dish is prepared with care because great food should feel special.",
-    color:
-      "bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]",
+    color_class: "bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]",
   },
 ];
 
-export default function WhyChooseUs() {
-  return (
-    <section className="relative overflow-hidden bg-[var(--color-cream)]  px-4 py-6 md:px-8 md:py-10">
+const FALLBACK_SECTION = {
+  badge: "Why Choose Us",
+  title: "More Than Just",
+  highlight: "Fast Food",
+  subtitle:
+    "We believe great food starts with great ingredients, careful preparation and a whole lot of love.",
+  cta_text: "Taste The Difference",
+  cta_href: "/menu",
+};
 
+export default function WhyChooseUs() {
+  const { data } = useGetWhyChooseUsQuery();
+
+  const section = data?.section || FALLBACK_SECTION;
+  const features =
+    data?.items && data.items.length > 0 ? data.items : FALLBACK_FEATURES;
+
+  return (
+    <section className="relative overflow-hidden bg-[var(--color-cream)] px-4 py-6 md:px-8 md:py-10">
       <div
         className="
           pointer-events-none
@@ -86,50 +126,20 @@ export default function WhyChooseUs() {
       />
 
       <div className="relative mx-auto max-w-7xl">
-
         {/* =====================================================
             HEADER
         ===================================================== */}
-
         <div className="mx-auto mb-12 max-w-2xl text-center">
-
           {/* Small label */}
-
           <div className="mb-3 flex items-center justify-center gap-2">
-
-            <span
-              className="
-                h-2
-                w-2
-                rounded-full
-                bg-[var(--color-primary)]
-              "
-            />
-
-            <span
-              className="
-                text-xs
-                font-bold
-                uppercase
-                tracking-[0.18em]
-                text-[var(--color-primary)]
-              "
-            >
-              Why Choose Us
+            <span className="h-2 w-2 rounded-full bg-[var(--color-primary)]" />
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+              {section.badge || "Why Choose Us"}
             </span>
-
-            <span
-              className="
-                h-2
-                w-2
-                rounded-full
-                bg-[var(--color-primary)]
-              "
-            />
+            <span className="h-2 w-2 rounded-full bg-[var(--color-primary)]" />
           </div>
 
           {/* Heading */}
-
           <h2
             className="
               text-3xl
@@ -140,35 +150,41 @@ export default function WhyChooseUs() {
               lg:text-5xl
             "
           >
-            More Than Just
-            <span className="text-[var(--color-primary)]">
-              {" "}
-              Fast Food
-            </span>
+            {section.title || "More Than Just"}{" "}
+            {section.highlight && (
+              <span className="text-[var(--color-primary)]">
+                {section.highlight}
+              </span>
+            )}
           </h2>
 
-          <p
-            className="
-              mt-4
-              text-sm
-              leading-6
-              text-[var(--color-text-secondary)]
-              md:text-base
-            "
-          >
-            We believe great food starts with great ingredients,
-            careful preparation and a whole lot of love.
-          </p>
+          {section.subtitle && (
+            <p
+              className="
+                mt-4
+                text-sm
+                leading-6
+                text-[var(--color-text-secondary)]
+                md:text-base
+              "
+            >
+              {section.subtitle}
+            </p>
+          )}
         </div>
 
         {/* =====================================================
             FEATURES
         ===================================================== */}
-
         <div className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
-          {features.map((feature) => {
-            const Icon = feature.icon;
+          {features.map((feature, idx) => {
+            const IconComponent =
+              (feature.icon && ICON_MAP[feature.icon]) || Sparkles;
+            const colorClass =
+              feature.color_class ||
+              (idx % 2 === 0
+                ? "bg-[var(--color-primary-50)] text-[var(--color-primary)]"
+                : "bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]");
 
             return (
               <div
@@ -192,9 +208,7 @@ export default function WhyChooseUs() {
                   hover:shadow-[0_18px_40px_rgba(79,125,22,0.12)]
                 "
               >
-
                 {/* Number */}
-
                 <span
                   className="
                     absolute
@@ -208,11 +222,10 @@ export default function WhyChooseUs() {
                     text-[var(--color-primary)]/[0.05]
                   "
                 >
-                  0{feature.id}
+                  {String(idx + 1).padStart(2, "0")}
                 </span>
 
-                {/* Icon */}
-
+                {/* Icon / Image */}
                 <div
                   className={`
                     relative
@@ -226,18 +239,25 @@ export default function WhyChooseUs() {
                     justify-center
                     rounded-xl
                     sm:rounded-2xl
-                    ${feature.color}
+                    ${colorClass}
                     transition-transform
                     duration-300
                     group-hover:scale-110
                     group-hover:rotate-3
                   `}
                 >
-                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
+                  {"image" in feature && feature.image ? (
+                    <img
+                      src={toAssetUrl(feature.image)}
+                      alt={feature.title}
+                      className="h-6 w-6 sm:h-8 sm:w-8 object-contain rounded-lg"
+                    />
+                  ) : (
+                    <IconComponent className="h-5 w-5 sm:h-7 sm:w-7" />
+                  )}
                 </div>
 
                 {/* Title */}
-
                 <h3
                   className="
                     mt-3
@@ -252,7 +272,6 @@ export default function WhyChooseUs() {
                 </h3>
 
                 {/* Description */}
-
                 <p
                   className="
                     mt-1.5
@@ -276,7 +295,6 @@ export default function WhyChooseUs() {
         {/* =====================================================
             TRUST STRIP
         ===================================================== */}
-
         <div
           className="
             mt-8
@@ -289,9 +307,7 @@ export default function WhyChooseUs() {
             sm:grid-cols-3
           "
         >
-
           {/* Rating */}
-
           <div
             className="
               flex
@@ -333,7 +349,6 @@ export default function WhyChooseUs() {
           </div>
 
           {/* Preparation */}
-
           <div
             className="
               flex
@@ -375,7 +390,6 @@ export default function WhyChooseUs() {
           </div>
 
           {/* Customer */}
-
           <div
             className="
               flex
@@ -416,11 +430,9 @@ export default function WhyChooseUs() {
         {/* =====================================================
             CTA
         ===================================================== */}
-
         <div className="mt-10 text-center">
-
           <Link
-            href="/menu"
+            href={section.cta_href || "/menu"}
             className="
               inline-flex
               items-center
@@ -437,11 +449,10 @@ export default function WhyChooseUs() {
               hover:-translate-y-1
               hover:bg-[var(--color-primary-dark)]
             "
-            style={{color:"white"}}
+            style={{ color: "white" }}
           >
-            Taste The Difference
-
-            <ArrowRight size={17} className="text-white"/>
+            {section.cta_text || "Taste The Difference"}
+            <ArrowRight size={17} className="text-white" />
           </Link>
         </div>
       </div>

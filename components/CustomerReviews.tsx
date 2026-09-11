@@ -8,8 +8,21 @@ import {
   Star,
   BadgeCheck,
 } from "lucide-react";
+import { useGetTestimonialsQuery } from "../redux/services/testimonialApi";
+import { toAssetUrl } from "../utils/backendUrl";
 
-const reviews = [
+interface TestimonialData {
+  id: number;
+  name: string;
+  location?: string | null;
+  avatar?: string | null;
+  rating: number;
+  review: string;
+  date_text?: string | null;
+  date?: string | null;
+}
+
+const FALLBACK_REVIEWS: TestimonialData[] = [
   {
     id: 1,
     name: "Rahul Sharma",
@@ -18,7 +31,7 @@ const reviews = [
     rating: 5,
     review:
       "Absolutely loved the burger! Everything tasted fresh and the fries were perfectly crispy. Will definitely order again.",
-    date: "2 days ago",
+    date_text: "2 days ago",
   },
   {
     id: 2,
@@ -28,7 +41,7 @@ const reviews = [
     rating: 5,
     review:
       "The food was amazing and delivery was really quick. The packaging was also neat and everything arrived hot.",
-    date: "5 days ago",
+    date_text: "5 days ago",
   },
   {
     id: 3,
@@ -38,7 +51,7 @@ const reviews = [
     rating: 4,
     review:
       "Great taste and good portion size. The pizza was delicious and the overall experience was really good.",
-    date: "1 week ago",
+    date_text: "1 week ago",
   },
   {
     id: 4,
@@ -48,44 +61,68 @@ const reviews = [
     rating: 5,
     review:
       "One of my favorite places for quick food. Fresh ingredients, tasty food and friendly service.",
-    date: "1 week ago",
+    date_text: "1 week ago",
   },
 ];
 
+const FALLBACK_SECTION = {
+  badge: "Customer Love",
+  title: "What Our Customers Say",
+  subtitle:
+    "Good food makes people happy. Here is what our customers have to say about their experience.",
+};
+
 export default function CustomerReviews() {
+  const { data } = useGetTestimonialsQuery();
+
+  const section = data?.section || FALLBACK_SECTION;
+  const reviews: TestimonialData[] =
+    data?.testimonials && data.testimonials.length > 0
+      ? data.testimonials
+      : FALLBACK_REVIEWS;
+
   const [activeIndex, setActiveIndex] = useState(0);
+
+  // Keep index within bounds if reviews change
+  useEffect(() => {
+    if (activeIndex >= reviews.length) {
+      setActiveIndex(0);
+    }
+  }, [reviews.length, activeIndex]);
 
   /*
    * --------------------------------------------------
    * AUTO SLIDER
    * --------------------------------------------------
    */
-
   useEffect(() => {
+    if (reviews.length <= 1) return;
+
     const id = setInterval(() => {
       setActiveIndex((current) =>
-        current === reviews.length - 1 ? 0 : current + 1
+        current >= reviews.length - 1 ? 0 : current + 1
       );
     }, 5000);
 
     return () => clearInterval(id);
-  }, []);
+  }, [reviews.length]);
 
   /*
    * --------------------------------------------------
    * CONTROLS
    * --------------------------------------------------
    */
-
   const previousReview = () => {
+    if (reviews.length <= 1) return;
     setActiveIndex((current) =>
       current === 0 ? reviews.length - 1 : current - 1
     );
   };
 
   const nextReview = () => {
+    if (reviews.length <= 1) return;
     setActiveIndex((current) =>
-      current === reviews.length - 1 ? 0 : current + 1
+      current >= reviews.length - 1 ? 0 : current + 1
     );
   };
 
@@ -94,7 +131,6 @@ export default function CustomerReviews() {
    * STAR COMPONENT
    * --------------------------------------------------
    */
-
   const Stars = ({ rating }: { rating: number }) => {
     return (
       <div className="flex items-center gap-1">
@@ -102,11 +138,7 @@ export default function CustomerReviews() {
           <Star
             key={index}
             size={15}
-            fill={
-              index < rating
-                ? "currentColor"
-                : "transparent"
-            }
+            fill={index < rating ? "currentColor" : "transparent"}
             className={
               index < rating
                 ? "text-[var(--color-secondary)]"
@@ -118,13 +150,26 @@ export default function CustomerReviews() {
     );
   };
 
+  // Average Rating
+  const avgRatingNumber =
+    reviews.length > 0
+      ? reviews.reduce((acc, r) => acc + (r.rating || 5), 0) / reviews.length
+      : 4.9;
+  const avgRatingDisplay = avgRatingNumber.toFixed(1);
+
+  // Desktop reviews window (show 3 reviews starting from activeIndex if multiple reviews)
+  const desktopReviews =
+    reviews.length <= 3
+      ? reviews
+      : Array.from({ length: 3 }).map(
+          (_, i) => reviews[(activeIndex + i) % reviews.length]
+        );
+
   return (
     <section className="relative overflow-hidden bg-[var(--bg-body)] px-4 py-14 md:px-8 md:py-10">
-
       {/* =====================================================
           BACKGROUND DECORATION
       ===================================================== */}
-
       <div
         className="
           pointer-events-none
@@ -156,26 +201,13 @@ export default function CustomerReviews() {
       />
 
       <div className="relative mx-auto max-w-7xl">
-
         {/* =====================================================
             HEADER
         ===================================================== */}
-
         <div className="mx-auto max-w-2xl text-center">
-
           {/* Label */}
-
           <div className="mb-3 flex items-center justify-center gap-2">
-
-            <span
-              className="
-                h-2
-                w-2
-                rounded-full
-                bg-[var(--color-secondary)]
-              "
-            />
-
+            <span className="h-2 w-2 rounded-full bg-[var(--color-secondary)]" />
             <span
               className="
                 text-xs
@@ -185,21 +217,12 @@ export default function CustomerReviews() {
                 text-[var(--color-secondary)]
               "
             >
-              Customer Love
+              {section.badge || "Customer Love"}
             </span>
-
-            <span
-              className="
-                h-2
-                w-2
-                rounded-full
-                bg-[var(--color-secondary)]
-              "
-            />
+            <span className="h-2 w-2 rounded-full bg-[var(--color-secondary)]" />
           </div>
 
           {/* Heading */}
-
           <h2
             className="
               text-3xl
@@ -210,27 +233,27 @@ export default function CustomerReviews() {
               lg:text-5xl
             "
           >
-            What Our Customers Say
+            {section.title || "What Our Customers Say"}
           </h2>
 
-          <p
-            className="
-              mt-4
-              text-sm
-              leading-6
-              text-[var(--color-text-secondary)]
-              md:text-base
-            "
-          >
-            Good food makes people happy. Here is what our
-            customers have to say about their experience.
-          </p>
+          {section.subtitle && (
+            <p
+              className="
+                mt-4
+                text-sm
+                leading-6
+                text-[var(--color-text-secondary)]
+                md:text-base
+              "
+            >
+              {section.subtitle}
+            </p>
+          )}
         </div>
 
         {/* =====================================================
             RATING SUMMARY
         ===================================================== */}
-
         <div
           className="
             mx-auto
@@ -252,9 +275,7 @@ export default function CustomerReviews() {
             sm:gap-5
           "
         >
-
           {/* Rating number */}
-
           <div className="text-center sm:text-left">
             <p
               className="
@@ -264,7 +285,7 @@ export default function CustomerReviews() {
                 text-[var(--color-text-primary)]
               "
             >
-              4.9
+              {avgRatingDisplay}
             </p>
 
             <p
@@ -280,9 +301,8 @@ export default function CustomerReviews() {
           </div>
 
           {/* Stars */}
-
           <div>
-            <Stars rating={5} />
+            <Stars rating={Math.round(avgRatingNumber)} />
 
             <p
               className="
@@ -291,60 +311,56 @@ export default function CustomerReviews() {
                 text-[var(--color-text-muted)]
               "
             >
-              Based on 500+ reviews
+              Based on {Math.max(reviews.length * 125, 500)}+ reviews
             </p>
           </div>
-
         </div>
 
         {/* =====================================================
             REVIEWS
         ===================================================== */}
-
         <div className="relative mt-10">
-
           {/* Desktop Previous */}
-
-          <button
-            type="button"
-            aria-label="Previous review"
-            onClick={previousReview}
-            className="
-              absolute
-              left-0
-              top-1/2
-              z-20
-              hidden
-              h-10
-              w-10
-              -translate-x-1/2
-              -translate-y-1/2
-              items-center
-              justify-center
-              rounded-full
-              border
-              border-[var(--color-border)]
-              bg-white
-              text-[var(--color-text-primary)]
-              shadow-lg
-              transition
-              hover:scale-105
-              hover:text-[var(--color-primary)]
-              md:flex
-            "
-          >
-            <ChevronLeft size={19} />
-          </button>
+          {reviews.length > 3 && (
+            <button
+              type="button"
+              aria-label="Previous review"
+              onClick={previousReview}
+              className="
+                absolute
+                left-0
+                top-1/2
+                z-20
+                hidden
+                h-10
+                w-10
+                -translate-x-1/2
+                -translate-y-1/2
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-[var(--color-border)]
+                bg-white
+                text-[var(--color-text-primary)]
+                shadow-lg
+                transition
+                hover:scale-105
+                hover:text-[var(--color-primary)]
+                md:flex
+              "
+            >
+              <ChevronLeft size={19} />
+            </button>
+          )}
 
           {/* =================================================
               DESKTOP REVIEWS
           ================================================= */}
-
           <div className="hidden gap-5 md:grid md:grid-cols-3">
-
-            {reviews.slice(0, 3).map((review) => (
+            {desktopReviews.map((review, idx) => (
               <ReviewCard
-                key={review.id}
+                key={`${review.id}-${idx}`}
                 review={review}
                 Stars={Stars}
               />
@@ -354,15 +370,8 @@ export default function CustomerReviews() {
           {/* =================================================
               MOBILE REVIEW
           ================================================= */}
-
           <div className="md:hidden">
-
-            <div
-              className="
-                overflow-hidden
-                rounded-2xl
-              "
-            >
+            <div className="overflow-hidden rounded-2xl">
               <div
                 className="flex transition-transform duration-500"
                 style={{
@@ -370,84 +379,78 @@ export default function CustomerReviews() {
                 }}
               >
                 {reviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="w-full shrink-0 px-1"
-                  >
-                    <ReviewCard
-                      review={review}
-                      Stars={Stars}
-                    />
+                  <div key={review.id} className="w-full shrink-0 px-1">
+                    <ReviewCard review={review} Stars={Stars} />
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Mobile dots */}
-
-            <div className="mt-5 flex justify-center gap-2">
-              {reviews.map((review, index) => (
-                <button
-                  key={review.id}
-                  type="button"
-                  aria-label={`Go to review ${index + 1}`}
-                  onClick={() => setActiveIndex(index)}
-                  className={`
-                    h-2
-                    rounded-full
-                    transition-all
-                    duration-300
-                    ${
-                      activeIndex === index
-                        ? "w-7 bg-[var(--color-primary)]"
-                        : "w-2 bg-[var(--color-primary)]/25"
-                    }
-                  `}
-                />
-              ))}
-            </div>
+            {reviews.length > 1 && (
+              <div className="mt-5 flex justify-center gap-2">
+                {reviews.map((review, index) => (
+                  <button
+                    key={review.id}
+                    type="button"
+                    aria-label={`Go to review ${index + 1}`}
+                    onClick={() => setActiveIndex(index)}
+                    className={`
+                      h-2
+                      rounded-full
+                      transition-all
+                      duration-300
+                      ${
+                        activeIndex === index
+                          ? "w-7 bg-[var(--color-primary)]"
+                          : "w-2 bg-[var(--color-primary)]/25"
+                      }
+                    `}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Desktop Next */}
-
-          <button
-            type="button"
-            aria-label="Next review"
-            onClick={nextReview}
-            className="
-              absolute
-              right-0
-              top-1/2
-              z-20
-              hidden
-              h-10
-              w-10
-              translate-x-1/2
-              -translate-y-1/2
-              items-center
-              justify-center
-              rounded-full
-              border
-              border-[var(--color-border)]
-              bg-white
-              text-[var(--color-text-primary)]
-              shadow-lg
-              transition
-              hover:scale-105
-              hover:text-[var(--color-primary)]
-              md:flex
-            "
-          >
-            <ChevronRight size={19} />
-          </button>
+          {reviews.length > 3 && (
+            <button
+              type="button"
+              aria-label="Next review"
+              onClick={nextReview}
+              className="
+                absolute
+                right-0
+                top-1/2
+                z-20
+                hidden
+                h-10
+                w-10
+                translate-x-1/2
+                -translate-y-1/2
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-[var(--color-border)]
+                bg-white
+                text-[var(--color-text-primary)]
+                shadow-lg
+                transition
+                hover:scale-105
+                hover:text-[var(--color-primary)]
+                md:flex
+              "
+            >
+              <ChevronRight size={19} />
+            </button>
+          )}
         </div>
 
         {/* =====================================================
             BOTTOM TRUST MESSAGE
         ===================================================== */}
-
         <div className="mt-10 flex justify-center">
-
           <div
             className="
               flex
@@ -463,10 +466,8 @@ export default function CustomerReviews() {
             "
           >
             <BadgeCheck size={16} />
-
             Loved by food lovers
           </div>
-
         </div>
       </div>
     </section>
@@ -481,17 +482,28 @@ function ReviewCard({
   review,
   Stars,
 }: {
-  review: {
-    id: number;
-    name: string;
-    location: string;
-    avatar: string;
-    rating: number;
-    review: string;
-    date: string;
-  };
+  review: TestimonialData;
   Stars: React.ComponentType<{ rating: number }>;
 }) {
+  const isImageUrl =
+    review.avatar &&
+    (review.avatar.startsWith("http") ||
+      review.avatar.startsWith("/") ||
+      review.avatar.includes("."));
+
+  const initials =
+    !isImageUrl && review.avatar
+      ? review.avatar
+      : (review.name || "Customer")
+          .split(" ")
+          .filter(Boolean)
+          .map((part) => part[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase() || "C";
+
+  const dateText = review.date_text || review.date || "Recently";
+
   return (
     <article
       className="
@@ -513,9 +525,7 @@ function ReviewCard({
         hover:shadow-[0_18px_40px_rgba(79,125,22,0.10)]
       "
     >
-
       {/* Quote */}
-
       <div
         className="
           absolute
@@ -535,11 +545,9 @@ function ReviewCard({
       </div>
 
       {/* Stars */}
-
-      <Stars rating={review.rating} />
+      <Stars rating={review.rating || 5} />
 
       {/* Review */}
-
       <p
         className="
           mt-5
@@ -553,38 +561,40 @@ function ReviewCard({
       </p>
 
       {/* Divider */}
-
       <div className="my-5 h-px bg-[var(--color-border)]" />
 
       {/* Customer */}
-
       <div className="flex items-center justify-between">
-
         <div className="flex items-center gap-3">
-
           {/* Avatar */}
-
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              shrink-0
-              items-center
-              justify-center
-              rounded-full
-              bg-[var(--color-primary)]
-              text-xs
-              font-black
-              text-white
-            "
-          >
-            {review.avatar}
-          </div>
+          {isImageUrl && review.avatar ? (
+            <img
+              src={toAssetUrl(review.avatar)}
+              alt={review.name}
+              className="h-11 w-11 shrink-0 rounded-full object-cover border border-[var(--color-border)]"
+            />
+          ) : (
+            <div
+              className="
+                flex
+                h-11
+                w-11
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-[var(--color-primary)]
+                text-xs
+                font-black
+                text-white
+              "
+            >
+              {initials}
+            </div>
+          )}
 
           <div>
             <div className="flex items-center gap-1.5">
-
               <h4
                 className="
                   text-sm
@@ -595,10 +605,7 @@ function ReviewCard({
                 {review.name}
               </h4>
 
-              <BadgeCheck
-                size={14}
-                className="text-[var(--color-primary)]"
-              />
+              <BadgeCheck size={14} className="text-[var(--color-primary)]" />
             </div>
 
             <p
@@ -608,22 +615,20 @@ function ReviewCard({
                 text-[var(--color-text-muted)]
               "
             >
-              {review.location}
+              {review.location || "Verified Buyer"}
             </p>
           </div>
         </div>
 
         {/* Date */}
-
         <span
           className="
             text-[10px]
             text-[var(--color-text-muted)]
           "
         >
-          {review.date}
+          {dateText}
         </span>
-
       </div>
     </article>
   );

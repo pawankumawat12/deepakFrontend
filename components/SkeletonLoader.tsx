@@ -317,7 +317,8 @@ export default function SkeletonLoader({
   // 2. CATEGORY PILLS STRIP / GRID
   if (variant === "category") {
     const defaultGrid =
-      gridClassName || "flex items-center gap-2.5 overflow-x-auto py-2";
+      gridClassName ||
+      "flex gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory py-3 scrollbar-x";
 
     return (
       <div className={defaultGrid} {...props}>

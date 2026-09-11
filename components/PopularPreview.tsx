@@ -196,14 +196,12 @@ export default function PopularPreview() {
             onMouseLeave={() => setAutoplay(true)}
             className="
               flex
-              gap-4
+              gap-2
               overflow-x-auto
               scroll-smooth
               snap-x
               snap-mandatory
-              px-1
-              pb-4
-              touch-pan-x
+              py-3
               scrollbar-x
             "
           >

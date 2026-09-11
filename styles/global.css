@@ -215,21 +215,32 @@ html[data-store-closed="true"] {
   .hero-slide { height: 52vh; }
 }
 
-/* horizontal scrollbar helpers */
-.scrollbar-x {
-  scrollbar-color: var(--color-primary) transparent;
+.scrollbar-x,
+.touch-pan-x {
+  touch-action: pan-x pan-y !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Webkit scrollbar */
-.touch-pan-x::-webkit-scrollbar {
+.touch-pan-x::-webkit-scrollbar,
+.scrollbar-x::-webkit-scrollbar {
   height: 10px;
 }
-.touch-pan-x::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg,var(--color-primary), #d97706 80%);
+.touch-pan-x::-webkit-scrollbar-thumb,
+.scrollbar-x::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, var(--color-primary), #d97706 80%);
   border-radius: 999px;
 }
-.touch-pan-x::-webkit-scrollbar-track {
+.touch-pan-x::-webkit-scrollbar-track,
+.scrollbar-x::-webkit-scrollbar-track {
   background: transparent;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .touch-pan-x,
+  .scrollbar-x {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) transparent;
+  }
 }
 
 .snap-x { scroll-snap-type: x mandatory; }
@@ -332,7 +343,8 @@ html.dark .dropdown-panel {
 }
 
 /* Warm Cafe scrollbars in Dark Mode */
-html.dark .touch-pan-x::-webkit-scrollbar-thumb {
+html.dark .touch-pan-x::-webkit-scrollbar-thumb,
+html.dark .scrollbar-x::-webkit-scrollbar-thumb {
   background: linear-gradient(90deg, var(--color-primary), #d98207 80%);
 }
 

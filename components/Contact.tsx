@@ -190,23 +190,23 @@ export default function ContactPage() {
   const socialLinks = [
     {
       name: "Instagram",
-      url: settingData?.instagram,
+      url: settingData?.instagram?.trim(),
       icon: FaInstagram,
       size: 19,
     },
     {
       name: "Facebook",
-      url: settingData?.facebook,
+      url: settingData?.facebook?.trim(),
       icon: FaFacebookF,
       size: 17,
     },
     {
       name: "Twitter",
-      url: settingData?.twitter,
+      url: settingData?.twitter?.trim(),
       icon: FaTwitter,
       size: 17,
     },
-  ];
+  ].filter((s) => Boolean(s.url && s.url !== "#"));
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)]">
@@ -1039,44 +1039,45 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-16 sm:px-8">
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-            Follow & Connect
-          </p>
-          <h2 className="mt-2 text-2xl font-black text-[var(--color-text-primary)]">
-            Stay connected with SFC
-          </h2>
-          <div className="mt-6 flex justify-center gap-3">
-            {socialLinks.map((social) => {
-              const Icon = social.icon;
-              return (
-                <a
-                  key={social.name}
-                  href={social.url || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.name}
-                  className="flex
-                  h-10
-                  w-10
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-[var(--color-primary-light)]
-                  text-white/70
-                  transition
-                  hover:bg-[var(--color-primary)]
-                  hover:text-white"
-
-                >
-                  <Icon size={social.size} />
-                </a>
-              );
-            })}
+      {socialLinks.length > 0 && (
+        <section className="px-5 pb-16 sm:px-8">
+          <div className="mx-auto max-w-5xl text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              Follow & Connect
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-[var(--color-text-primary)]">
+              Stay connected with SFC
+            </h2>
+            <div className="mt-6 flex justify-center gap-3">
+              {socialLinks.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.name}
+                    className="flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-[var(--color-primary-light)]
+                    text-white/70
+                    transition
+                    hover:bg-[var(--color-primary)]
+                    hover:text-white"
+                  >
+                    <Icon size={social.size} />
+                  </a>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   );
 }

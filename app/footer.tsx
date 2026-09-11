@@ -79,6 +79,17 @@ export default function Footer() {
   const rawLogoUrl = logoResponse?.data?.logo_url ? toAssetUrl(logoResponse.data.logo_url) : "/images/sfcLogo.png";
   const [logoSrc, setLogoSrc] = React.useState(rawLogoUrl);
 
+  const facebookUrl = footerSettings?.facebook?.trim();
+  const hasFacebook = Boolean(facebookUrl && facebookUrl !== "#");
+
+  const instagramUrl = footerSettings?.instagram?.trim();
+  const hasInstagram = Boolean(instagramUrl && instagramUrl !== "#");
+
+  const twitterUrl = footerSettings?.twitter?.trim();
+  const hasTwitter = Boolean(twitterUrl && twitterUrl !== "#");
+
+  const hasAnySocial = hasFacebook || hasInstagram || hasTwitter;
+
   const dynamicHelpLinks = React.useMemo(() => {
     const base = [
       { label: "My Orders", href: "/orders" },
@@ -145,35 +156,43 @@ export default function Footer() {
               </div>
             </Link>
 
-            <div className="flex items-center gap-2">
-              <a
-                href={footerSettings?.facebook || "#"}
-                target={footerSettings?.facebook ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
-              >
-                <FaFacebook size={14} />
-              </a>
-              <a
-                href={footerSettings?.instagram || "#"}
-                target={footerSettings?.instagram ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
-              >
-                <FaInstagram size={14} />
-              </a>
-              <a
-                href={footerSettings?.twitter || "#"}
-                target={footerSettings?.twitter ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Twitter"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
-              >
-                <FaTwitter size={14} />
-              </a>
-            </div>
+            {hasAnySocial && (
+              <div className="flex items-center gap-2">
+                {hasFacebook && (
+                  <a
+                    href={facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Facebook"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+                  >
+                    <FaFacebook size={14} />
+                  </a>
+                )}
+                {hasInstagram && (
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+                  >
+                    <FaInstagram size={14} />
+                  </a>
+                )}
+                {hasTwitter && (
+                  <a
+                    href={twitterUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Twitter"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+                  >
+                    <FaTwitter size={14} />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
@@ -183,10 +202,10 @@ export default function Footer() {
             <Link href="/menu" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
               Menu
             </Link>
-            <Link href="/offers" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/contact" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
               Contact
             </Link>
-            <Link href="/orders" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/about" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
               About Us
             </Link>
             <Link href="/privacy-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
@@ -194,6 +213,15 @@ export default function Footer() {
             </Link>
             <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
               Terms
+            </Link>
+            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+              Faq
+            </Link>
+            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            Shipping & Delivery Policy
+            </Link>
+            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            Refund Policy
             </Link>
           </div>
 
@@ -253,70 +281,79 @@ export default function Footer() {
               clicks away.
             </p>
 
-            <div className="mt-6 flex items-center gap-2">
-              <a
-                href={footerSettings?.facebook || "#"}
-                target={footerSettings?.facebook ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="flex
-                  h-10
-                  w-10
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-[var(--color-primary-light)]
-                  text-white/70
-                  transition
-                  hover:bg-[var(--color-primary)]
-                  hover:text-white"
-              >
-                <span className="text-sm font-bold">
-                  <FaFacebook />
-                </span>
-              </a>
-              <a
-                href={footerSettings?.instagram || "#"}
-                target={footerSettings?.instagram ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="flex
-                h-10
-                w-10
-                items-center
-                justify-center
-                rounded-xl
-                bg-[var(--color-primary-light)]
-                text-white/70
-                transition
-                hover:bg-[var(--color-primary)]
-                hover:text-white"
-              >
-                <span className="text-sm font-bold">
-                <FaInstagram />
-                
-                </span>
-              </a>
-              <a
-                href={footerSettings?.twitter || "#"}
-                target={footerSettings?.twitter ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Twitter"
-                className="flex
-                  h-10
-                  w-10
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-[var(--color-primary-light)]
-                  text-white/70
-                  transition
-                  hover:bg-[var(--color-primary)]
-                  hover:text-white"
-              >
-                <span className="text-sm font-bold"><FaTwitter /></span>
-              </a>
-            </div>
+            {hasAnySocial && (
+              <div className="mt-6 flex items-center gap-2">
+                {hasFacebook && (
+                  <a
+                    href={facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Facebook"
+                    className="flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-[var(--color-primary-light)]
+                      text-white/70
+                      transition
+                      hover:bg-[var(--color-primary)]
+                      hover:text-white"
+                  >
+                    <span className="text-sm font-bold">
+                      <FaFacebook />
+                    </span>
+                  </a>
+                )}
+                {hasInstagram && (
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                    className="flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-[var(--color-primary-light)]
+                      text-white/70
+                      transition
+                      hover:bg-[var(--color-primary)]
+                      hover:text-white"
+                  >
+                    <span className="text-sm font-bold">
+                      <FaInstagram />
+                    </span>
+                  </a>
+                )}
+                {hasTwitter && (
+                  <a
+                    href={twitterUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Twitter"
+                    className="flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-[var(--color-primary-light)]
+                      text-white/70
+                      transition
+                      hover:bg-[var(--color-primary)]
+                      hover:text-white"
+                  >
+                    <span className="text-sm font-bold">
+                      <FaTwitter />
+                    </span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
           <div>
 

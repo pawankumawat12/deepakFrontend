@@ -205,7 +205,17 @@ export default function OffersPage() {
         </div>
 
         {/* Filters */}
-        <div className="mt-7 flex gap-2 overflow-x-auto pb-2">
+        <div className="
+          mt-7
+          flex
+          gap-2
+          overflow-x-auto
+          scroll-smooth
+          snap-x
+          snap-mandatory
+          py-3
+          scrollbar-x
+        ">
           {filters.map((filter) => {
             const active = activeFilter === filter;
             return (
@@ -214,7 +224,7 @@ export default function OffersPage() {
                 type="button"
                 onClick={() => setActiveFilter(filter)}
                 className={`
-                  shrink-0 rounded-full px-5 py-2.5 text-xs font-bold transition
+                  shrink-0 snap-start rounded-full px-5 py-2.5 text-xs font-bold transition
                   ${active
                     ? "bg-[var(--color-primary)] text-white shadow-md"
                     : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"

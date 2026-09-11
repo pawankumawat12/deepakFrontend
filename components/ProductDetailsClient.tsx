@@ -663,67 +663,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
 
             {/* Image info cards */}
 
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <div
-                className="
-                  rounded-2xl
-                  border
-                  border-[var(--color-border)]
-                  bg-white
-                  p-3
-                  text-center
-                  shadow-sm
-                "
-              >
-                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
-                  <Leaf size={16} />
-                </div>
-
-                <p className="mt-2 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
-                  Fresh
-                </p>
-              </div>
-
-              <div
-                className="
-                  rounded-2xl
-                  border
-                  border-[var(--color-border)]
-                  bg-white
-                  p-3
-                  text-center
-                  shadow-sm
-                "
-              >
-                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
-                  <Zap size={16} />
-                </div>
-
-                <p className="mt-2 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
-                  Quick
-                </p>
-              </div>
-
-              <div
-                className="
-                  rounded-2xl
-                  border
-                  border-[var(--color-border)]
-                  bg-white
-                  p-3
-                  text-center
-                  shadow-sm
-                "
-              >
-                <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
-                  <Heart size={16} />
-                </div>
-
-                <p className="mt-2 text-[9px] font-black text-[var(--color-text-secondary)] sm:text-[10px]">
-                  Loved
-                </p>
-              </div>
-            </div>
+       
           </div>
 
           <div className="flex flex-col">
@@ -1567,7 +1507,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 hover:-translate-y-0.5
                 active:scale-95
               "
-              style={{color: "white"}}
             >
               Explore Menu
               <ArrowRight size={16} />

@@ -144,6 +144,8 @@ export const baseApi = createApi({
     "Offers",
     "Contact",
     "HeroSliders",
+    "WhyChooseUs",
+    "Testimonials",
     "Notification",
     "CmsPages",
   ],

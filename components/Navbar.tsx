@@ -1070,11 +1070,7 @@ const Navbar = () => {
                       />
                       My Orders
                     </div>
-                    {wishlistCount > 0 && (
-                      <span className="rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[10px] font-bold text-white">
-                        {wishlistCount}
-                      </span>
-                    )}
+
                   </Link>
                   <Link
                     href="/favorites"

@@ -573,7 +573,16 @@ export default function Orders() {
       ===================================================== */}
 
       <section className="mx-auto max-w-6xl px-5 pt-8 sm:px-8">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="
+          flex
+          gap-2
+          overflow-x-auto
+          scroll-smooth
+          snap-x
+          snap-mandatory
+          py-3
+          scrollbar-x
+        ">
           {filters.map((filter) => {
             const active = activeFilter === filter;
 
@@ -587,6 +596,7 @@ export default function Orders() {
                 }}
                 className={`
                   shrink-0
+                  snap-start
                   rounded-full
                   border
                   px-4

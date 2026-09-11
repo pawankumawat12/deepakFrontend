@@ -433,11 +433,14 @@ export default function Menu() {
 
           <div
             className="
-              flex
-              gap-2
-              overflow-x-auto
-              py-3
-              scrollbar-x
+            flex
+            gap-2
+            overflow-x-auto
+            scroll-smooth
+            snap-x
+            snap-mandatory
+            py-3
+            scrollbar-x
             "
           >
 
@@ -450,6 +453,7 @@ export default function Menu() {
                 flex
                 h-11
                 shrink-0
+                snap-start
                 items-center
                 gap-2
                 rounded-full
@@ -486,6 +490,7 @@ export default function Menu() {
                     h-11
                     min-w-[120px]
                     shrink-0
+                    snap-start
                     items-center
                     gap-2
                     overflow-hidden
