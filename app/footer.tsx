@@ -214,17 +214,16 @@ export default function Footer() {
             <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
               Terms
             </Link>
-            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/faq" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
               Faq
             </Link>
-            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
-            Shipping & Delivery Policy
+            <Link href="/shipping-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            Shipping Policy
             </Link>
-            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/refund-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
             Refund Policy
             </Link>
           </div>
-
           {!isAppInstalled && (
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2">
               <div className="flex items-center gap-2">

@@ -7,6 +7,7 @@ import "../styles/global.css";
 import Providers from "./providers";
 import CustomToaster from "@/components/CustomToaster";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import GlobalNetworkWatcher from "@/components/GlobalNetworkWatcher";
 import { getSiteUrl } from "@/utils/backendUrl";
 
 const geistSans = Geist({
@@ -99,6 +100,7 @@ export default function RootLayout({
           <CustomToaster />
           <Footer />
           <PWAInstallPrompt />
+          <GlobalNetworkWatcher />
         </Providers>
       </body>
     </html>

@@ -85,7 +85,6 @@ export default function ProductReviewSection({
 
   const handleOpenCreate = () => {
     if (!user) {
-      toast.error("Please sign in to write a review");
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }

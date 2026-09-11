@@ -98,7 +98,6 @@ export default function PopularProducts() {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error("Please sign in to save favorites");
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }

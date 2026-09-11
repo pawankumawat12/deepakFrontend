@@ -110,7 +110,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
 
   const handleToggleWishlist = async () => {
     if (!user) {
-      toast.error("Please sign in to save favorites");
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }

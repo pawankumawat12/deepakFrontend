@@ -163,6 +163,7 @@ export default function CmsPageView({ slug, initialData }: CmsPageViewProps) {
             <Link
               href="/contact"
               className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
+            style={{color: "white"}}
             >
               <MessageCircle size={15} />
               <span>Contact Support</span>

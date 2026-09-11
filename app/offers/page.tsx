@@ -92,7 +92,8 @@ export default function OffersPage() {
           <Link
             href="/"
             className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur transition hover:bg-white/20"
-          >
+          style={{color: "white"}}
+        >
             <ArrowLeft size={15} />
             Back to Home
           </Link>

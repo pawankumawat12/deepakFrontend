@@ -197,7 +197,7 @@ export default function Profile() {
             </button>
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-6 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-6 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50"
             >
               Back to Home
             </Link>

@@ -112,7 +112,6 @@ export default function FavoritesPage() {
 
   const handleAddToCart = async (product: WishlistItem) => {
     if (!user) {
-      toast.error("Please sign in to add items to cart");
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
@@ -140,7 +139,6 @@ export default function FavoritesPage() {
     isMadeToOrder?: boolean
   ) => {
     if (!user) {
-      toast.error("Please sign in to modify cart");
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }

@@ -99,7 +99,6 @@ export default function ReviewsPage() {
 
   const handleOpenCreateSite = () => {
     if (!user) {
-      toast.error("Please sign in to write a review");
       window.dispatchEvent(new CustomEvent("sfc_open_login"));
       return;
     }
