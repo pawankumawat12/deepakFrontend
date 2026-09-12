@@ -21,6 +21,12 @@ export const getBackendUrl = (): string => {
 };
 
 export const getApiUrl = (): string => {
+  // In the browser, use same-origin relative path "/api/v1".
+  // This routes requests through Next.js rewrites, guaranteeing first-party cookie persistence in mobile PWAs.
+  if (typeof window !== "undefined") {
+    return "/api/v1";
+  }
+
   const backendUrl = getBackendUrl();
   if (!backendUrl) return "/api/v1";
   return backendUrl.endsWith("/api/v1") ? backendUrl : `${backendUrl}/api/v1`;

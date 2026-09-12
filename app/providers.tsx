@@ -17,7 +17,7 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
-  const { data, isError, isLoading } = useGetMeQuery(undefined, {
+  const { data, error, isError, isLoading } = useGetMeQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
@@ -34,12 +34,18 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
   }, [accessToken]);
 
   useEffect(() => {
-    // Only logout if an active authenticated session fails verification.
-    // Never trigger logout for guests or during active login transitions.
-    if (isError && !isLoading && (user || accessToken)) {
+    // Only logout if an active authenticated session fails verification with an explicit 401/403.
+    // NEVER trigger logout on network disconnection, offline mode, or server cold-starts.
+    const isExplicitAuthFailure =
+      isError &&
+      ((error as any)?.status === 401 || (error as any)?.status === 403);
+
+    const isOnline = typeof navigator === "undefined" || navigator.onLine !== false;
+
+    if (isExplicitAuthFailure && isOnline && !isLoading && (user || accessToken)) {
       dispatch(logout());
     }
-  }, [isError, isLoading, user, accessToken, dispatch]);
+  }, [isError, error, isLoading, user, accessToken, dispatch]);
 
   const isBlocked = Boolean(
     user && (user.is_blocked || user.is_active === false)
