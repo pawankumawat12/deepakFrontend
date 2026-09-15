@@ -24,7 +24,8 @@ import {
   useVerifyOtpMutation,
 } from "../redux/services/authApi";
 import { emailLoginSchema } from "@/schemas/authSchema";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../redux/store";
 import { setCredentials } from "../redux/features/authSlice";
 import { useMergeCartMutation } from "../redux/services/cartApi";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
@@ -60,6 +61,14 @@ export default function LoginModal({
   const [mergeCart] = useMergeCartMutation();
   const [getMe] = useLazyGetMeQuery();
   const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  useEffect(() => {
+    if ((user || accessToken) && open) {
+      onClose();
+    }
+  }, [user, accessToken, open, onClose]);
 
   const syncGuestCart = async () => {
     const guestItems = getGuestCart();
@@ -252,7 +261,7 @@ export default function LoginModal({
     }
   };
 
-  if (!open) return null;
+  if (!open || user || accessToken) return null;
 
   return (
     <div

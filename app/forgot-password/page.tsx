@@ -9,9 +9,19 @@ import {
   useVerifyForgotPasswordOtpMutation,
   useResetPasswordMutation,
 } from "@/redux/services/authApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  useEffect(() => {
+    if (user || accessToken) {
+      router.replace("/");
+    }
+  }, [user, accessToken, router]);
 
   // Step 1: "email" -> Step 2: "otp" -> Step 3: "newPassword"
   const [step, setStep] = useState<"email" | "otp" | "newPassword">("email");
@@ -128,6 +138,10 @@ export default function ForgotPasswordPage() {
       setFormError(err?.data?.message || "Failed to reset password. Please try again.");
     }
   };
+
+  if (user || accessToken) {
+    return null;
+  }
 
   return (
     <div className="page-content flex min-h-[70vh] items-center justify-center py-12">
@@ -277,12 +291,7 @@ export default function ForgotPasswordPage() {
           </>
         )}
 
-        <Link
-          className="mt-6 block text-center text-sm font-semibold text-lime-700 hover:underline"
-          href="/login"
-        >
-          ← Back to login
-        </Link>
+     
       </section>
     </div>
   );

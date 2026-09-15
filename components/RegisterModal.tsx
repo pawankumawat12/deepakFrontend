@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 import { X } from "lucide-react";
 import RegisterForm from "./RegisterForm";
 
@@ -15,6 +17,15 @@ export default function RegisterModal({
   onClose,
   onOpenLogin,
 }: RegisterModalProps) {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+
+  useEffect(() => {
+    if ((user || accessToken) && open) {
+      onClose();
+    }
+  }, [user, accessToken, open, onClose]);
+
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -24,7 +35,7 @@ export default function RegisterModal({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || user || accessToken) return null;
 
   return (
     <div
