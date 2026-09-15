@@ -55,6 +55,7 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import SkeletonLoader from "./SkeletonLoader";
+import { isValidIndianPhone, normalizeIndianPhone } from "../lib/phone";
 
 import {
   useGetCartQuery,
@@ -489,15 +490,9 @@ export default function CartClient() {
     const shippingAddress = addressParts.join(", ");
 
     const rawPhone = (selectedAddress.phone_number || user.phone || "").toString();
-    const rawDigits = rawPhone.replace(/\D/g, "");
-    const normalizedPhone =
-      rawDigits.length === 12 && rawDigits.startsWith("91")
-        ? rawDigits.slice(2)
-        : rawDigits.length === 11 && rawDigits.startsWith("0")
-        ? rawDigits.slice(1)
-        : rawDigits;
+    const normalizedPhone = normalizeIndianPhone(rawPhone);
 
-    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
+    if (!isValidIndianPhone(normalizedPhone)) {
       toast.error("A valid 10-digit Indian mobile number (starts with 6-9) is required for delivery.");
       return;
     }

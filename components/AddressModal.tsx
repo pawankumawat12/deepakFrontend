@@ -19,6 +19,7 @@ import {
   useCreateAddressMutation,
   useUpdateAddressMutation,
 } from "@/redux/services/addressApi";
+import { isValidIndianPhone, normalizeIndianPhone, sanitizePhoneInput } from "@/lib/phone";
 
 interface AddressModalProps {
   open: boolean;
@@ -101,15 +102,9 @@ export default function AddressModal({
       toast.error("Please enter receiver name");
       return;
     }
-    const rawDigits = phoneNumber.replace(/\D/g, "");
-    const cleanPhone =
-      rawDigits.length === 12 && rawDigits.startsWith("91")
-        ? rawDigits.slice(2)
-        : rawDigits.length === 11 && rawDigits.startsWith("0")
-        ? rawDigits.slice(1)
-        : rawDigits;
+    const cleanPhone = normalizeIndianPhone(phoneNumber);
 
-    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+    if (!isValidIndianPhone(cleanPhone)) {
       toast.error("Please enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9)");
       return;
     }
@@ -297,7 +292,7 @@ export default function AddressModal({
                     maxLength={10}
                     placeholder="e.g. 9876543210"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => setPhoneNumber(sanitizePhoneInput(e.target.value))}
                     className="w-full rounded-xl border border-[var(--color-border)] bg-stone-50/60 py-2.5 pl-10 pr-3.5 text-xs font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-primary)] focus:bg-white transition"
                   />
                 </div>

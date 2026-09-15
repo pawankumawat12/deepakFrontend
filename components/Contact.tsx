@@ -27,6 +27,7 @@ import {
   useGetMyContactQueriesQuery,
 } from "@/redux/services/contactApi";
 import { getSocket } from "@/lib/socket";
+import { isValidIndianPhone, normalizeIndianPhone, sanitizePhoneInput } from "@/lib/phone";
 
 export default function ContactPage() {
   // const mapRef = React.useRef<HTMLDivElement | null>(null);
@@ -143,7 +144,8 @@ export default function ContactPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const finalVal = name === "phone" ? sanitizePhoneInput(value) : value;
+    setFormData((prev) => ({ ...prev, [name]: finalVal }));
     if (errorMessage) setErrorMessage("");
   };
 
@@ -159,6 +161,13 @@ export default function ContactPage() {
       setErrorMessage("Please enter your email address");
       return;
     }
+    if (formData.phone && formData.phone.trim()) {
+      const cleanPhone = normalizeIndianPhone(formData.phone);
+      if (!isValidIndianPhone(cleanPhone)) {
+        setErrorMessage("Please enter a valid 10-digit phone number");
+        return;
+      }
+    }
     if (!formData.subject.trim()) {
       setErrorMessage("Please enter a subject");
       return;
@@ -169,7 +178,11 @@ export default function ContactPage() {
     }
 
     try {
-      const response = await submitQuery(formData).unwrap();
+      const payload = {
+        ...formData,
+        phone: formData.phone ? normalizeIndianPhone(formData.phone) : "",
+      };
+      const response = await submitQuery(payload).unwrap();
       toast.success(response.message || "Message sent successfully!");
       setSubmitted(true);
       setFormData({
@@ -622,7 +635,8 @@ export default function ContactPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder="+91 98765 43210"
+                          maxLength={10}
+                          placeholder="9876543210"
                           disabled={isLoading}
                           readOnly={Boolean(user?.phone)}
                           className="

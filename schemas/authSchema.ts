@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidIndianPhone, normalizeIndianPhone } from "../lib/phone";
 
 const password = z
   .string()
@@ -8,16 +9,20 @@ const password = z
   .regex(/\d/, "Add a number")
   .regex(/[!@#$%^&*(),.?\":{}|<>]/, "Add a special character");
 
+const phoneField = z
+  .string()
+  .transform((val) => normalizeIndianPhone(val))
+  .refine((val) => val === "" || isValidIndianPhone(val), {
+    message: "Enter a valid 10-digit phone number (starts with 6-9)",
+  })
+  .optional()
+  .or(z.literal(""));
+
 export const registerSchema = z
   .object({
     name: z.string().trim().min(3, "Name must be at least 3 characters"),
     email: z.string().trim().email("Enter a valid email address"),
-    phone: z
-      .string()
-      .trim()
-      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit phone number")
-      .optional()
-      .or(z.literal("")),
+    phone: phoneField,
     password,
     confirmPassword: z.string().min(1, "Confirm your password"),
     termsAccepted: z.boolean().refine((accepted) => accepted, {
@@ -69,10 +74,5 @@ export const updateProfileSchema = z.object({
     .email("Enter a valid email address")
     .optional()
     .or(z.literal("")),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit phone number")
-    .optional()
-    .or(z.literal("")),
+  phone: phoneField,
 });

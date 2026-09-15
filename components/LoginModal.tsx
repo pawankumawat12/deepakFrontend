@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Eye,
+  EyeOff,
   KeyRound,
   LoaderCircle,
   Lock,
@@ -48,6 +50,7 @@ export default function LoginModal({
 }: LoginModalProps) {
   const [step, setStep] = useState<Step>("email");
   const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
@@ -398,13 +401,7 @@ export default function LoginModal({
                   <label className="text-sm font-semibold text-[var(--color-text-primary)]">
                     Password
                   </label>
-                  <Link
-                    href="/forgot-password"
-                    onClick={onClose}
-                    className="text-xs font-medium text-[var(--color-primary)] hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
+                 
                 </div>
 
                 <div className="relative">
@@ -418,13 +415,13 @@ export default function LoginModal({
                   />
 
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className="
                       h-12 w-full
                       rounded-xl
                       border border-[var(--color-border)]
-                      py-3 pl-11 pr-4
+                      py-3 pl-11 pr-11
                       text-sm
                       outline-none
                       transition
@@ -434,6 +431,21 @@ export default function LoginModal({
                     "
                     {...register("password")}
                   />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="
+                      absolute right-3.5 top-1/2
+                      -translate-y-1/2
+                      text-[var(--color-text-muted)]
+                      hover:text-[var(--color-text-primary)]
+                      transition
+                    "
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
                 {errors.password?.message && (
                   <p className="mt-1 text-xs text-red-600">
@@ -441,7 +453,7 @@ export default function LoginModal({
                   </p>
                 )}
               </div>
-
+<div style={{display:"flex" , justifyContent:"space-between", alignItems:"center"}}>
               {/* REMEMBER ME */}
               <label className="flex cursor-pointer items-center gap-3">
                 <input
@@ -455,6 +467,14 @@ export default function LoginModal({
                   Remember me 
                 </span>
               </label>
+              <Link
+                    href="/forgot-password"
+                    onClick={onClose}
+                    className="text-xs font-medium text-[var(--color-primary)] hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                  </div>
 
              <button
                 type="submit"

@@ -9,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   CheckCircle2,
+  Eye,
+  EyeOff,
   KeyRound,
   LoaderCircle,
   Mail,
@@ -57,6 +59,8 @@ export default function RegisterForm({
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"register" | "verify">("register");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [resendTimer, setResendTimer] = useState(0);
   const [resendCount, setResendCount] = useState(0);
@@ -293,23 +297,43 @@ export default function RegisterForm({
             label="Password"
             error={registration.formState.errors.password?.message}
           >
-            <input
-              className={input}
-              type="password"
-              autoComplete="new-password"
-              {...registration.register("password")}
-            />
+            <div className="relative">
+              <input
+                className={`${input} pr-10`}
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                {...registration.register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </Input>
           <Input
             label="Confirm password"
             error={registration.formState.errors.confirmPassword?.message}
           >
-            <input
-              className={input}
-              type="password"
-              autoComplete="new-password"
-              {...registration.register("confirmPassword")}
-            />
+            <div className="relative">
+              <input
+                className={`${input} pr-10`}
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                {...registration.register("confirmPassword")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition"
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </Input>
 
           <label className="flex cursor-pointer items-start gap-2 text-sm text-[var(--color-text-secondary)]">

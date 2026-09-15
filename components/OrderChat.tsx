@@ -28,6 +28,7 @@ import {
   OrderMessage,
 } from "../redux/services/chatApi";
 import { getSocket } from "../lib/socket";
+import { useTheme } from "../context/ThemeContext";
 import toast from "react-hot-toast";
 
 const API_ORIGIN = (
@@ -122,6 +123,8 @@ export default function OrderChat({
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const effectiveOrderId =
     dbOrderId ||
@@ -410,36 +413,44 @@ export default function OrderChat({
       }}
     >
       <div
-        className="
+        className={`
           flex
           h-[92vh]
           w-full
           flex-col
           overflow-hidden
           rounded-t-[1.5rem]
-          bg-[#efeae2]
           shadow-2xl
           sm:h-[680px]
           sm:max-w-[460px]
           sm:rounded-[1.5rem]
-          border border-[#d1d7db]
+          border
           animate-in fade-in zoom-in-95
           relative
-        "
+          ${isDark ? "bg-[#0b141a] border-[#222e35] text-[#e9edef]" : "bg-[#efeae2] border-[#d1d7db] text-[#111b21]"}
+        `}
         style={{
-          backgroundColor: "#efeae2",
-          backgroundImage: `radial-gradient(#d1d7db 0.85px, transparent 0.85px), radial-gradient(#d1d7db 0.85px, #efeae2 0.85px)`,
+          backgroundColor: isDark ? "#0b141a" : "#efeae2",
+          backgroundImage: isDark
+            ? `radial-gradient(#1e2a30 0.85px, transparent 0.85px), radial-gradient(#1e2a30 0.85px, #0b141a 0.85px)`
+            : `radial-gradient(#d1d7db 0.85px, transparent 0.85px), radial-gradient(#d1d7db 0.85px, #efeae2 0.85px)`,
           backgroundSize: "24px 24px",
           backgroundPosition: "0 0, 12px 12px",
         }}
       >
         {/* WHATSAPP TOP APP BAR (HEADER) */}
-        <div className="flex items-center justify-between bg-[#008069] px-3.5 py-2.5 text-white shadow-md select-none z-10">
+        <div className={`flex items-center justify-between px-3.5 py-2.5 text-white shadow-md select-none z-10 ${
+          isDark ? "bg-[#202c33] border-b border-[#222e35]" : "bg-[#008069]"
+        }`}>
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Store Avatar */}
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#128c7e] text-white font-bold text-sm shadow-inner ring-1 ring-white/20">
+            <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+              isDark ? "bg-[#1f3540] text-emerald-400 ring-white/10" : "bg-[#128c7e] text-white ring-white/20"
+            } font-bold text-sm shadow-inner ring-1`}>
               <span>SFC</span>
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#25d366] ring-2 ring-[#008069]" />
+              <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#25d366] ring-2 ${
+                isDark ? "ring-[#202c33]" : "ring-[#008069]"
+              }`} />
             </div>
 
             {/* Title & Status */}
@@ -448,9 +459,11 @@ export default function OrderChat({
                 SFC Bakers Support
               </h2>
 
-              <p className="text-[11.5px] leading-tight text-[#c1eedb] truncate font-normal mt-0.5">
+              <p className={`text-[11.5px] leading-tight truncate font-normal mt-0.5 ${
+                isDark ? "text-[#8696a0]" : "text-[#c1eedb]"
+              }`}>
                 {isAdminTyping ? (
-                  <span className="font-semibold text-white animate-pulse">
+                  <span className="font-semibold text-[#25d366] animate-pulse">
                     typing...
                   </span>
                 ) : (
@@ -493,19 +506,23 @@ export default function OrderChat({
         </div>
 
         {/* ORDER INFO SUB-HEADER */}
-        <div className="flex items-center justify-between border-b border-[#d1d7db]/80 bg-[#f0f2f5] px-3.5 py-1.5 text-[11px] shadow-2xs z-10">
-          <span className="font-medium text-[#54656f]">
-            Order: <b className="text-[#111b21]">{displayOrderNum}</b>
+        <div className={`flex items-center justify-between border-b px-3.5 py-1.5 text-[11px] shadow-2xs z-10 ${
+          isDark
+            ? "border-[#222e35] bg-[#111b21] text-[#8696a0]"
+            : "border-[#d1d7db]/80 bg-[#f0f2f5] text-[#54656f]"
+        }`}>
+          <span className="font-medium">
+            Order: <b className={isDark ? "text-[#e9edef]" : "text-[#111b21]"}>{displayOrderNum}</b>
           </span>
           <span
             className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
               orderStatus === "Delivered"
-                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                ? isDark ? "bg-emerald-950/70 text-emerald-400 border-emerald-800" : "bg-emerald-100 text-emerald-800 border-emerald-200"
                 : orderStatus === "Preparing"
-                ? "bg-blue-100 text-blue-800 border-blue-200"
+                ? isDark ? "bg-blue-950/70 text-blue-400 border-blue-800" : "bg-blue-100 text-blue-800 border-blue-200"
                 : orderStatus === "Out for Delivery"
-                ? "bg-orange-100 text-orange-800 border-orange-200"
-                : "bg-amber-100 text-amber-800 border-amber-200"
+                ? isDark ? "bg-orange-950/70 text-orange-400 border-orange-800" : "bg-orange-100 text-orange-800 border-orange-200"
+                : isDark ? "bg-amber-950/70 text-amber-400 border-amber-800" : "bg-amber-100 text-amber-800 border-amber-200"
             }`}
           >
             {orderStatus}
@@ -522,8 +539,12 @@ export default function OrderChat({
         >
           {/* Encryption Notice */}
           <div className="flex justify-center my-1 w-full">
-            <div className="flex items-center gap-1.5 rounded-[7.5px] bg-[#ffeecd] px-3 py-1 text-[10px] text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)] text-center max-w-[320px] leading-tight">
-              <Lock size={11} className="shrink-0 text-[#856404]" />
+            <div className={`flex items-center gap-1.5 rounded-[7.5px] px-3 py-1 text-[10px] text-center max-w-[320px] leading-tight ${
+              isDark
+                ? "bg-[#182229] text-[#8696a0] border border-[#222e35]"
+                : "bg-[#ffeecd] text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)]"
+            }`}>
+              <Lock size={11} className={`shrink-0 ${isDark ? "text-[#ffd279]" : "text-[#856404]"}`} />
               <span>Messages to SFC Kitchen are end-to-end encrypted.</span>
             </div>
           </div>
@@ -531,7 +552,11 @@ export default function OrderChat({
           {/* Chat Expired Notice */}
           {isExpired && (
             <div className="flex justify-center my-1 w-full">
-              <div className="flex items-center justify-center gap-1.5 rounded-[8px] bg-red-100 border border-red-300 px-3.5 py-1.5 text-[11px] font-semibold text-red-800 text-center max-w-[420px] leading-tight shadow-xs">
+              <div className={`flex items-center justify-center gap-1.5 rounded-[8px] border px-3.5 py-1.5 text-[11px] font-semibold text-center max-w-[420px] leading-tight shadow-xs ${
+                isDark
+                  ? "bg-red-950/60 border-red-800 text-red-300"
+                  : "bg-red-100 border-red-300 text-red-800"
+              }`}>
                 <span>⚠️ Chat support for this order closed 20 minutes after delivery.</span>
               </div>
             </div>
@@ -539,23 +564,31 @@ export default function OrderChat({
 
           {/* Date Separator */}
           <div className="flex justify-center my-1 w-full">
-            <span className="rounded-[7.5px] bg-white px-3 py-1 text-[11px] font-medium text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)] uppercase tracking-wide">
+            <span className={`rounded-[7.5px] px-3 py-1 text-[11px] font-medium uppercase tracking-wide ${
+              isDark
+                ? "bg-[#182229] text-[#8696a0] border border-[#222e35]"
+                : "bg-white text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)]"
+            }`}>
               Today
             </span>
           </div>
 
           {isHistoryLoading ? (
-            <div className="flex h-40 items-center justify-center gap-2 text-xs font-semibold text-[#54656f]">
+            <div className={`flex h-40 items-center justify-center gap-2 text-xs font-semibold ${
+              isDark ? "text-[#8696a0]" : "text-[#54656f]"
+            }`}>
               <LoaderCircle size={18} className="animate-spin text-[#008069]" />
               <span>Loading messages...</span>
             </div>
           ) : liveMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="rounded-2xl bg-white p-3.5 shadow-sm text-stone-500 mb-2">
+              <div className={`rounded-2xl p-3.5 shadow-sm mb-2 ${
+                isDark ? "bg-[#202c33] text-stone-300 border border-[#2a3942]" : "bg-white text-stone-500"
+              }`}>
                 👋
               </div>
-              <p className="text-xs font-bold text-[#111b21]">No messages yet</p>
-              <p className="text-[11px] text-[#54656f] max-w-[240px] mt-0.5">
+              <p className={`text-xs font-bold ${isDark ? "text-[#e9edef]" : "text-[#111b21]"}`}>No messages yet</p>
+              <p className={`text-[11px] max-w-[240px] mt-0.5 ${isDark ? "text-[#8696a0]" : "text-[#54656f]"}`}>
                 Send instructions, photos, receipts, or chat with the chef here!
               </p>
             </div>
@@ -588,11 +621,16 @@ export default function OrderChat({
                       width: "fit-content",
                       marginLeft: isMe ? "auto" : "2px",
                       marginRight: isMe ? "2px" : "auto",
-                      backgroundColor: isMe ? "#d9fdd3" : "#ffffff",
+                      backgroundColor: isMe
+                        ? isDark ? "#005c4b" : "#d9fdd3"
+                        : isDark ? "#202c33" : "#ffffff",
                       borderRadius: isMe
                         ? "7.5px 7.5px 0px 7.5px"
                         : "7.5px 7.5px 7.5px 0px",
                       boxShadow: "0 1px 0.5px rgba(11,20,26,.13)",
+                      border: isDark
+                        ? isMe ? "1px solid #005c4b" : "1px solid #2a3942"
+                        : "none",
                       padding: hasAttachment
                         ? "4px 4px 4px 4px"
                         : "6px 8px 4px 9px",
@@ -604,7 +642,7 @@ export default function OrderChat({
                         style={{
                           fontSize: "11.5px",
                           fontWeight: 700,
-                          color: "#008069",
+                          color: isDark ? "#25d366" : "#008069",
                           lineHeight: "1",
                           marginBottom: "3px",
                           paddingLeft: hasAttachment ? "4px" : "0",
@@ -622,7 +660,9 @@ export default function OrderChat({
                         {item.attachment_type === "image" ? (
                           /* Fixed-size Image Attachment */
                           <div
-                            className="relative overflow-hidden rounded-md bg-stone-100 cursor-pointer group"
+                            className={`relative overflow-hidden rounded-md cursor-pointer group ${
+                              isDark ? "bg-[#111b21]" : "bg-stone-100"
+                            }`}
                             style={{
                               width: "240px",
                               maxHeight: "200px",
@@ -660,20 +700,30 @@ export default function OrderChat({
                             target="_blank"
                             rel="noopener noreferrer"
                             download={item.attachment_name || "document"}
-                            className="flex items-center gap-2.5 rounded-lg border border-stone-200 bg-stone-50/90 p-2.5 transition hover:bg-stone-100 w-[230px] sm:w-[250px]"
+                            className={`flex items-center gap-2.5 rounded-lg border p-2.5 transition w-[230px] sm:w-[250px] ${
+                              isDark
+                                ? "border-[#2a3942] bg-[#111b21] hover:bg-[#182229]"
+                                : "border-stone-200 bg-stone-50/90 hover:bg-stone-100"
+                            }`}
                           >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 border border-red-200">
+                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                              isDark
+                                ? "bg-red-950/60 text-red-400 border-red-800"
+                                : "bg-red-50 text-red-600 border-red-200"
+                            }`}>
                               <FileText size={18} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs font-bold text-stone-900 truncate">
+                              <p className={`text-xs font-bold truncate ${isDark ? "text-[#e9edef]" : "text-stone-900"}`}>
                                 {item.attachment_name || "Document"}
                               </p>
-                              <p className="text-[10px] text-stone-500">
+                              <p className={`text-[10px] ${isDark ? "text-[#8696a0]" : "text-stone-500"}`}>
                                 {item.attachment_size || "Document"}
                               </p>
                             </div>
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-stone-600 shadow-xs hover:bg-stone-200">
+                            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full shadow-xs ${
+                              isDark ? "bg-[#202c33] text-[#e9edef] hover:bg-[#2a3942]" : "bg-white text-stone-600 hover:bg-stone-200"
+                            }`}>
                               <Download size={13} />
                             </div>
                           </a>
@@ -700,7 +750,7 @@ export default function OrderChat({
                             style={{
                               fontSize: "13.5px",
                               lineHeight: "19px",
-                              color: "#111b21",
+                              color: isDark ? "#e9edef" : "#111b21",
                               wordBreak: "break-word",
                               whiteSpace: "pre-wrap",
                               flex: "1 1 auto",
@@ -718,7 +768,7 @@ export default function OrderChat({
                           alignItems: "center",
                           gap: "3px",
                           fontSize: "10.5px",
-                          color: "#667781",
+                          color: isDark ? "#8696a0" : "#667781",
                           userSelect: "none",
                           marginLeft: "auto",
                           paddingBottom: "1px",
@@ -737,7 +787,7 @@ export default function OrderChat({
                             {item.is_read ? (
                               <CheckCheck size={15} color="#53bdeb" />
                             ) : (
-                              <CheckCheck size={15} color="#8696a0" />
+                              <CheckCheck size={15} color={isDark ? "#8696a0" : "#8696a0"} />
                             )}
                           </span>
                         )}
@@ -761,22 +811,23 @@ export default function OrderChat({
             >
               <div
                 style={{
-                  backgroundColor: "#ffffff",
+                  backgroundColor: isDark ? "#202c33" : "#ffffff",
                   borderRadius: "7.5px 7.5px 7.5px 0px",
                   padding: "7px 12px",
                   boxShadow: "0 1px 0.5px rgba(11,20,26,.13)",
+                  border: isDark ? "1px solid #2a3942" : "none",
                   display: "flex",
                   alignItems: "center",
                   gap: "6px",
                   fontSize: "12px",
-                  color: "#54656f",
+                  color: isDark ? "#8696a0" : "#54656f",
                 }}
               >
                 <span>SFC Bakers is typing</span>
                 <span className="flex gap-1 items-center">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#008069] animate-bounce" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#008069] animate-bounce [animation-delay:0.2s]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#008069] animate-bounce [animation-delay:0.4s]" />
+                  <span className={`h-1.5 w-1.5 rounded-full ${isDark ? "bg-[#25d366]" : "bg-[#008069]"} animate-bounce`} />
+                  <span className={`h-1.5 w-1.5 rounded-full ${isDark ? "bg-[#25d366]" : "bg-[#008069]"} animate-bounce [animation-delay:0.2s]`} />
+                  <span className={`h-1.5 w-1.5 rounded-full ${isDark ? "bg-[#25d366]" : "bg-[#008069]"} animate-bounce [animation-delay:0.4s]`} />
                 </span>
               </div>
             </div>
@@ -787,7 +838,9 @@ export default function OrderChat({
 
         {/* SELECTED FILE PREVIEW TRAY */}
         {selectedFile && (
-          <div className="bg-[#e9edef] p-2 border-t border-[#d1d7db] flex items-center justify-between gap-3 animate-in fade-in">
+          <div className={`p-2 border-t flex items-center justify-between gap-3 animate-in fade-in ${
+            isDark ? "bg-[#111b21] border-[#222e35]" : "bg-[#e9edef] border-[#d1d7db]"
+          }`}>
             <div className="flex items-center gap-2.5 min-w-0">
               {filePreview ? (
                 <NextImage
@@ -796,18 +849,20 @@ export default function OrderChat({
                   width={48}
                   height={48}
                   unoptimized
-                  className="h-12 w-12 rounded-lg object-cover border border-stone-300"
+                  className={`h-12 w-12 rounded-lg object-cover border ${isDark ? "border-[#2a3942]" : "border-stone-300"}`}
                 />
               ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white border border-stone-300 text-stone-600">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-lg border ${
+                  isDark ? "bg-[#202c33] border-[#2a3942] text-[#8696a0]" : "bg-white border-stone-300 text-stone-600"
+                }`}>
                   <FileText size={22} />
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-xs font-bold text-[#111b21] truncate max-w-[220px]">
+                <p className={`text-xs font-bold truncate max-w-[220px] ${isDark ? "text-[#e9edef]" : "text-[#111b21]"}`}>
                   {selectedFile.name}
                 </p>
-                <p className="text-[10px] text-[#54656f]">
+                <p className={`text-[10px] ${isDark ? "text-[#8696a0]" : "text-[#54656f]"}`}>
                   {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready to send
                 </p>
               </div>
@@ -815,31 +870,38 @@ export default function OrderChat({
             <button
               type="button"
               onClick={clearSelectedFile}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-300 text-stone-600 hover:bg-stone-400"
+              className={`flex h-7 w-7 items-center justify-center rounded-full ${
+                isDark ? "bg-[#2a3942] text-[#e9edef] hover:bg-[#374248]" : "bg-stone-300 text-stone-600 hover:bg-stone-400"
+              }`}
             >
               <X size={15} />
             </button>
           </div>
         )}
-
         {/* ATTACHMENT POPUP MENU (PHOTOS & DOCUMENTS) */}
         {showAttachMenu && (
           <div
-            className="absolute bottom-16 left-4 bg-white rounded-2xl shadow-xl border border-stone-200 p-2.5 flex flex-col gap-1.5 z-50 animate-in fade-in zoom-in-95"
+            className={`absolute bottom-16 left-4 rounded-2xl shadow-xl border p-2.5 flex flex-col gap-1.5 z-50 animate-in fade-in zoom-in-95 ${
+              isDark ? "bg-[#202c33] border-[#2a3942]" : "bg-white border-stone-200"
+            }`}
             style={{ width: "190px" }}
           >
             {/* Image / Photos option */}
             <button
               type="button"
               onClick={() => imageInputRef.current?.click()}
-              className="flex items-center gap-3 p-2 rounded-xl hover:bg-purple-50 text-left text-xs font-bold text-stone-700 transition"
+              className={`flex items-center gap-3 p-2 rounded-xl text-left text-xs font-bold transition ${
+                isDark ? "hover:bg-[#111b21] text-[#e9edef]" : "hover:bg-purple-50 text-stone-700"
+              }`}
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+              <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                isDark ? "bg-purple-950/70 text-purple-400" : "bg-purple-100 text-purple-600"
+              }`}>
                 <ImageIcon size={17} />
               </div>
               <div>
-                <p className="leading-tight text-stone-900 font-bold">Photos & Media</p>
-                <p className="text-[9px] text-stone-400">JPG, PNG, WEBP</p>
+                <p className={`leading-tight font-bold ${isDark ? "text-[#e9edef]" : "text-stone-900"}`}>Photos & Media</p>
+                <p className={`text-[9px] ${isDark ? "text-[#8696a0]" : "text-stone-400"}`}>JPG, PNG, WEBP</p>
               </div>
             </button>
 
@@ -847,14 +909,18 @@ export default function OrderChat({
             <button
               type="button"
               onClick={() => docInputRef.current?.click()}
-              className="flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50 text-left text-xs font-bold text-stone-700 transition"
+              className={`flex items-center gap-3 p-2 rounded-xl text-left text-xs font-bold transition ${
+                isDark ? "hover:bg-[#111b21] text-[#e9edef]" : "hover:bg-blue-50 text-stone-700"
+              }`}
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                isDark ? "bg-blue-950/70 text-blue-400" : "bg-blue-100 text-blue-600"
+              }`}>
                 <FileText size={17} />
               </div>
               <div>
-                <p className="leading-tight text-stone-900 font-bold">Document</p>
-                <p className="text-[9px] text-stone-400">PDF, DOC, TXT</p>
+                <p className={`leading-tight font-bold ${isDark ? "text-[#e9edef]" : "text-stone-900"}`}>Document</p>
+                <p className={`text-[9px] ${isDark ? "text-[#8696a0]" : "text-stone-400"}`}>PDF, DOC, TXT</p>
               </div>
             </button>
           </div>
@@ -863,11 +929,15 @@ export default function OrderChat({
         {/* WHATSAPP EMOJI PICKER POPUP */}
         {showEmojiPicker && (
           <div
-            className="absolute bottom-16 left-2 right-2 sm:left-3 sm:right-3 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50 animate-in fade-in zoom-in-95"
+            className={`absolute bottom-16 left-2 right-2 sm:left-3 sm:right-3 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in fade-in zoom-in-95 ${
+              isDark ? "bg-[#202c33] border-[#2a3942]" : "bg-white border-stone-200"
+            }`}
             style={{ maxHeight: "260px" }}
           >
             {/* Emoji Category Tabs */}
-            <div className="flex items-center justify-between border-b border-stone-200 bg-[#f0f2f5] px-2 py-1.5">
+            <div className={`flex items-center justify-between border-b px-2 py-1.5 ${
+              isDark ? "border-[#2a3942] bg-[#111b21]" : "border-stone-200 bg-[#f0f2f5]"
+            }`}>
               <div className="flex items-center gap-1">
                 {EMOJI_CATEGORIES.map((cat, idx) => (
                   <button
@@ -876,8 +946,8 @@ export default function OrderChat({
                     onClick={() => setActiveEmojiCategory(idx)}
                     className={`flex items-center justify-center h-8 w-8 rounded-xl text-base transition ${
                       activeEmojiCategory === idx
-                        ? "bg-white shadow-xs scale-110"
-                        : "hover:bg-stone-200/70 opacity-70 hover:opacity-100"
+                        ? isDark ? "bg-[#202c33] text-white shadow-xs scale-110" : "bg-white shadow-xs scale-110"
+                        : isDark ? "hover:bg-[#202c33]/70 opacity-70 hover:opacity-100 text-stone-300" : "hover:bg-stone-200/70 opacity-70 hover:opacity-100"
                     }`}
                     title={cat.name}
                   >
@@ -888,7 +958,9 @@ export default function OrderChat({
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-200/80 text-stone-500 hover:bg-stone-300"
+                className={`flex h-7 w-7 items-center justify-center rounded-full ${
+                  isDark ? "bg-[#2a3942] text-[#8696a0] hover:bg-[#374248]" : "bg-stone-200/80 text-stone-500 hover:bg-stone-300"
+                }`}
               >
                 <X size={14} />
               </button>
@@ -905,7 +977,9 @@ export default function OrderChat({
                     key={index}
                     type="button"
                     onClick={() => handleEmojiSelect(emoji)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-xl hover:bg-stone-100 active:scale-125 transition"
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg text-xl active:scale-125 transition ${
+                      isDark ? "hover:bg-[#111b21]" : "hover:bg-stone-100"
+                    }`}
                   >
                     {emoji}
                   </button>
@@ -932,14 +1006,16 @@ export default function OrderChat({
         />
 
         {/* WHATSAPP INPUT BAR (BOTTOM) */}
-        <div className="bg-[#f0f2f5] p-2 border-t border-[#d1d7db] z-10">
+        <div className={`p-2 border-t z-10 ${
+          isDark ? "bg-[#202c33] border-[#222e35]" : "bg-[#f0f2f5] border-[#d1d7db]"
+        }`}>
           <div className="flex items-center gap-1.5">
             {/* Input Box Capsule */}
             <div
               className={`flex flex-1 items-center gap-2 rounded-full px-3 py-2 shadow-2xs border ${
                 isExpired
-                  ? "bg-stone-100 border-stone-200 opacity-70"
-                  : "bg-white border-[#e9edef]"
+                  ? isDark ? "bg-[#111b21] border-[#222e35] opacity-70" : "bg-stone-100 border-stone-200 opacity-70"
+                  : isDark ? "bg-[#2a3942] border-[#2a3942]" : "bg-white border-[#e9edef]"
               }`}
             >
               <button
@@ -949,8 +1025,8 @@ export default function OrderChat({
                   isExpired
                     ? "text-stone-400 cursor-not-allowed"
                     : showEmojiPicker
-                    ? "text-[#008069] scale-110"
-                    : "text-[#54656f] hover:text-[#111b21]"
+                    ? isDark ? "text-[#00a884] scale-110" : "text-[#008069] scale-110"
+                    : isDark ? "text-[#8696a0] hover:text-[#e9edef]" : "text-[#54656f] hover:text-[#111b21]"
                 }`}
                 onClick={() => {
                   if (!isExpired) {
@@ -980,6 +1056,8 @@ export default function OrderChat({
                 className={`flex-1 bg-transparent text-[14px] outline-none ${
                   isExpired
                     ? "text-stone-400 placeholder:text-stone-400 cursor-not-allowed"
+                    : isDark
+                    ? "text-[#e9edef] placeholder:text-[#8696a0]"
                     : "text-[#111b21] placeholder:text-[#8696a0]"
                 }`}
               />
@@ -997,8 +1075,8 @@ export default function OrderChat({
                   isExpired
                     ? "text-stone-400 cursor-not-allowed"
                     : showAttachMenu
-                    ? "text-[#008069] scale-110"
-                    : "text-[#54656f] hover:text-[#111b21]"
+                    ? isDark ? "text-[#00a884] scale-110" : "text-[#008069] scale-110"
+                    : isDark ? "text-[#8696a0] hover:text-[#e9edef]" : "text-[#54656f] hover:text-[#111b21]"
                 }`}
                 title={isExpired ? "Chat closed" : "Attach photo or document"}
               >
@@ -1013,8 +1091,8 @@ export default function OrderChat({
               disabled={isSending || isExpired}
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md transition ${
                 isExpired
-                  ? "bg-stone-400 cursor-not-allowed opacity-60"
-                  : "bg-[#008069] hover:bg-[#006e5a] active:scale-95 disabled:opacity-50"
+                  ? isDark ? "bg-stone-700 cursor-not-allowed opacity-60" : "bg-stone-400 cursor-not-allowed opacity-60"
+                  : isDark ? "bg-[#00a884] hover:bg-[#008f6f] active:scale-95 disabled:opacity-50" : "bg-[#008069] hover:bg-[#006e5a] active:scale-95 disabled:opacity-50"
               }`}
               title={
                 isExpired
