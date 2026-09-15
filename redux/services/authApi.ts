@@ -71,6 +71,23 @@ export const authApi = baseApi.injectEndpoints({
         body: { email, role: "user" },
       }),
     }),
+    resendForgotPasswordOtp: builder.mutation({
+      query: (email: string) => ({
+        url: "/auth/resend-forgot-password-otp",
+        method: "POST",
+        body: { email, role: "user" },
+      }),
+    }),
+    verifyForgotPasswordOtp: builder.mutation<
+      { success: boolean; message: string; resetToken: string },
+      { email: string; otp: string }
+    >({
+      query: ({ email, otp }) => ({
+        url: "/auth/verify-forgot-password-otp",
+        method: "POST",
+        body: { email, otp },
+      }),
+    }),
     verifyResetPasswordToken: builder.mutation({
       query: (accessToken: string) => ({
         url: `/auth/reset-password/${encodeURIComponent(accessToken)}`,
@@ -78,10 +95,10 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
     resetPassword: builder.mutation({
-      query: ({ accessToken, password }: { accessToken: string; password: string }) => ({
-        url: `/auth/reset-password/${encodeURIComponent(accessToken)}`,
+      query: (body: { email?: string; resetToken?: string; accessToken?: string; password: string }) => ({
+        url: "/auth/reset-password",
         method: "POST",
-        body: { password },
+        body,
       }),
     }),
     submitBlockedSupportRequest: builder.mutation({
@@ -143,6 +160,8 @@ export const {
   useGoogleLoginMutation,
   useLogoutMutation,
   useForgotPasswordMutation,
+  useResendForgotPasswordOtpMutation,
+  useVerifyForgotPasswordOtpMutation,
   useVerifyResetPasswordTokenMutation,
   useResetPasswordMutation,
   useSubmitBlockedSupportRequestMutation,

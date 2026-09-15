@@ -95,7 +95,7 @@ export default function GlobalNetworkWatcher() {
             <p className="text-xs font-bold leading-snug truncate">
               {isRestored
                 ? "Connection restored! Syncing..."
-                : "Offline Mode — Viewing cached data"}
+                : "Offline Mode"}
             </p>
             {!isRestored && (
               <p className="text-[11px] text-white/70 leading-tight">
