@@ -177,7 +177,7 @@ export default function PopularPreview() {
               rounded-full
               border
               border-[var(--color-border)]
-              bg-white
+              bg-[var(--bg-surface)]
               text-[var(--color-text-primary)]
               shadow-lg
               transition
@@ -210,7 +210,7 @@ export default function PopularPreview() {
               Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="min-w-[180px] snap-start overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white p-3 shadow-sm sm:min-w-[210px] md:min-w-[225px]"
+                  className="min-w-[180px] snap-start overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--bg-surface)] p-3 shadow-sm sm:min-w-[210px] md:min-w-[225px]"
                 >
                   <SkeletonLoader variant="rectangular" height={150} className="w-full !rounded-xl" />
                   <div className="mt-3 space-y-2">
@@ -236,7 +236,7 @@ export default function PopularPreview() {
                   rounded-2xl
                   border
                   border-[var(--color-border)]
-                  bg-white
+                  bg-[var(--bg-surface)]
                   text-left
                   shadow-sm
                   transition-all
@@ -382,7 +382,7 @@ export default function PopularPreview() {
               rounded-full
               border
               border-[var(--color-border)]
-              bg-white
+              bg-[var(--bg-surface)]
               text-[var(--color-text-primary)]
               shadow-lg
               transition

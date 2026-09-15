@@ -851,7 +851,7 @@ const Navbar = () => {
           z-50
           border-t
           border-[var(--color-border)]
-          bg-white/95
+          bg-[var(--bg-surface)]/95
           px-2
           pt-2
           backdrop-blur-xl

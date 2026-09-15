@@ -131,7 +131,7 @@ export default function Footer() {
   }, [rawLogoUrl]);
 
   return (
-    <footer className="app-footer bg-[var(--bg-footer)] text-white">
+    <footer className="app-footer bg-[var(--bg-footer)] text-white border-t border-black/10 dark:border-white/10 transition-colors duration-200">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-6">
         {/* Mobile Compact Footer */}
         <div className="flex flex-col gap-4 sm:hidden">
@@ -150,7 +150,7 @@ export default function Footer() {
               </div>
               <div>
                 <span className="block text-base font-black tracking-tight">SFC Bakers</span>
-                <span className="block text-[8px] font-medium uppercase tracking-[0.16em] text-white/50">
+                <span className="block text-[8px] font-medium uppercase tracking-[0.16em] text-white/60">
                   Fresh • Fast • Delicious
                 </span>
               </div>
@@ -164,7 +164,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Facebook"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-white/80 hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] hover:text-white transition"
                   >
                     <FaFacebook size={14} />
                   </a>
@@ -175,7 +175,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Instagram"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-white/80 hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] hover:text-white transition"
                   >
                     <FaInstagram size={14} />
                   </a>
@@ -186,7 +186,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Twitter"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-[var(--color-primary)] hover:text-white transition"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-white/80 hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] hover:text-white transition"
                   >
                     <FaTwitter size={14} />
                   </a>
@@ -196,32 +196,32 @@ export default function Footer() {
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
-            <Link href="/" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
               Home
             </Link>
-            <Link href="/menu" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/menu" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
               Menu
             </Link>
-            <Link href="/contact" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/contact" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
               Contact
             </Link>
-            <Link href="/about" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/about" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
               About Us
             </Link>
-            <Link href="/privacy-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/privacy-policy" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
               Privacy
             </Link>
-            <Link href="/terms" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/terms" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
               Terms
             </Link>
-            <Link href="/faq" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
+            <Link href="/faq" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
               Faq
             </Link>
-            <Link href="/shipping-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
-            Shipping Policy
+            <Link href="/shipping-policy" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
+              Shipping Policy
             </Link>
-            <Link href="/refund-policy" className="rounded-xl bg-white/5 py-2 px-2 text-white/80 hover:bg-white/10 hover:text-white transition">
-            Refund Policy
+            <Link href="/refund-policy" className="rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-white/90 hover:bg-white/10 hover:text-white transition">
+              Refund Policy
             </Link>
           </div>
           {!isAppInstalled && (
@@ -230,7 +230,7 @@ export default function Footer() {
                 <Zap size={14} className="text-[var(--color-primary-light)] shrink-0" />
                 <span className="text-xs font-bold text-white/90">Install SFC Bakers App</span>
               </div>
-              <PWAInstallButton variant="footer" />
+              <PWAInstallButton variant="compact" />
             </div>
           )}
         </div>
@@ -272,7 +272,7 @@ export default function Footer() {
                 max-w-sm
                 text-sm
                 leading-6
-                text-white/60
+                text-white/70
               "
             >
               Freshly prepared food, delicious flavors and
@@ -294,10 +294,13 @@ export default function Footer() {
                       items-center
                       justify-center
                       rounded-xl
-                      bg-[var(--color-primary-light)]
-                      text-white/70
+                      border
+                      border-white/10
+                      bg-white/10
+                      text-white/80
                       transition
                       hover:bg-[var(--color-primary)]
+                      hover:border-[var(--color-primary)]
                       hover:text-white"
                   >
                     <span className="text-sm font-bold">
@@ -317,10 +320,13 @@ export default function Footer() {
                       items-center
                       justify-center
                       rounded-xl
-                      bg-[var(--color-primary-light)]
-                      text-white/70
+                      border
+                      border-white/10
+                      bg-white/10
+                      text-white/80
                       transition
                       hover:bg-[var(--color-primary)]
+                      hover:border-[var(--color-primary)]
                       hover:text-white"
                   >
                     <span className="text-sm font-bold">
@@ -340,10 +346,13 @@ export default function Footer() {
                       items-center
                       justify-center
                       rounded-xl
-                      bg-[var(--color-primary-light)]
-                      text-white/70
+                      border
+                      border-white/10
+                      bg-white/10
+                      text-white/80
                       transition
                       hover:bg-[var(--color-primary)]
+                      hover:border-[var(--color-primary)]
                       hover:text-white"
                   >
                     <span className="text-sm font-bold">
@@ -379,10 +388,10 @@ export default function Footer() {
                       items-center
                       gap-1.5
                       text-sm
-                      text-white/55
+                      text-white/70
                       transition
                       hover:gap-2.5
-                      hover:text-[var(--color-primary-light)]
+                      hover:text-white
                     "
                   >
                     <ArrowRight size={12} />
@@ -419,10 +428,10 @@ export default function Footer() {
                       items-center
                       gap-1.5
                       text-sm
-                      text-white/55
+                      text-white/70
                       transition
                       hover:gap-2.5
-                      hover:text-[var(--color-primary-light)]
+                      hover:text-white
                     "
                   >
                     <ArrowRight size={12} />
@@ -459,7 +468,7 @@ export default function Footer() {
                   className="mt-0.5 shrink-0 text-[var(--color-primary-light)]"
                 />
 
-                <p className="text-sm leading-6 text-white/55">
+                <p className="text-sm leading-6 text-white/70">
                   {footerSettings?.location || (
                     <>
                       123 Main Street,
@@ -480,7 +489,7 @@ export default function Footer() {
                   items-center
                   gap-3
                   text-sm
-                  text-white/55
+                  text-white/70
                   transition
                   hover:text-white
                 "
@@ -503,7 +512,7 @@ export default function Footer() {
                   gap-3
                   break-all
                   text-sm
-                  text-white/55
+                  text-white/70
                   transition
                   hover:text-white
                 "
@@ -525,7 +534,7 @@ export default function Footer() {
                   className="mt-0.5 shrink-0 text-[var(--color-primary-light)]"
                 />
 
-                <div className="text-sm text-white/55">
+                <div className="text-sm text-white/70">
                   {footerSettings?.working_hours ? (
                     footerSettings.working_hours.split("\n").map((line: string, idx: number) => (
                       <p key={idx}>{line}</p>
@@ -566,7 +575,7 @@ export default function Footer() {
                   <h3 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
                     Install SFC Bakers App
                   </h3>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">
                     Add SFC Bakers to your home screen for faster ordering, quick
                     reorders, and an app-like experience — no app store needed.
                   </p>
@@ -579,7 +588,7 @@ export default function Footer() {
                     ].map(({ icon: Icon, label }) => (
                       <span
                         key={label}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/75"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80"
                       >
                         <Icon size={13} className="text-[var(--color-primary-light)]" />
                         {label}
@@ -608,11 +617,11 @@ export default function Footer() {
             sm:text-left
           "
         >
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-white/60">
             © {currentYear} SFC Bakers. All rights reserved.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/40">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/60">
             {bottomPolicyLinks.map((link, idx) => (
               <React.Fragment key={link.href}>
                 <Link href={link.href} className="hover:text-white transition">
@@ -630,7 +639,7 @@ export default function Footer() {
               justify-center
               gap-1.5
               text-xs
-              text-white/40
+              text-white/60
             "
           >
             Made with

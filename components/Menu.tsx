@@ -465,7 +465,7 @@ export default function Menu() {
                 ${
                   selected === "all"
                     ? "bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20"
-                    : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                    : "border border-[var(--color-border)] bg-[var(--bg-surface)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                 }
               `}
             >
@@ -504,7 +504,7 @@ export default function Menu() {
                     ${
                       selected === c.id
                         ? "bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20"
-                        : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                        : "border border-[var(--color-border)] bg-[var(--bg-surface)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                     }
                   `}
                 >
@@ -552,7 +552,7 @@ export default function Menu() {
               rounded-2xl
               border
               border-[var(--color-border)]
-              bg-white
+              bg-[var(--bg-surface)]
               p-2
               shadow-sm
               md:gap-3
@@ -672,7 +672,7 @@ export default function Menu() {
                 rounded-full
                 border
                 border-[var(--color-border)]
-                bg-white
+                bg-[var(--bg-surface)]
                 px-4
                 py-2
                 text-xs
@@ -736,7 +736,7 @@ export default function Menu() {
                     rounded-2xl
                     border
                     border-[var(--color-border)]
-                    bg-white
+                    bg-[var(--bg-surface)]
                     shadow-xs
                     transition-all
                     duration-300
@@ -745,7 +745,7 @@ export default function Menu() {
                   "
                 >
 
-                  <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden bg-stone-50">
+                  <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden bg-[var(--bg-muted)]">
 
                     <Link
                       href={`/product/${p.id}`}
@@ -858,7 +858,7 @@ export default function Menu() {
                         items-center
                         justify-center
                         rounded-full
-                        bg-white/95
+                        bg-[var(--bg-surface)]/95
                         shadow-md
                         backdrop-blur-md
                         transition
@@ -1034,7 +1034,7 @@ export default function Menu() {
                                 items-center
                                 justify-center
                                 rounded-full
-                                bg-white
+                                bg-[var(--bg-surface)]
                                 text-[var(--color-primary)]
                                 shadow-sm
                                 transition

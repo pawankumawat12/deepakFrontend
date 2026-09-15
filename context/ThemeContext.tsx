@@ -11,6 +11,8 @@ import {
 } from "../redux/features/themeSlice";
 import { RootState } from "../redux/store";
 
+import { getSocket } from "../lib/socket";
+
 export type Theme = ThemeMode;
 
 interface ThemeContextType {
@@ -51,17 +53,40 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyThemeToDOM(theme || "light", colorTheme || "matcha");
   }, [theme, colorTheme]);
 
-  // Only query the API if we do NOT have valid loaded theme data in Redux Persist!
-  // No aggressive polling or repeated requests on route navigation.
+  // Query server theme to keep client synchronized with store-wide settings
   const {
     data: themeResponse,
     isLoading,
     refetch,
   } = useGetThemeQuery(undefined, {
-    skip: Boolean(isLoaded && colorTheme && availableColorThemes?.length > 0),
+    refetchOnMountOrArgChange: true,
   });
 
-  // When API returns (initial load or explicit refetch), store in Redux Persist
+  // Real-time synchronization via WebSocket
+  useEffect(() => {
+    const socket = getSocket();
+    const handleThemeUpdated = (updated: any) => {
+      if (updated) {
+        const serverTheme = updated.theme === "dark" ? "dark" : "light";
+        const serverColor = updated.colorTheme || "matcha";
+        const serverPalettes = updated.availableColorThemes || [];
+        dispatch(
+          setThemeSettings({
+            theme: serverTheme,
+            colorTheme: serverColor,
+            availableColorThemes: serverPalettes,
+          })
+        );
+      }
+    };
+
+    socket.on("theme_updated", handleThemeUpdated);
+    return () => {
+      socket.off("theme_updated", handleThemeUpdated);
+    };
+  }, [dispatch]);
+
+  // When API returns, store in Redux Persist
   useEffect(() => {
     if (themeResponse?.data) {
       const serverTheme =

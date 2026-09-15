@@ -188,11 +188,11 @@ export default function SpecialOffers() {
                   ${
                     isActive
                       ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] shadow-sm"
-                      : "border-[var(--color-border)] bg-white hover:border-[var(--color-primary)]/40"
+                      : "border-[var(--color-border)] bg-[var(--bg-surface)] hover:border-[var(--color-primary)]/40"
                   }
                 `}
               >
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[var(--bg-muted)]">
                   {item.image && (
                     <Image
                       src={item.image}
