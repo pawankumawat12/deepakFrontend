@@ -766,9 +766,7 @@ export default function CartClient() {
     );
   }
 
-  /* ============================================================
-     3. EMPTY CART (LOGGED IN)
-  ============================================================ */
+
   if (!items.length) {
     return (
       <main className="min-h-screen bg-[var(--bg-body)] pt-24 pb-20">
