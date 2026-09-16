@@ -62,6 +62,7 @@ export default function PopularProducts() {
   const [updateCartItem] = useUpdateCartItemMutation();
 
   const [guestCartItems, setGuestCartItems] = React.useState<GuestCartItem[]>([]);
+  const inFlightQtyRef = React.useRef<Set<number>>(new Set());
 
   React.useEffect(() => {
     setGuestCartItems(getGuestCart());
@@ -163,35 +164,42 @@ export default function PopularProducts() {
     maxStock: number,
     isMadeToOrder?: boolean
   ) => {
-    if (!isMadeToOrder && nextQty > maxStock) {
-      toast.error(`Only ${maxStock} items available in stock`);
-      return;
-    }
-
-    if (!user) {
-      const res = updateGuestCartItemQty(
-        productId,
-        nextQty,
-        maxStock,
-        isMadeToOrder
-      );
-      if (res.success) {
-        if (nextQty === 0) {
-          toast.success("Removed from cart");
-        }
-      } else {
-        toast.error(res.message || "Failed to update quantity");
-      }
-      return;
-    }
+    if (inFlightQtyRef.current.has(productId)) return;
+    inFlightQtyRef.current.add(productId);
 
     try {
+      if (!isMadeToOrder && nextQty > maxStock) {
+        toast.error(`Only ${maxStock} items available in stock`);
+        return;
+      }
+
+      if (!user) {
+        const res = updateGuestCartItemQty(
+          productId,
+          nextQty,
+          maxStock,
+          isMadeToOrder
+        );
+        if (res.success) {
+          if (nextQty === 0) {
+            toast.success("Removed from cart");
+          }
+        } else {
+          toast.error(res.message || "Failed to update quantity");
+        }
+        return;
+      }
+
       await updateCartItem({ productId, quantity: nextQty }).unwrap();
       if (nextQty === 0) {
         toast.success("Removed from cart");
       }
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to update quantity");
+    } finally {
+      setTimeout(() => {
+        inFlightQtyRef.current.delete(productId);
+      }, 350);
     }
   };
 

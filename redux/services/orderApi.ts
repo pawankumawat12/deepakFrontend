@@ -62,6 +62,7 @@ export interface CreateOrderPayload {
   notes?: string;
   offerCode?: string;
   couponCode?: string;
+  idempotencyKey?: string;
 }
 
 export interface OrderResponse<T = Order> {

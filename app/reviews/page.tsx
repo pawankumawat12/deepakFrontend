@@ -32,6 +32,7 @@ import {
   ReviewItem,
 } from "../../redux/services/reviewApi";
 import { RootState } from "../../redux/store";
+import { useThrottledCallback } from "../../utils/throttle";
 
 const RATING_LABELS: Record<number, string> = {
   1: "Poor",
@@ -159,6 +160,8 @@ export default function ReviewsPage() {
       setFormError(err?.data?.message || "Failed to submit review.");
     }
   };
+
+  const throttledSubmit = useThrottledCallback(handleSubmit, 2000);
 
   return (
     <main className="min-h-screen bg-[var(--bg-body)] pb-16">
@@ -634,7 +637,7 @@ export default function ReviewsPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+              <form onSubmit={throttledSubmit} className="mt-5 space-y-4">
                 {formError && (
                   <div className="rounded-xl bg-red-50 p-3 text-xs font-black text-red-600">
                     {formError}

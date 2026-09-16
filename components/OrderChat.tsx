@@ -30,6 +30,7 @@ import {
 import { getSocket } from "../lib/socket";
 import { useTheme } from "../context/ThemeContext";
 import toast from "react-hot-toast";
+import { useThrottledCallback } from "../utils/throttle";
 
 const API_ORIGIN = (
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
@@ -152,7 +153,7 @@ export default function OrderChat({
   const docInputRef = useRef<HTMLInputElement | null>(null);
   const inputFieldRef = useRef<HTMLInputElement | null>(null);
   const isSendingRef = useRef(false);
-
+  
   const {
     data: historyData,
     isLoading: isHistoryLoading,
@@ -162,37 +163,37 @@ export default function OrderChat({
 
   const queryChatStatus = (historyData as any)?.chatStatus;
   const isExpired =
-    queryChatStatus?.isExpired ??
-    queryChatStatus?.is_expired ??
-    chatStatus?.isExpired ??
-    chatStatus?.is_expired ??
-    ((orderStatus === "Delivered" || orderStatus === "Completed") &&
-      deliveredAt &&
-      Date.now() > new Date(deliveredAt).getTime() + 20 * 60 * 1000);
-
+  queryChatStatus?.isExpired ??
+  queryChatStatus?.is_expired ??
+  chatStatus?.isExpired ??
+  chatStatus?.is_expired ??
+  ((orderStatus === "Delivered" || orderStatus === "Completed") &&
+  deliveredAt &&
+  Date.now() > new Date(deliveredAt).getTime() + 20 * 60 * 1000);
+  
   const [postMessageMutation, { isLoading: isSending }] =
-    usePostOrderMessageMutation();
+  usePostOrderMessageMutation();
   const [markReadMutation] = useMarkMessagesReadMutation();
-
+  
   // Initialize messages from history
   useEffect(() => {
     if (historyData?.data) {
       setLiveMessages(historyData.data);
     }
   }, [historyData]);
-
+  
   // Socket.IO Room Connection and Events
   useEffect(() => {
     if (!open || !effectiveOrderId) return;
-
+    
     const socket = getSocket(user?.id);
-
+    
     // Join order room
     socket.emit("join_order_room", { orderId: effectiveOrderId });
-
+    
     // Mark messages read on open
     markReadMutation(effectiveOrderId);
-
+    
     // Listen for incoming live chat messages
     const handleNewMessage = (payload: {
       orderId: number | string;
@@ -212,7 +213,7 @@ export default function OrderChat({
         }
       }
     };
-
+    
     // Listen for read receipts from admin
     const handleMessagesRead = (payload: {
       orderId: number | string;
@@ -225,42 +226,42 @@ export default function OrderChat({
         setLiveMessages((prev) =>
           prev.map((m) =>
             m.sender_role === "customer" ? { ...m, is_read: true } : m
-          )
-        );
-      }
-    };
+      )
+    );
+  }
+};
 
-    // Listen for typing indicators
-    const handleUserTyping = (payload: {
-      orderId: number | string;
-      senderRole: string;
-      isTyping: boolean;
-    }) => {
-      if (
-        String(payload.orderId) === String(effectiveOrderId) &&
-        payload.senderRole === "admin"
-      ) {
-        setIsAdminTyping(payload.isTyping);
-      }
-    };
+// Listen for typing indicators
+const handleUserTyping = (payload: {
+  orderId: number | string;
+  senderRole: string;
+  isTyping: boolean;
+}) => {
+  if (
+    String(payload.orderId) === String(effectiveOrderId) &&
+    payload.senderRole === "admin"
+  ) {
+    setIsAdminTyping(payload.isTyping);
+  }
+};
 
-    socket.on("new_chat_message", handleNewMessage);
-    socket.on("messages_read", handleMessagesRead);
-    socket.on("user_typing", handleUserTyping);
+socket.on("new_chat_message", handleNewMessage);
+socket.on("messages_read", handleMessagesRead);
+socket.on("user_typing", handleUserTyping);
 
-    return () => {
+return () => {
       socket.emit("leave_order_room", { orderId: effectiveOrderId });
       socket.off("new_chat_message", handleNewMessage);
       socket.off("messages_read", handleMessagesRead);
       socket.off("user_typing", handleUserTyping);
     };
   }, [open, effectiveOrderId, user?.id, markReadMutation]);
-
+  
   // Scroll to bottom on new messages, typing or file preview
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [liveMessages, isAdminTyping, filePreview]);
-
+  
   // Disable body scroll when modal open
   useEffect(() => {
     if (!open) return;
@@ -269,12 +270,12 @@ export default function OrderChat({
       document.body.style.overflow = "";
     };
   }, [open]);
-
+  
   if (!open) return null;
-
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
-
+    
     // Emit typing indicator to socket
     const socket = getSocket(user?.id);
     socket.emit("typing_start", {
@@ -282,7 +283,7 @@ export default function OrderChat({
       senderRole: "customer",
       senderName: user?.name || "Customer",
     });
-
+    
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("typing_stop", {
@@ -291,24 +292,24 @@ export default function OrderChat({
       });
     }, 1500);
   };
-
+  
   const handleEmojiSelect = (emoji: string) => {
     setInputText((prev) => prev + emoji);
     inputFieldRef.current?.focus();
   };
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+    
     if (file.size > 10 * 1024 * 1024) {
       toast.error("File size cannot exceed 10 MB");
       return;
     }
-
+    
     setSelectedFile(file);
     setShowAttachMenu(false);
-
+    
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -319,14 +320,14 @@ export default function OrderChat({
       setFilePreview(null);
     }
   };
-
+  
   const clearSelectedFile = () => {
     setSelectedFile(null);
     setFilePreview(null);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (docInputRef.current) docInputRef.current.value = "";
   };
-
+  
   const handleSendMessage = async () => {
     if (isExpired) {
       toast.error("Chat support for this order expired 20 minutes after delivery.");
@@ -336,20 +337,20 @@ export default function OrderChat({
     if (!trimmed && !selectedFile) return;
     if (isSending || isSendingRef.current) return;
     isSendingRef.current = true;
-
+    
     const socket = getSocket(user?.id);
     socket.emit("typing_stop", {
       orderId: effectiveOrderId,
       senderRole: "customer",
     });
-
+    
     const fileToSend = selectedFile;
     const textToSend = trimmed;
-
+    
     setInputText("");
     clearSelectedFile();
     setShowEmojiPicker(false);
-
+    
     try {
       if (fileToSend) {
         const formData = new FormData();
@@ -357,7 +358,7 @@ export default function OrderChat({
         formData.append("message", textToSend);
         formData.append("senderRole", "customer");
         formData.append("file", fileToSend);
-
+        
         const res = await postMessageMutation(formData).unwrap();
         if (res.data) {
           setLiveMessages((prev) => {
@@ -388,24 +389,25 @@ export default function OrderChat({
       isSendingRef.current = false;
     }
   };
-
+  
+  const throttledSendMessage = useThrottledCallback(handleSendMessage, 1000);
+  
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      handleSendMessage();
+      throttledSendMessage();
     }
   };
-
+  
   return (
     <div
-      className="
-        fixed inset-0 z-[100]
-        flex items-end justify-center
-        bg-black/60
-        backdrop-blur-xs
-        sm:items-center
-        sm:p-4
-      "
+    className="
+    fixed inset-0 z-[100]
+    flex items-end justify-center
+    bg-black/60
+    backdrop-blur-xs
+    sm:items-center
+    sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -1087,7 +1089,7 @@ export default function OrderChat({
             {/* WhatsApp Send / Mic Circular Button */}
             <button
               type="button"
-              onClick={handleSendMessage}
+              onClick={throttledSendMessage}
               disabled={isSending || isExpired}
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md transition ${
                 isExpired

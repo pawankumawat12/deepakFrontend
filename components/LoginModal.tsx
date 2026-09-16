@@ -32,6 +32,7 @@ import { setCredentials } from "../redux/features/authSlice";
 import { useMergeCartMutation } from "../redux/services/cartApi";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
 import GoogleSignInButton from "./GoogleSignInButton";
+import { useThrottledCallback } from "../utils/throttle";
 
 interface LoginModalProps {
   open: boolean;
@@ -233,6 +234,10 @@ export default function LoginModal({
     }
   };
 
+  const throttledOnSubmit = useThrottledCallback(onSubmit, 2000);
+  const throttledVerifyOtp = useThrottledCallback(handleVerifyOtp, 1500);
+  const throttledResendOtp = useThrottledCallback(handleResendOtp, 2000);
+
   useEffect(() => {
     if (!open) {
       setStep("email");
@@ -355,7 +360,7 @@ export default function LoginModal({
         <div className="p-5 sm:p-6">
           {/* EMAIL LOGIN FORM */}
           {step === "email" && (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(throttledOnSubmit)} className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-[var(--color-text-primary)]">
                   Email address
@@ -586,7 +591,7 @@ export default function LoginModal({
 
               <button
                 type="button"
-                onClick={handleVerifyOtp}
+                onClick={throttledVerifyOtp}
                 disabled={isVerifying || otpDigits.join("").length < 4}
                 className="
                   flex h-12 w-full
@@ -621,7 +626,7 @@ export default function LoginModal({
 
                 <button
                   type="button"
-                  onClick={handleResendOtp}
+                  onClick={throttledResendOtp}
                   disabled={resendTimer > 0 || isSendingOtp}
                   className="font-semibold text-[var(--color-primary)] hover:underline disabled:opacity-50"
                 >

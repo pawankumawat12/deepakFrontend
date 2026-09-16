@@ -91,6 +91,7 @@ import RegisterModal from "./RegisterModal";
 import AddressModal from "./AddressModal";
 import DeleteAddressDialog from "./DeleteAddressDialog";
 import { loadRazorpayScript } from "../lib/razorpay";
+import { useThrottledCallback } from "../utils/throttle";
 
 const API_ORIGIN = (
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
@@ -141,7 +142,7 @@ export default function CartClient() {
   const [getGuestCartPreview, { isLoading: isGuestPreviewLoading }] =
     useGetGuestCartPreviewMutation();
   const [mergeCart] = useMergeCartMutation();
-
+  
   useEffect(() => {
     setGuestCartItems(getGuestCart());
     const unsubscribe = subscribeGuestCart((newItems) => {
@@ -149,7 +150,7 @@ export default function CartClient() {
     });
     return unsubscribe;
   }, []);
-
+  
   // Fetch guest cart preview when user is guest and guest items or offerCode change
   useEffect(() => {
     if (user) return;
@@ -157,7 +158,7 @@ export default function CartClient() {
       setGuestPreviewResponse(null);
       return;
     }
-
+    
     let isMounted = true;
     getGuestCartPreview({
       items: guestCartItems,
@@ -170,18 +171,18 @@ export default function CartClient() {
       .catch((err) => {
         console.error("Guest cart preview failed:", err);
       });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user, guestCartItems, appliedOfferCode, getGuestCartPreview]);
-
-  // Safeguard: If user logs in and guest cart still has items, auto-merge!
-  useEffect(() => {
-    if (!user) return;
-    const pendingGuestItems = getGuestCart();
-    if (pendingGuestItems.length > 0) {
-      mergeCart({ items: pendingGuestItems })
+      
+      return () => {
+        isMounted = false;
+      };
+    }, [user, guestCartItems, appliedOfferCode, getGuestCartPreview]);
+    
+    // Safeguard: If user logs in and guest cart still has items, auto-merge!
+    useEffect(() => {
+      if (!user) return;
+      const pendingGuestItems = getGuestCart();
+      if (pendingGuestItems.length > 0) {
+        mergeCart({ items: pendingGuestItems })
         .unwrap()
         .then((res) => {
           clearGuestCart();
@@ -198,9 +199,9 @@ export default function CartClient() {
         .catch((err) => {
           console.error("Cart merge safeguard error:", err);
         });
-    }
-  }, [user, mergeCart]);
-
+      }
+    }, [user, mergeCart]);
+    
   const {
     data: cartResponse,
     isLoading: isCartQueryLoading,
@@ -216,13 +217,13 @@ export default function CartClient() {
   );
 
   const isLoading = user ? isCartQueryLoading : (isGuestPreviewLoading && guestCartItems.length > 0 && !guestPreviewResponse);
-
+  
   const { data: addressResponse, isLoading: isAddressesLoading } = useGetAddressesQuery(
     undefined,
     { skip: !user }
   );
   const addresses: Address[] = addressResponse?.data || [];
-
+  
   // Auto-select default or first address
   useEffect(() => {
     if (addresses.length > 0) {
@@ -234,30 +235,30 @@ export default function CartClient() {
       setSelectedAddressId(null);
     }
   }, [addresses, selectedAddressId]);
-
-
-
-
+  
+  
+  
+  
   // Preload Razorpay script on mount
   useEffect(() => {
     loadRazorpayScript().catch((err) => {
       console.warn("Failed to preload Razorpay script:", err);
     });
   }, []);
-
-
-
-
-
-
+  
+  
+  
+  
+  
+  
   const [updateCartItem] = useUpdateCartItemMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
   const [clearCart, { isLoading: isClearing }] = useClearCartMutation();
   const [createOrder, { isLoading: isPlacingOrder }] = useCreateOrderMutation();
-
+  
   const [verifyPayment, { isLoading: isVerifyingPayment }] =
-    useVerifyPaymentMutation();
-
+  useVerifyPaymentMutation();
+  
   const { data: storeStatusData } = useGetStoreStatusQuery();
   const isStoreClosed = storeStatusData?.data?.is_open === false;
   const storeClosedMessage =
@@ -302,9 +303,9 @@ export default function CartClient() {
     outOfStockCount: 0,
   };
   const summary: CartSummary = user
-    ? (cartResponse?.data?.summary || defaultSummary)
-    : (guestPreviewResponse?.data?.summary || defaultSummary);
-
+  ? (cartResponse?.data?.summary || defaultSummary)
+  : (guestPreviewResponse?.data?.summary || defaultSummary);
+  
   const handleUpdateQty = async (
     productId: number,
     currentQty: number,
@@ -314,12 +315,12 @@ export default function CartClient() {
   ) => {
     const nextQty = currentQty + delta;
     if (nextQty < 0) return;
-
+    
     if (!isMadeToOrder && nextQty > maxStock) {
       toast.error(`Only ${maxStock} items available in stock`);
       return;
     }
-
+    
     if (!user) {
       const res = updateGuestCartItemQty(
         productId,
@@ -336,7 +337,7 @@ export default function CartClient() {
       }
       return;
     }
-
+    
     try {
       setUpdatingId(productId);
       await updateCartItem({ productId, quantity: nextQty }).unwrap();
@@ -349,14 +350,15 @@ export default function CartClient() {
       setUpdatingId(null);
     }
   };
-
+  
+  
   const handleDeleteItem = async (productId: number) => {
     if (!user) {
       removeGuestCartItem(productId);
       toast.success("Item removed from cart");
       return;
     }
-
+    
     try {
       setDeletingId(productId);
       await deleteCartItem(productId).unwrap();
@@ -395,14 +397,14 @@ export default function CartClient() {
     setEditingAddress(addr);
     setAddressModalOpen(true);
   };
-
+  
   const handleOpenDeleteAddress = (addr: Address, e: React.MouseEvent) => {
     e.stopPropagation();
     setDeletingAddress(addr);
   };
-
+  
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) || null;
-
+  
   const handleApplyCoupon = async (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
     if (!code) {
@@ -427,7 +429,7 @@ export default function CartClient() {
       toast.error(err?.data?.message || "Invalid promo code or not applicable to your cart");
     }
   };
-
+  
   const handleRemoveCoupon = () => {
     setAppliedOfferCode("");
     toast.success("Promo code removed");
@@ -437,24 +439,24 @@ export default function CartClient() {
       toast.error(storeClosedMessage);
       return;
     }
-
+    
     if (!user) {
       setAuthOpen(true);
       return;
     }
-
+    
     if (summary.hasOutOfStockItems) {
       toast.error(
         "Please remove or adjust out-of-stock items before checkout"
       );
       return;
     }
-
+    
     if (items.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
-
+    
     if (!selectedAddress) {
       toast.error(
         "Please select or add a delivery address to place your order"
@@ -462,7 +464,7 @@ export default function CartClient() {
       setAddressModalOpen(true);
       return;
     }
-
+    
     if (summary.isBelowMinimumOrder) {
       toast.error(
         `Minimum order amount is ₹${formatRupee(
@@ -471,24 +473,24 @@ export default function CartClient() {
       );
       return;
     }
-
+    
     if (summary.isOutOfRange) {
       toast.error("This delivery address is outside our service area");
       return;
     }
-
+    
     const addressParts = [
       selectedAddress.house_number,
       selectedAddress.building_name,
       selectedAddress.landmark
-        ? `Near ${selectedAddress.landmark}`
-        : null,
+      ? `Near ${selectedAddress.landmark}`
+      : null,
       selectedAddress.formatted_address,
       `${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pincode}`,
     ].filter(Boolean);
-
+    
     const shippingAddress = addressParts.join(", ");
-
+    
     const rawPhone = (selectedAddress.phone_number || user.phone || "").toString();
     const normalizedPhone = normalizeIndianPhone(rawPhone);
 
@@ -500,10 +502,10 @@ export default function CartClient() {
     if (isProcessingPayment || isPlacingOrder || isVerifyingPayment) {
       return;
     }
-
+    
     try {
       setIsProcessingPayment(true);
-
+      
       // 0. ENSURE RAZORPAY SCRIPT IS LOADED BEFORE CREATING ORDER
       // This prevents creating duplicate unpaid orders in the database when Razorpay isn't ready.
       if (paymentMethod === "Online Payment") {
@@ -512,7 +514,7 @@ export default function CartClient() {
         }
         const isLoaded = await loadRazorpayScript();
         toast.dismiss("razorpay-init");
-
+        
         if (!isLoaded || !window.Razorpay) {
           toast.error(
             "Payment gateway could not be loaded. Please check your internet connection and try again."
@@ -521,28 +523,30 @@ export default function CartClient() {
           return;
         }
       }
-
-      // 1. CREATE ORDER
+      
+      // 1. CREATE ORDER WITH IDEMPOTENCY KEY
+      const idempotencyKey = `ord_${user?.id || "guest"}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
       const orderResponse = await createOrder({
+        idempotencyKey,
         addressId: selectedAddress.id,
-
+        
         customerName:
-          selectedAddress.receiver_name ||
-          user.name ||
-          "Customer",
-
+        selectedAddress.receiver_name ||
+        user.name ||
+        "Customer",
+        
         customerEmail: user.email || "",
-
+        
         customerPhone: normalizedPhone,
-
+        
         shippingAddress,
-
+        
         deliveryAddressJson: selectedAddress,
-
+        
         paymentMethod,
-
+        
         notes: orderNotes.trim(),
-
+        
         offerCode:
           appliedOfferCode ||
           summary.appliedOffer?.code ||
@@ -554,18 +558,18 @@ export default function CartClient() {
       if (!orderData) {
         throw new Error("Order creation failed");
       }
-
+      
       // 2. COD
       if (paymentMethod === "Cash on Delivery") {
         setIsProcessingPayment(false);
         toast.success(
           "Order placed successfully! Fresh food is being prepared."
         );
-
+        
         router.push("/orders");
         return;
       }
-
+      
       // 3. ONLINE PAYMENT
       if (paymentMethod === "Online Payment") {
         if (!orderData.razorpayOrderId) {
@@ -573,7 +577,7 @@ export default function CartClient() {
             "Unable to initialize online payment."
           );
         }
-
+        
         if (!orderData.razorpayKeyId) {
           throw new Error(
             "Razorpay configuration is missing."
@@ -589,7 +593,7 @@ export default function CartClient() {
           router.push("/orders");
           return;
         }
-
+        
         const options = {
           key: orderData.razorpayKeyId,
 
@@ -604,33 +608,33 @@ export default function CartClient() {
           description:
             `Payment for Order #${orderData.order_number
             }`,
-
-          order_id:
+            
+            order_id:
             orderData.razorpayOrderId,
-
-          prefill: {
-            name:
+            
+            prefill: {
+              name:
               orderData.customer_name ||
               selectedAddress.receiver_name ||
               user.name ||
               "",
-
-            email:
+              
+              email:
               orderData.customer_email ||
               user.email ||
               "",
-
-            contact:
+              
+              contact:
               orderData.customer_phone ||
               selectedAddress.phone_number ||
               user.phone ||
               "",
-          },
-
-          notes: {
-            order_number:
+            },
+            
+            notes: {
+              order_number:
               orderData.order_number,
-          },
+            },
 
           theme: {
             color: "#4f7d16",
@@ -646,28 +650,28 @@ export default function CartClient() {
                   id: "payment-verification",
                 }
               );
-
+              
               // 4. VERIFY PAYMENT WITH BACKEND
               await verifyPayment({
                 orderId: orderData.id,
-
+                
                 razorpay_order_id:
-                  response.razorpay_order_id,
-
+                response.razorpay_order_id,
+                
                 razorpay_payment_id:
-                  response.razorpay_payment_id,
-
+                response.razorpay_payment_id,
+                
                 razorpay_signature:
-                  response.razorpay_signature,
+                response.razorpay_signature,
               }).unwrap();
-
+              
               toast.success(
                 "Payment successful! Your order has been placed.",
                 {
                   id: "payment-verification",
                 }
               );
-
+              
               setIsProcessingPayment(false);
               router.push("/orders");
             } catch (error: any) {
@@ -676,7 +680,7 @@ export default function CartClient() {
                 "Payment verification error:",
                 error
               );
-
+              
               toast.error(
                 error?.data?.message ||
                 "Payment verification failed. Please contact support.",
@@ -687,7 +691,7 @@ export default function CartClient() {
               router.push("/orders");
             }
           },
-
+          
           modal: {
             ondismiss: function () {
               setIsProcessingPayment(false);
@@ -700,8 +704,8 @@ export default function CartClient() {
         };
 
         const razorpay =
-          new window.Razorpay(options);
-
+        new window.Razorpay(options);
+        
         razorpay.on(
           "payment.failed",
           function (response: any) {
@@ -710,7 +714,7 @@ export default function CartClient() {
               "Razorpay payment failed:",
               response
             );
-
+            
             toast.error(
               response?.error?.description ||
               "Payment failed. You can retry from My Orders."
@@ -727,7 +731,7 @@ export default function CartClient() {
         "Checkout error:",
         err
       );
-
+      
       toast.error(
         err?.data?.message ||
         err?.message ||
@@ -735,12 +739,12 @@ export default function CartClient() {
       );
     }
   };
+  
+  const throttledCheckout = useThrottledCallback(handleCheckout, 2000);
+  const throttledApplyCoupon = useThrottledCallback(handleApplyCoupon, 2000);
+  const throttledDeleteItem = useThrottledCallback(handleDeleteItem, 1000);
+  const throttledConfirmClearCart = useThrottledCallback(handleConfirmClearCart, 1500);
 
-
-
-  /* ============================================================
-     2. LOADING SPINNER
-  ============================================================ */
   if (isLoading) {
     return (
       <main className="min-h-screen bg-[var(--bg-body)] pt-24 pb-20">
@@ -1213,7 +1217,7 @@ export default function CartClient() {
                           <button
                             type="button"
                             disabled={isItemDeleting}
-                            onClick={() => handleDeleteItem(it.id)}
+                            onClick={() => throttledDeleteItem(it.id)}
                             className="
                               flex
                               items-center
@@ -1568,7 +1572,7 @@ export default function CartClient() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        handleApplyCoupon();
+                        throttledApplyCoupon();
                       }
                     }}
                     placeholder="Enter Promo Code"
@@ -1576,7 +1580,7 @@ export default function CartClient() {
                   />
                   <button
                     type="button"
-                    onClick={() => handleApplyCoupon()}
+                    onClick={() => throttledApplyCoupon()}
                     disabled={isValidatingOffer || !couponInput.trim()}
                     className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
                   >
@@ -1643,7 +1647,7 @@ export default function CartClient() {
                               ) : (
                                 <button
                                   type="button"
-                                  onClick={() => handleApplyCoupon(off.code)}
+                                  onClick={() => throttledApplyCoupon(off.code)}
                                   className="text-[11px] font-bold text-[var(--color-primary)] hover:underline shrink-0"
                                 >
                                   Apply
@@ -2099,7 +2103,7 @@ export default function CartClient() {
                       !selectedAddress
                     ) : false)
                   }
-                  onClick={handleCheckout}
+                  onClick={throttledCheckout}
                   className="
                     flex
                     h-13
@@ -2263,7 +2267,7 @@ export default function CartClient() {
               </button>
               <button
                 type="button"
-                onClick={handleConfirmClearCart}
+                onClick={throttledConfirmClearCart}
                 disabled={isClearing}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-600 py-3 text-xs font-bold text-white shadow-md shadow-red-500/20 transition hover:bg-red-700 active:scale-[0.98] disabled:opacity-50"
               >
