@@ -744,8 +744,8 @@ export default function OrderChat({
                     >
                       {item.message &&
                         (!hasAttachment ||
-                          (item.message !== "📷 Photo" &&
-                            item.message !== "📄 Document")) && (
+                          (item.message !== "Photo" &&
+                            item.message !== "Document")) && (
                           <span
                             style={{
                               fontSize: "13.5px",
