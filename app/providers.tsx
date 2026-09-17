@@ -22,7 +22,18 @@ function AuthLoader({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
+    // Purge any stored admin session immediately from customer storefront
+    if (user && user.role === "admin") {
+      dispatch(logout());
+    }
+  }, [user, dispatch]);
+
+  useEffect(() => {
     if (data?.user) {
+      if (data.user.role === "admin") {
+        dispatch(logout());
+        return;
+      }
       dispatch(setCredentials(data));
     }
   }, [data, dispatch]);

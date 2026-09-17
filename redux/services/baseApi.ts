@@ -53,6 +53,7 @@ const rawBaseQuery = fetchBaseQuery({
     if (accessToken) {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
+    headers.set("x-client-type", "storefront");
     return headers;
   },
 });
@@ -122,6 +123,17 @@ const baseQueryWithRefresh = async (args: any, api: any, extraOptions: any) => {
         result = await rawBaseQuery(args, api, extraOptions);
       }
     }
+  }
+
+  // If backend explicitly rejected an admin account accessing storefront, clear auth
+  if (
+    result.error?.status === 403 &&
+    (result.error?.data?.isAdminOnStorefront ||
+      (typeof result.error?.data?.message === "string" &&
+        result.error?.data?.message.toLowerCase().includes("admin accounts cannot")))
+  ) {
+    disconnectSocket();
+    api.dispatch(logout());
   }
 
   return result;

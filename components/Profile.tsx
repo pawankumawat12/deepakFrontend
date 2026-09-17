@@ -169,7 +169,7 @@ export default function Profile() {
     }
   };
 
-  if (!user) {
+  if (!user || user.role === "admin") {
     return (
       <div className="min-h-screen bg-[var(--bg-body)] flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center bg-white rounded-3xl p-8 border border-slate-200 shadow-xl">

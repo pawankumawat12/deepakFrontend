@@ -117,85 +117,107 @@ export default function AddressModal({
     }
 
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setLatitude(lat);
-        setLongitude(lng);
-        setLocationCaptured(true);
-        setIsLocating(false);
-        toast.success("Location captured via GPS!");
 
-        // Auto-fill receiver contact details if still empty
-        setReceiverName((prev) => prev.trim() || authUser?.name || authUser?.user_name || "");
-        setPhoneNumber((prev) => prev.trim() || authUser?.phone || authUser?.phone_number || "");
+    const onLocationSuccess = async (position: GeolocationPosition) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      setLatitude(lat);
+      setLongitude(lng);
+      setLocationCaptured(true);
+      setIsLocating(false);
+      toast.success("Location captured successfully!");
 
-        // Free reverse geocoding via OpenStreetMap Nominatim to assist with address fields
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-            {
-              headers: {
-                Accept: "application/json",
-              },
-            }
-          );
-          if (res.ok) {
-            const data = await res.json();
-            if (data?.address) {
-              const addr = data.address;
-              const detectedCity =
-                addr.city || addr.town || addr.village || addr.county || addr.state_district || "Jaipur";
-              const detectedState = addr.state || "Rajasthan";
-              const detectedPincode = addr.postcode || "";
+      // Auto-fill receiver contact details if still empty
+      setReceiverName((prev) => prev.trim() || authUser?.name || authUser?.user_name || "");
+      setPhoneNumber((prev) => prev.trim() || authUser?.phone || authUser?.phone_number || "");
 
-              // Build a rich, detailed street / locality string
-              const roadParts = [
-                addr.amenity || addr.shop || addr.building,
-                addr.road,
-                addr.suburb || addr.neighbourhood || addr.residential,
-                addr.city_district || addr.subdistrict,
-              ]
-                .filter(Boolean)
-                .filter((val, idx, arr) => arr.indexOf(val) === idx);
+      // Free reverse geocoding via OpenStreetMap Nominatim to assist with address fields
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+          {
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.address) {
+            const addr = data.address;
+            const detectedCity =
+              addr.city || addr.town || addr.village || addr.county || addr.state_district || "Jaipur";
+            const detectedState = addr.state || "Rajasthan";
+            const detectedPincode = addr.postcode || "";
 
-              const detailedAddress =
-                roadParts.length > 0
-                  ? roadParts.join(", ")
-                  : data.display_name
-                  ? data.display_name.split(",").slice(0, 3).join(", ").trim()
-                  : "Current Location Area";
+            // Build a rich, detailed street / locality string
+            const roadParts = [
+              addr.amenity || addr.shop || addr.building,
+              addr.road,
+              addr.suburb || addr.neighbourhood || addr.residential,
+              addr.city_district || addr.subdistrict,
+            ]
+              .filter(Boolean)
+              .filter((val, idx, arr) => arr.indexOf(val) === idx);
 
-              if (detectedCity) setCity(detectedCity);
-              if (detectedState) setState(detectedState);
-              if (detectedPincode) setPincode(detectedPincode);
-              setFormattedAddress(detailedAddress);
-              setHouseNumber(addr.house_number || "House / Premises");
-              if (addr.amenity || addr.shop || addr.building) {
-                setLandmark(addr.amenity || addr.shop || addr.building);
-              }
-            } else {
-              setHouseNumber((prev) => prev.trim() || "House / Premises");
+            const detailedAddress =
+              roadParts.length > 0
+                ? roadParts.join(", ")
+                : data.display_name
+                ? data.display_name.split(",").slice(0, 3).join(", ").trim()
+                : "Current Location Area";
+
+            if (detectedCity) setCity(detectedCity);
+            if (detectedState) setState(detectedState);
+            if (detectedPincode) setPincode(detectedPincode);
+            setFormattedAddress(detailedAddress);
+            setHouseNumber(addr.house_number || "House / Premises");
+            if (addr.amenity || addr.shop || addr.building) {
+              setLandmark(addr.amenity || addr.shop || addr.building);
             }
           } else {
             setHouseNumber((prev) => prev.trim() || "House / Premises");
           }
-        } catch {
+        } else {
           setHouseNumber((prev) => prev.trim() || "House / Premises");
         }
-      },
-      (error) => {
+      } catch {
+        setHouseNumber((prev) => prev.trim() || "House / Premises");
+      }
+    };
+
+    const tryFallbackOrError = (error: GeolocationPositionError) => {
+      if (error.code === error.PERMISSION_DENIED) {
         setIsLocating(false);
-        let errorMsg = "Could not get your location. Please check browser permissions.";
-        if (error.code === error.PERMISSION_DENIED) {
-          errorMsg = "Location permission denied. Please allow location access in your browser.";
+        toast.error("Location permission denied. Please allow location access in your browser.");
+        return;
+      }
+
+      // Fallback to standard network/Wi-Fi accuracy (for PC / Laptop without GPS chip)
+      navigator.geolocation.getCurrentPosition(
+        onLocationSuccess,
+        (fallbackErr) => {
+          setIsLocating(false);
+          let errorMsg = "Could not get your location. Please check browser permissions.";
+          if (fallbackErr.code === fallbackErr.PERMISSION_DENIED) {
+            errorMsg = "Location permission denied. Please allow location access in your browser.";
+          }
+          toast.error(errorMsg);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 60000,
         }
-        toast.error(errorMsg);
-      },
+      );
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      onLocationSuccess,
+      tryFallbackOrError,
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 5000,
         maximumAge: 0,
       }
     );

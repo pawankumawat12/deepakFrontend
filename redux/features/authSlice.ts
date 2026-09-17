@@ -32,6 +32,12 @@ const authSlice = createSlice({
       if (!payload) return;
       const user = payload.user || (payload.id ? payload : null);
       if (user) {
+        // Disallow and reject admin accounts on customer storefront
+        if (user.role === "admin") {
+          state.user = null;
+          state.accessToken = null;
+          return;
+        }
         state.user = user;
       }
       const token = payload.accessToken || payload.token || user?.token;
