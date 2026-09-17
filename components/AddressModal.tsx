@@ -11,8 +11,10 @@ import {
   Phone,
   Check,
   LoaderCircle,
+  Navigation,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
 import {
   Address,
   CreateAddressPayload,
@@ -42,6 +44,7 @@ export default function AddressModal({
   const [updateAddress, { isLoading: isUpdating }] = useUpdateAddressMutation();
   const isSaving = isCreating || isUpdating;
 
+  const authUser = useSelector((state: any) => state.auth?.user);
   const [label, setLabel] = useState<string>("Home");
   const [customLabel, setCustomLabel] = useState<string>("");
   const [receiverName, setReceiverName] = useState<string>("");
@@ -55,6 +58,10 @@ export default function AddressModal({
   const [state, setState] = useState<string>("Rajasthan");
   const [pincode, setPincode] = useState<string>("");
   const [isDefault, setIsDefault] = useState<boolean>(false);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [locationCaptured, setLocationCaptured] = useState<boolean>(false);
 
   useEffect(() => {
     if (open) {
@@ -74,12 +81,19 @@ export default function AddressModal({
         setState(initialData.state || "Rajasthan");
         setPincode(initialData.pincode || "");
         setIsDefault(Boolean(initialData.is_default));
+        const initLat = initialData.latitude ? Number(initialData.latitude) : null;
+        const initLng = initialData.longitude ? Number(initialData.longitude) : null;
+        setLatitude(initLat);
+        setLongitude(initLng);
+        setLocationCaptured(Boolean(initLat && initLng && initLat !== 0 && initLng !== 0));
       } else {
         // Add mode
         setLabel("Home");
         setCustomLabel("");
-        setReceiverName(defaultUserName || "");
-        setPhoneNumber(defaultUserPhone || "");
+        const initialName = defaultUserName || authUser?.name || authUser?.user_name || "";
+        const initialPhone = defaultUserPhone || authUser?.phone || authUser?.phone_number || "";
+        setReceiverName(initialName);
+        setPhoneNumber(initialPhone);
         setHouseNumber("");
         setBuildingName("");
         setFloor("");
@@ -89,9 +103,103 @@ export default function AddressModal({
         setState("Rajasthan");
         setPincode("");
         setIsDefault(false);
+        setLatitude(null);
+        setLongitude(null);
+        setLocationCaptured(false);
       }
     }
-  }, [open, initialData, defaultUserName, defaultUserPhone]);
+  }, [open, initialData, defaultUserName, defaultUserPhone, authUser]);
+
+  const handleUseCurrentLocation = () => {
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setLatitude(lat);
+        setLongitude(lng);
+        setLocationCaptured(true);
+        setIsLocating(false);
+        toast.success("Location captured via GPS!");
+
+        // Auto-fill receiver contact details if still empty
+        setReceiverName((prev) => prev.trim() || authUser?.name || authUser?.user_name || "");
+        setPhoneNumber((prev) => prev.trim() || authUser?.phone || authUser?.phone_number || "");
+
+        // Free reverse geocoding via OpenStreetMap Nominatim to assist with address fields
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+            {
+              headers: {
+                Accept: "application/json",
+              },
+            }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.address) {
+              const addr = data.address;
+              const detectedCity =
+                addr.city || addr.town || addr.village || addr.county || addr.state_district || "Jaipur";
+              const detectedState = addr.state || "Rajasthan";
+              const detectedPincode = addr.postcode || "";
+
+              // Build a rich, detailed street / locality string
+              const roadParts = [
+                addr.amenity || addr.shop || addr.building,
+                addr.road,
+                addr.suburb || addr.neighbourhood || addr.residential,
+                addr.city_district || addr.subdistrict,
+              ]
+                .filter(Boolean)
+                .filter((val, idx, arr) => arr.indexOf(val) === idx);
+
+              const detailedAddress =
+                roadParts.length > 0
+                  ? roadParts.join(", ")
+                  : data.display_name
+                  ? data.display_name.split(",").slice(0, 3).join(", ").trim()
+                  : "Current Location Area";
+
+              if (detectedCity) setCity(detectedCity);
+              if (detectedState) setState(detectedState);
+              if (detectedPincode) setPincode(detectedPincode);
+              setFormattedAddress(detailedAddress);
+              setHouseNumber(addr.house_number || "House / Premises");
+              if (addr.amenity || addr.shop || addr.building) {
+                setLandmark(addr.amenity || addr.shop || addr.building);
+              }
+            } else {
+              setHouseNumber((prev) => prev.trim() || "House / Premises");
+            }
+          } else {
+            setHouseNumber((prev) => prev.trim() || "House / Premises");
+          }
+        } catch {
+          setHouseNumber((prev) => prev.trim() || "House / Premises");
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        let errorMsg = "Could not get your location. Please check browser permissions.";
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = "Location permission denied. Please allow location access in your browser.";
+        }
+        toast.error(errorMsg);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   if (!open) return null;
 
@@ -140,6 +248,8 @@ export default function AddressModal({
       city: city.trim() || "Jaipur",
       state: state.trim() || "Rajasthan",
       pincode: pincode.trim(),
+      latitude: latitude != null ? Number(latitude) : undefined,
+      longitude: longitude != null ? Number(longitude) : undefined,
       is_default: isDefault,
     };
 
@@ -209,6 +319,52 @@ export default function AddressModal({
 
         {/* MODAL FORM BODY */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* AUTO-DETECT GPS LOCATION BANNER */}
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 transition-all">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <Navigation size={17} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-emerald-950 flex items-center gap-1.5 truncate">
+                    <span>{locationCaptured ? "GPS Location Captured" : "Auto-detect Location"}</span>
+                    {locationCaptured && (
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-200/80 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-800">
+                        <Check size={10} />
+                        Active
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10.5px] text-emerald-700 font-medium truncate">
+                    {locationCaptured && latitude != null && longitude != null
+                      ? `GPS: ${Number(latitude).toFixed(4)}, ${Number(longitude).toFixed(4)} • Full address auto-filled below`
+                      : "Click to auto-detect exact delivery pin & address."}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={isLocating}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95 disabled:opacity-60"
+              >
+                {isLocating ? (
+                  <>
+                    <LoaderCircle size={14} className="animate-spin" />
+                    <span>Detecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Navigation size={13} />
+                    <span>{locationCaptured ? "Re-detect" : "Current Location"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
           {/* 1. SAVE AS / LABEL SELECTION */}
           <div>
             <label className="mb-2 block text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">

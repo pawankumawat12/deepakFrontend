@@ -1,5 +1,4 @@
 "use client";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import React, { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
@@ -30,59 +29,6 @@ import { getSocket } from "@/lib/socket";
 import { isValidIndianPhone, normalizeIndianPhone, sanitizePhoneInput } from "@/lib/phone";
 
 export default function ContactPage() {
-  // const mapRef = React.useRef<HTMLDivElement | null>(null);
-  // useEffect(() => {
-  //   let cancelled = false;
-  
-  //   const initMap = async () => {
-  //     try {
-  //       setOptions({
-  //         key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-  //         v: "weekly",
-  //       });
-  
-  //       const { Map } = (await importLibrary("maps")) as google.maps.MapsLibrary;
-  
-  //       if (cancelled || !mapRef.current) return;
-  
-  //       const defaultLocation = {
-  //         lat: 26.9124,
-  //         lng: 75.7873,
-  //       };
-  
-
-        
-  //       const map = new Map(mapRef.current, {
-  //         center: defaultLocation,
-  //         zoom: 14,
-  //         mapTypeControl: false,
-  //         streetViewControl: false,
-  //         fullscreenControl: false,
-  //       });
-  
-  //       // Marker library load
-  //       const { AdvancedMarkerElement } =
-  //         (await importLibrary("marker")) as google.maps.MarkerLibrary;
-  
-  //       if (cancelled) return;
-  
-  //       new AdvancedMarkerElement({
-  //         map,
-  //         position: defaultLocation,
-  //         title: "SFC Bakers",
-  //       });
-  //     } catch (error) {
-  //       console.error("Google Maps initialization failed:", error);
-  //     }
-  //   };
-  
-  //   initMap();
-  
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, []);
-
   const user = useSelector((state: any) => state.auth?.user);
   const { data: settings } = useGetFooterQuery();
   const settingData = settings?.data;
@@ -948,13 +894,40 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              {/* Interactive Google Map */}
-              {/* <div className="mb-6 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-stone-100 shadow-md">
-                <div
-                  ref={mapRef}
-                  className="h-[220px] w-full"
+              {/* Interactive Google Map Embed */}
+              <div className="mb-6 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-stone-100 shadow-md">
+                <iframe
+                  title="SFC Bakers Location"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                    settingData?.location
+                      ? `SFC Bakers ${settingData.location}`
+                      : "SFC Bakers bajor sikar jaipur road"
+                  )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                  className="h-[230px] w-full border-0"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
                 />
-              </div> */}
+                <div className="flex items-center justify-between border-t border-[var(--color-border)] bg-white px-4 py-2.5 text-xs">
+                  <span className="truncate font-semibold text-[var(--color-text-secondary)]">
+                    {settingData?.location || "bajor, sikar jaipur road"}
+                  </span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      settingData?.location
+                        ? `SFC Bakers ${settingData.location}`
+                        : "SFC Bakers bajor sikar jaipur road"
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-3 inline-flex shrink-0 items-center gap-1.5 font-bold text-[var(--color-primary)] hover:underline"
+                  >
+                    <Navigation size={13} />
+                    <span>Get Directions</span>
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
+              </div> 
 
               {/* Location details */}
               <div className="space-y-5">
