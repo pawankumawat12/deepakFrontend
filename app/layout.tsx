@@ -8,6 +8,7 @@ import Providers from "./providers";
 import CustomToaster from "@/components/CustomToaster";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import GlobalNetworkWatcher from "@/components/GlobalNetworkWatcher";
+import WhatsAppChatButton from "@/components/WhatsAppChatButton";
 import { getSiteUrl } from "@/utils/backendUrl";
 
 const geistSans = Geist({
@@ -98,6 +99,7 @@ export default function RootLayout({
           <Navbar />
           <main className="app-main">{children}</main>
           <CustomToaster />
+          <WhatsAppChatButton />
           <Footer />
           <PWAInstallPrompt />
           <GlobalNetworkWatcher />

@@ -20,7 +20,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useGetFooterQuery } from "@/redux/services/settingsApi";
+import { useGetFooterQuery, useGetOrderPricingQuery } from "@/redux/services/settingsApi";
 import {
   useSubmitContactQueryMutation,
   useGetMyContactQueriesQuery,
@@ -32,6 +32,15 @@ export default function ContactPage() {
   const user = useSelector((state: any) => state.auth?.user);
   const { data: settings } = useGetFooterQuery();
   const settingData = settings?.data;
+  const { data: pricingResponse } = useGetOrderPricingQuery();
+  const pricingData = pricingResponse?.data;
+  const storeLat = pricingData?.store_latitude;
+  const storeLng = pricingData?.store_longitude;
+  const hasStoreCoords =
+    storeLat != null &&
+    storeLng != null &&
+    Number(storeLat) !== 0 &&
+    Number(storeLng) !== 0;
 
   const [activeTab, setActiveTab] = useState<"form" | "threads">("form");
 
@@ -261,11 +270,10 @@ export default function ContactPage() {
             </h3>
 
             <a
-              href="tel:+919999999999"
+              href={`tel:${(settingData?.phone_number || "+91 98765 43210").replace(/\s/g, "")}`}
               className="mt-2 block text-xs leading-6 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
             >
-              {settingData?.phone_number}
-
+              {settingData?.phone_number || "+91 98765 43210"}
             </a>
 
           </div>
@@ -311,11 +319,10 @@ export default function ContactPage() {
             </h3>
 
             <a
-              href="mailto:hello@sfcbakers.com"
+              href={`mailto:${settingData?.email || "hello@sfcbakers.com"}`}
               className="mt-2 block break-all text-xs leading-6 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
             >
-              {settingData?.email}
-
+              {settingData?.email || "hello@sfcbakers.com"}
             </a>
 
           </div>
@@ -899,10 +906,12 @@ export default function ContactPage() {
                 <iframe
                   title="SFC Bakers Location"
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                    settingData?.location
+                    hasStoreCoords
+                      ? `${storeLat},${storeLng}`
+                      : settingData?.location
                       ? `SFC Bakers ${settingData.location}`
                       : "SFC Bakers bajor sikar jaipur road"
-                  )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                   className="h-[230px] w-full border-0"
                   loading="lazy"
                   allowFullScreen
@@ -910,14 +919,16 @@ export default function ContactPage() {
                 />
                 <div className="flex items-center justify-between border-t border-[var(--color-border)] bg-white px-4 py-2.5 text-xs">
                   <span className="truncate font-semibold text-[var(--color-text-secondary)]">
-                    {settingData?.location || "bajor, sikar jaipur road"}
+                    {settingData?.location || (hasStoreCoords ? `Bakery GPS: ${storeLat}, ${storeLng}` : "bajor, sikar jaipur road")}
                   </span>
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      settingData?.location
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                      hasStoreCoords
+                        ? `${storeLat},${storeLng}`
+                        : settingData?.location
                         ? `SFC Bakers ${settingData.location}`
                         : "SFC Bakers bajor sikar jaipur road"
-                    )}`}
+                    )}&travelmode=driving`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ml-3 inline-flex shrink-0 items-center gap-1.5 font-bold text-[var(--color-primary)] hover:underline"

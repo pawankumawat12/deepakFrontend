@@ -57,6 +57,27 @@ export interface StoreStatusResponse {
   data: StoreStatusSettings;
 }
 
+export interface OrderPricingSettings {
+  store_latitude: number;
+  store_longitude: number;
+  minimum_order_amount?: number;
+  free_delivery_threshold?: number;
+  max_delivery_distance?: number;
+  delivery_charge_type?: string;
+  delivery_charge_value?: number;
+  packaging_fee?: number;
+  platform_fee?: number;
+  cod_fee?: number;
+  gst_percent?: number;
+  tax_inclusive?: boolean;
+}
+
+export interface OrderPricingResponse {
+  success: boolean;
+  message?: string;
+  data: OrderPricingSettings;
+}
+
 export const settingsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getTheme: build.query<ThemeSettingsResponse, void>({
@@ -75,6 +96,10 @@ export const settingsApi = baseApi.injectEndpoints({
       query: () => "/settings/store-status",
       providesTags: ["Settings"],
     }),
+    getOrderPricing: build.query<OrderPricingResponse, void>({
+      query: () => "/settings/order-pricing",
+      providesTags: ["Settings"],
+    }),
   }),
 });
 
@@ -83,4 +108,5 @@ export const {
   useGetFooterQuery,
   useGetLogoQuery,
   useGetStoreStatusQuery,
+  useGetOrderPricingQuery,
 } = settingsApi;
