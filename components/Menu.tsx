@@ -63,12 +63,37 @@ export default function Menu() {
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
+  const searchParams = useSearchParams();
+  const urlStoreId = searchParams?.get("store_id") || searchParams?.get("storeId");
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (urlStoreId) {
+      setSelectedStoreId(urlStoreId);
+      try {
+        localStorage.setItem("sfc_selected_store_id", urlStoreId);
+      } catch {}
+    } else {
+      try {
+        const saved = localStorage.getItem("sfc_selected_store_id");
+        if (saved) setSelectedStoreId(saved);
+      } catch {}
+    }
+  }, [urlStoreId]);
+
+  const categoryQuery = useMemo(() => {
+    return selectedStoreId ? { store_id: selectedStoreId } : {};
+  }, [selectedStoreId]);
+
   const { data: categoryResponse, isLoading: isCategoriesLoading } =
-    useGetStoreCategoriesQuery({});
+    useGetStoreCategoriesQuery(categoryQuery);
   const [selected, setSelected] = useState<string>("all");
   const productQuery = useMemo(
-    () => (selected === "all" ? {} : { categoryId: selected }),
-    [selected]
+    () => ({
+      ...(selected === "all" ? {} : { categoryId: selected }),
+      ...(selectedStoreId ? { store_id: selectedStoreId } : {}),
+    }),
+    [selected, selectedStoreId]
   );
   const {
     data: productResponse,
@@ -242,8 +267,6 @@ export default function Menu() {
   );
 
   useEffect(() => setPage(1), [selected]);
-
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const cat = searchParams?.get("category");

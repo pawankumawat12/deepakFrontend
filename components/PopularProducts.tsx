@@ -44,7 +44,18 @@ export default function PopularProducts() {
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
-  const { data: productResponse, isLoading } = useGetStoreProductsQuery({ limit: 6 });
+  const [selectedStoreId, setSelectedStoreId] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("sfc_selected_store_id");
+      if (saved) setSelectedStoreId(saved);
+    } catch {}
+  }, []);
+
+  const { data: productResponse, isLoading } = useGetStoreProductsQuery({
+    limit: 6,
+    ...(selectedStoreId ? { store_id: selectedStoreId } : {}),
+  });
   const products = productResponse?.data || [];
   const [addedProduct, setAddedProduct] = React.useState<string | null>(
     null

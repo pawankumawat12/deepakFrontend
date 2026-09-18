@@ -30,6 +30,8 @@ type StoreProductQuery = {
   isActive?: boolean;
   limit?: number;
   page?: number;
+  store_id?: string | number;
+  storeId?: string | number;
 };
 
 
@@ -74,10 +76,20 @@ export const catalogApi = baseApi.injectEndpoints({
       ApiResponse<ReturnType<typeof normalizeProduct>>,
       StoreProductQuery | void
     >({
-      query: (params = {}) => ({
-        url: "/products",
-        params: { limit: 100, isActive: true, ...params },
-      }),
+      query: (params: StoreProductQuery = {}) => {
+        const { storeId, store_id, ...rest } = params || {};
+        const effectiveStoreId = store_id !== undefined ? store_id : storeId;
+        return {
+          url: "/products",
+          params: {
+            limit: 100,
+            isActive: true,
+            include_admin: true,
+            ...(effectiveStoreId !== undefined ? { store_id: effectiveStoreId } : {}),
+            ...rest,
+          },
+        };
+      },
       transformResponse: (response: ApiResponse<ApiProduct>) => ({
         ...response,
         data: (response.data || []).map(normalizeProduct),
@@ -85,7 +97,10 @@ export const catalogApi = baseApi.injectEndpoints({
       providesTags: ["Catalog"],
     }),
     getStoreProduct: build.query({
-      query: (id) => `/products/${id}`,
+      query: (id) => ({
+        url: `/products/${id}`,
+        params: { include_admin: true },
+      }),
       transformResponse: (response: ApiItemResponse<ApiProduct>) => ({
         ...response,
         data: normalizeProduct(response.data),
@@ -95,7 +110,7 @@ export const catalogApi = baseApi.injectEndpoints({
     getStoreCategories: build.query({
       query: (params = {}) => ({
         url: "/categories",
-        params: { limit: 100, isActive: true, ...params },
+        params: { limit: 100, isActive: true, include_admin: true, ...params },
       }),
       transformResponse: (response: ApiResponse<ApiCategory>) => ({
         ...response,

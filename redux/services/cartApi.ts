@@ -15,6 +15,10 @@ export interface CartItem {
   is_active: boolean;
   availability_type: "IN_STOCK" | "MADE_TO_ORDER";
   isMadeToOrder: boolean;
+  store_id?: number | null;
+  store_name?: string | null;
+  store_is_closed?: boolean;
+  stockMessage?: string | null;
   category_id: number | string;
   category_name: string;
   quantity: number;
@@ -149,6 +153,7 @@ const transformCartResponse = (response: any): CartResponse => {
         ? "MADE_TO_ORDER"
         : "IN_STOCK";
     const isMadeToOrder = availabilityType === "MADE_TO_ORDER";
+    const storeIsClosed = Boolean(item.store_is_closed);
     const firstImg = Array.isArray(item.images)
       ? item.images[0]
       : item.image || item.img || null;
@@ -172,6 +177,10 @@ const transformCartResponse = (response: any): CartResponse => {
       is_active: item.is_active !== undefined ? Boolean(item.is_active) : true,
       availability_type: availabilityType,
       isMadeToOrder,
+      store_id: item.store_id ? Number(item.store_id) : null,
+      store_name: item.store_name || null,
+      store_is_closed: storeIsClosed,
+      stockMessage: item.stockMessage || item.stock_message || null,
       category_id: item.category_id || "",
       category_name: item.category_name || "Menu",
       quantity,
@@ -181,7 +190,7 @@ const transformCartResponse = (response: any): CartResponse => {
       bogo_details: item.bogo_details || null,
       itemTotal,
       // MADE_TO_ORDER products are never out of stock
-      isOutOfStock: isMadeToOrder ? false : (stock <= 0 || item.is_active === false),
+      isOutOfStock: storeIsClosed || (isMadeToOrder ? false : (stock <= 0 || item.is_active === false)),
       exceedsStock: isMadeToOrder ? false : quantity > stock,
       added_at: item.added_at,
       updated_at: item.updated_at,

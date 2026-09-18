@@ -48,7 +48,40 @@ const Navbar = () => {
   );
 
   const { data: storeStatusData } = useGetStoreStatusQuery();
-  const isStoreClosed = storeStatusData?.data?.is_open === false;
+  const [selectedBranchStatus, setSelectedBranchStatus] = useState<{ isOpen: boolean; name: string } | null>(null);
+
+  useEffect(() => {
+    const handleBranchEvent = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      let currentSelectedStoreId: string | null = null;
+      try {
+        currentSelectedStoreId = localStorage.getItem("sfc_selected_store_id");
+      } catch {}
+
+      if (detail && currentSelectedStoreId && String(currentSelectedStoreId) === String(detail.storeId)) {
+        if (detail.isDeleted) {
+          setSelectedBranchStatus(null);
+        } else {
+          setSelectedBranchStatus({
+            isOpen: detail.isOpen && detail.isActive,
+            name: detail.storeName,
+          });
+        }
+      }
+    };
+
+    window.addEventListener("sfc_branch_status_changed", handleBranchEvent);
+    return () => {
+      window.removeEventListener("sfc_branch_status_changed", handleBranchEvent);
+    };
+  }, []);
+
+  const isGlobalClosed = storeStatusData?.data?.is_open === false;
+  const isBranchClosed = selectedBranchStatus ? !selectedBranchStatus.isOpen : false;
+  const isStoreClosed = isGlobalClosed || isBranchClosed;
+  const closedBannerMessage = isGlobalClosed
+    ? "Notice: Store is currently CLOSED for new orders."
+    : `Notice: Branch "${selectedBranchStatus?.name || "Selected Store"}" is currently CLOSED for new orders.`;
 
   const { data: wishlistData } = useGetWishlistQuery(undefined, {
     skip: !user,
@@ -280,7 +313,7 @@ const Navbar = () => {
         {isStoreClosed && (
           <div className="bg-red-600 text-white text-xs font-semibold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
             <span className="inline-block h-2 w-2 rounded-full bg-white animate-pulse" />
-            <span>Notice: Store is currently CLOSED for new orders.</span>
+            <span>{closedBannerMessage}</span>
           </div>
         )}
         <div className="border-b border-[var(--color-border)] bg-[var(--bg-surface)]/95 backdrop-blur-xl shadow-[0_4px_25px_rgba(45,27,15,0.08)]">
@@ -704,7 +737,7 @@ const Navbar = () => {
         {isStoreClosed && (
           <div className="bg-red-600 text-white text-[11px] font-semibold py-1 px-3 text-center flex items-center justify-center gap-1.5 shadow-sm">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-            <span>Store is currently CLOSED for orders</span>
+            <span>{closedBannerMessage}</span>
           </div>
         )}
         <div
