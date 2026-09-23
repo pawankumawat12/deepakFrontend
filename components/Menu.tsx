@@ -205,7 +205,7 @@ export default function Menu() {
       await addCartItem({ productId, quantity: 1 }).unwrap();
       toast.success("Added to cart");
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to add to cart");
+      toast.error(err?.data?.message || "This product is not available right now.");
     }
   };
 

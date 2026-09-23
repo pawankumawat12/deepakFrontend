@@ -340,7 +340,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
         toast.success("Added to cart");
         setTimeout(() => setAdded(false), 900);
       } else {
-        toast.error(res.message || "Failed to add to cart");
+        toast.error(res.message || "This product is not available right now.");
       }
       return;
     }
@@ -354,7 +354,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
       toast.success("Added to cart");
       setTimeout(() => setAdded(false), 900);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to add to cart");
+      toast.error(err?.data?.message || "This product is not available right now.");
     }
   }
 

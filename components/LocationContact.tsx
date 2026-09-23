@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   MapPin,
   Phone,
@@ -10,17 +11,37 @@ import {
   ArrowRight,
   ExternalLink,
 } from "lucide-react";
-import { useGetFooterQuery } from "@/redux/services/settingsApi";
+import { useGetFooterQuery, useGetOrderPricingQuery } from "@/redux/services/settingsApi";
+
+const StoreLocationMap = dynamic(() => import("@/components/StoreLocationMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full min-h-[360px] lg:min-h-[500px] w-full bg-stone-100 flex items-center justify-center text-xs text-stone-400">
+      Loading bakery location map...
+    </div>
+  ),
+});
 
 export default function LocationContact() {
   const { data: settings } = useGetFooterQuery();
   const settingData = settings?.data;
+  const { data: pricingResponse } = useGetOrderPricingQuery();
+  const pricingData = pricingResponse?.data;
+  const storeLat = pricingData?.store_latitude;
+  const storeLng = pricingData?.store_longitude;
+  const hasStoreCoords =
+    storeLat != null &&
+    storeLng != null &&
+    Number(storeLat) !== 0 &&
+    Number(storeLng) !== 0;
 
   const location = {
     name: "SFC Bakers",
     address: settingData?.location || "123 Main Street, Jaipur, Rajasthan 302017",
     phone: settingData?.phone_number || "+91 98765 43210",
-    mapUrl: settingData?.location
+    mapUrl: hasStoreCoords
+      ? `https://www.google.com/maps/dir/?api=1&destination=${storeLat},${storeLng}&travelmode=driving`
+      : settingData?.location
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`SFC Bakers ${settingData.location}`)}`
       : "https://www.google.com/maps/search/?api=1&query=SFC+Bakers+Jaipur",
   };
@@ -114,194 +135,16 @@ export default function LocationContact() {
               MAP / LOCATION VISUAL
           ================================================= */}
 
-          <div
-            className="
-              relative
-              min-h-[360px]
-              overflow-hidden
-              bg-[#e8eadf]
-              lg:min-h-[500px]
-            "
-          >
-
-            {/* Fake map background */}
-
-            <div className="absolute inset-0 opacity-70">
-
-              <div
-                className="
-                  absolute
-                  left-[10%]
-                  top-[20%]
-                  h-[2px]
-                  w-[100%]
-                  rotate-[18deg]
-                  bg-white
-                "
-              />
-
-              <div
-                className="
-                  absolute
-                  left-[-10%]
-                  top-[48%]
-                  h-[3px]
-                  w-[120%]
-                  rotate-[-12deg]
-                  bg-white
-                "
-              />
-
-              <div
-                className="
-                  absolute
-                  left-[35%]
-                  top-[-10%]
-                  h-[120%]
-                  w-[3px]
-                  rotate-[28deg]
-                  bg-white
-                "
-              />
-
-              <div
-                className="
-                  absolute
-                  left-[65%]
-                  top-[-10%]
-                  h-[120%]
-                  w-[3px]
-                  rotate-[-35deg]
-                  bg-white
-                "
-              />
-
-              <div
-                className="
-                  absolute
-                  left-[15%]
-                  top-[65%]
-                  h-[100px]
-                  w-[180px]
-                  rotate-[20deg]
-                  rounded-[40%]
-                  bg-[#d5dfc8]
-                "
-              />
-
-              <div
-                className="
-                  absolute
-                  right-[5%]
-                  top-[10%]
-                  h-[130px]
-                  w-[200px]
-                  rounded-[40%]
-                  bg-[#d5dfc8]
-                "
-              />
-            </div>
-
-            {/* Map overlay */}
-
-            <div
-              className="
-                absolute
-                inset-0
-                bg-gradient-to-t
-                from-black/10
-                via-transparent
-                to-transparent
-              "
+          <div className="relative min-h-[380px] overflow-hidden rounded-3xl lg:min-h-[500px]">
+            <StoreLocationMap
+              latitude={storeLat}
+              longitude={storeLng}
+              address={location.address}
+              storeName={location.name}
+              height="100%"
+              showDirectionsBar={true}
+              className="h-full min-h-[380px] lg:min-h-[500px]"
             />
-
-            {/* Location pin */}
-
-            <div
-              className="
-                absolute
-                left-1/2
-                top-1/2
-                -translate-x-1/2
-                -translate-y-1/2
-              "
-            >
-              <div
-                className="
-                  relative
-                  flex
-                  h-16
-                  w-16
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-[var(--color-primary)]
-                  text-white
-                  shadow-[0_10px_35px_rgba(0,0,0,0.25)]
-                "
-              >
-                <MapPin size={30} fill="currentColor" />
-
-                <span
-                  className="
-                    absolute
-                    inset-0
-                    animate-ping
-                    rounded-full
-                    bg-[var(--color-primary)]
-                    opacity-20
-                  "
-                />
-              </div>
-            </div>
-
-            {/* Location label */}
-
-            <div
-              className="
-                absolute
-                bottom-5
-                left-5
-                right-5
-                rounded-2xl
-                border
-                border-white/50
-                bg-white/90
-                p-4
-                shadow-lg
-                backdrop-blur-md
-              "
-            >
-              <div className="flex items-center gap-3">
-
-                <div
-                  className="
-                    flex
-                    h-10
-                    w-10
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-[var(--color-primary-50)]
-                    text-[var(--color-primary)]
-                  "
-                >
-                  <MapPin size={19} />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="text-sm font-black text-[var(--color-text-primary)]">
-                    {location.name}
-                  </p>
-
-                  <p className="mt-0.5 truncate text-xs text-[var(--color-text-secondary)]">
-                    {location.address}
-                  </p>
-                </div>
-
-              </div>
-            </div>
           </div>
 
           {/* =================================================

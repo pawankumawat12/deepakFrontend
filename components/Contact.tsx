@@ -1,7 +1,17 @@
 "use client";
 import React, { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useSelector } from "react-redux";
+
+const StoreLocationMap = dynamic(() => import("@/components/StoreLocationMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[250px] w-full rounded-2xl bg-stone-100 flex items-center justify-center text-xs text-stone-400">
+      Loading bakery location map...
+    </div>
+  ),
+});
 import { FaInstagram, FaFacebookF, FaTwitter } from "react-icons/fa";
 import {
   ArrowRight,
@@ -901,43 +911,16 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              {/* Interactive Google Map Embed */}
-              <div className="mb-6 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-stone-100 shadow-md">
-                <iframe
-                  title="SFC Bakers Location"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                    hasStoreCoords
-                      ? `${storeLat},${storeLng}`
-                      : settingData?.location
-                      ? `SFC Bakers ${settingData.location}`
-                      : "SFC Bakers bajor sikar jaipur road"
-                  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                  className="h-[230px] w-full border-0"
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
+              {/* Interactive Store Location Map */}
+              <div className="mb-6">
+                <StoreLocationMap
+                  latitude={storeLat}
+                  longitude={storeLng}
+                  address={settingData?.location || "SFC Bakers, Bajor, Sikar Jaipur Road"}
+                  storeName="SFC Bakers"
+                  height="260px"
+                  showDirectionsBar={true}
                 />
-                <div className="flex items-center justify-between border-t border-[var(--color-border)] bg-white px-4 py-2.5 text-xs">
-                  <span className="truncate font-semibold text-[var(--color-text-secondary)]">
-                    {settingData?.location || (hasStoreCoords ? `Bakery GPS: ${storeLat}, ${storeLng}` : "bajor, sikar jaipur road")}
-                  </span>
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                      hasStoreCoords
-                        ? `${storeLat},${storeLng}`
-                        : settingData?.location
-                        ? `SFC Bakers ${settingData.location}`
-                        : "SFC Bakers bajor sikar jaipur road"
-                    )}&travelmode=driving`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-3 inline-flex shrink-0 items-center gap-1.5 font-bold text-[var(--color-primary)] hover:underline"
-                  >
-                    <Navigation size={13} />
-                    <span>Get Directions</span>
-                    <ExternalLink size={11} />
-                  </a>
-                </div>
               </div> 
 
               {/* Location details */}
@@ -1011,7 +994,9 @@ export default function ContactPage() {
             <div className="mt-9 grid gap-3 sm:grid-cols-2">
               <a
                 href={
-                  settingData?.location
+                  hasStoreCoords
+                    ? `https://www.google.com/maps/dir/?api=1&destination=${storeLat},${storeLng}&travelmode=driving`
+                    : settingData?.location
                     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`SFC Bakers ${settingData.location}`)}`
                     : "https://www.google.com/maps/search/?api=1&query=SFC+Bakers+Jaipur"
                 }

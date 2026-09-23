@@ -122,7 +122,8 @@ export default function PairItWithSection({
       await addCartItem({ productId: pid, quantity: 1 }).unwrap();
       toast.success(`Added ${product.name} to cart`);
     } catch {
-      toast.error("Failed to add to cart");
+      toast.error("This product is not available right now.");
+
     }
   };
 

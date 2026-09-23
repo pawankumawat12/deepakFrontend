@@ -101,8 +101,8 @@ const API_ORIGIN = (
 ).replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
 
 function formatRupee(v: number) {
-  const num = Math.round((Number(v || 0) + Number.EPSILON) * 100) / 100;
-  return num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  const num = Math.round(Number(v || 0));
+  return num.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
 export default function CartClient() {

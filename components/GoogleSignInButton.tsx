@@ -119,9 +119,10 @@ export default function GoogleSignInButton({
         (apiError.data?.errors && Object.values(apiError.data.errors)[0]) ||
         "Unable to sign in with Google. Please try again.";
 
-      toast.error(errorMsg);
       if (onError) {
         onError(errorMsg);
+      } else {
+        toast.error(errorMsg);
       }
     } finally {
       setIsAuthenticating(false);

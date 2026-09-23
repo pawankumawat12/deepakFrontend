@@ -128,7 +128,8 @@ export default function FavoritesPage() {
         );
       }, 1200);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to add to cart");
+      toast.error(err?.data?.message || "This product is not available right now.");
+      
     }
   };
 

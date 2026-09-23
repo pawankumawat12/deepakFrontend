@@ -160,7 +160,6 @@ export default function LoginModal({
         setResendTimer(RESEND_COOLDOWN_SECONDS);
         toast(errorMsg);
       } else {
-        toast.error(errorMsg);
         setError(errorMsg);
       }
     }

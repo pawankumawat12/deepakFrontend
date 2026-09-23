@@ -52,8 +52,8 @@ const filters = [
 ];
 
 function formatRupee(value: number) {
-  const num = Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
-  return `₹${num.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  const num = Math.round(Number(value || 0));
+  return `₹${num.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
 function StatusIcon({ status }: { status: string }) {
@@ -350,11 +350,11 @@ export default function Orders() {
           hour12: true,
         }),
         status: o.status as OrderStatus,
-        subtotal: Math.round((Number(o.subtotal || 0) + Number.EPSILON) * 100) / 100,
-        deliveryFee: Math.round((Number(o.delivery_fee || 0) + Number.EPSILON) * 100) / 100,
-        discount: Math.round((Number(o.discount || 0) + Number.EPSILON) * 100) / 100,
-        taxAmount: Math.round((Number((o as any).tax_amount || 0) + Number.EPSILON) * 100) / 100,
-        total: Math.round((Number(o.total_amount || 0) + Number.EPSILON) * 100) / 100,
+        subtotal: Math.round(Number(o.subtotal || 0)),
+        deliveryFee: Math.round(Number(o.delivery_fee || 0)),
+        discount: Math.round(Number(o.discount || 0)),
+        taxAmount: Math.round(Number((o as any).tax_amount || 0)),
+        total: Math.round(Number(o.total_amount || 0)),
         pricingJson,
         address: o.shipping_address || (addressJson ? `${addressJson.house_number}, ${addressJson.formatted_address || `${addressJson.city} - ${addressJson.pincode}`}` : "Jaipur, Rajasthan"),
         addressJson,
@@ -370,7 +370,7 @@ export default function Orders() {
           id: it.id,
           name: it.product_name,
           qty: it.quantity,
-          price: Math.round((Number(it.price || 0) + Number.EPSILON) * 100) / 100,
+          price: Math.round(Number(it.price || 0)),
           img: it.image || "/images/placeholder.png",
           availability_type: it.availability_type,
           production_status: it.production_status,
@@ -813,7 +813,7 @@ export default function Orders() {
                         </div>
 
                         <p className="text-xs font-bold text-[var(--color-text-primary)]">
-                          {formatRupee(Math.round(((item.price * item.qty) + Number.EPSILON) * 100) / 100)}
+                          {formatRupee(Math.round(item.price * item.qty))}
                         </p>
                       </div>
                     ))}
