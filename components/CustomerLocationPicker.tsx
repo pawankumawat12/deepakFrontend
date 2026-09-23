@@ -240,11 +240,84 @@ export default function CustomerLocationPicker({
     }
   };
 
-  // Reverse geocoding helper to extract city, pincode, state, address
+  // Robust reverse geocoding helper using Photon -> BigDataCloud -> Nominatim
   const fetchAddressDetails = useCallback(
     async (lat: number, lng: number): Promise<AddressAutoFillDetails | null> => {
       try {
         setGeocoding(true);
+
+        // 1. Try Photon reverse geocoding (fast and accurate for Indian areas)
+        try {
+          const photonRes = await fetch(
+            `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`
+          );
+          if (photonRes.ok) {
+            const pData = await photonRes.json();
+            const props = pData?.features?.[0]?.properties;
+            if (props) {
+              const detectedCity =
+                props.city || props.district || props.county || "Sikar";
+              const detectedState = props.state || "Rajasthan";
+              const detectedPincode = props.postcode || "";
+
+              const roadParts = [
+                props.name,
+                props.street && props.name !== props.street ? props.street : null,
+                props.district && props.district !== props.name ? props.district : null,
+              ]
+                .filter(Boolean)
+                .filter((val, idx, arr) => arr.indexOf(val) === idx);
+
+              const detailedAddress =
+                roadParts.length > 0
+                  ? roadParts.join(", ")
+                  : props.name || "Selected Location";
+
+              setResolvedSpot(detailedAddress);
+
+              return {
+                city: detectedCity,
+                state: detectedState,
+                pincode: detectedPincode,
+                formattedAddress: detailedAddress,
+                landmark: props.name || "",
+                houseNumber: props.housenumber || "",
+                rawAddress: props,
+              };
+            }
+          }
+        } catch {
+          // fallback
+        }
+
+        // 2. Try BigDataCloud free client reverse geocoding
+        try {
+          const bdcRes = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+          );
+          if (bdcRes.ok) {
+            const bdc = await bdcRes.json();
+            const detectedCity = bdc.locality || bdc.city || "Sikar";
+            const detectedState = bdc.principalSubdivision || "Rajasthan";
+            const detectedPincode = bdc.postcode || "";
+            const spotName = [bdc.locality, bdc.city].filter(Boolean).join(", ") || "Selected Location";
+            setResolvedSpot(spotName);
+
+            return {
+              city: detectedCity,
+              state: detectedState,
+              pincode: detectedPincode,
+              formattedAddress: spotName,
+              landmark: "",
+              houseNumber: "",
+              rawAddress: bdc,
+            };
+          }
+        } catch {
+          // fallback
+        }
+
+        // 3. Fallback to Nominatim
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
           { headers: { Accept: "application/json" } }
@@ -259,7 +332,7 @@ export default function CustomerLocationPicker({
               addr.village ||
               addr.county ||
               addr.state_district ||
-              "Jaipur";
+              "Sikar";
             const detectedState = addr.state || "Rajasthan";
             const detectedPincode = addr.postcode || "";
 
@@ -292,8 +365,6 @@ export default function CustomerLocationPicker({
               houseNumber: addr.house_number || "",
               rawAddress: addr,
             };
-          } else if (data?.display_name) {
-            setResolvedSpot(data.display_name.split(",").slice(0, 2).join(", "));
           }
         }
       } catch {
