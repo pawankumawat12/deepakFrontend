@@ -563,10 +563,10 @@ export default function CustomerLocationPicker({
           </div>
           <div className="text-xs">
             <p className="font-bold text-amber-950 leading-tight">
-              Laptop / Desktop (No Hardware GPS)
+              Laptop / Desktop Detected (No Hardware GPS)
             </p>
             <p className="mt-0.5 text-[11px] font-medium text-amber-900/90 leading-tight">
-              इस डिवाइस में GPS चिप नहीं है। कृपया सर्च बार में अपनी कॉलोनी या एरिया सर्च करें, फिर मैप पर लाल पिन को खींचकर (Drag) अपनी सही जगह पर सेट करें।
+              Laptops and PCs lack physical GPS chips. To set your delivery location accurately, search your colony/area in the search box, or drag the red pin directly to your building on the map.
             </p>
           </div>
         </div>
