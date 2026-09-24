@@ -52,12 +52,13 @@ import {
   FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import SkeletonLoader from "./SkeletonLoader";
 import { isValidIndianPhone, normalizeIndianPhone } from "../lib/phone";
 
 import {
+  cartApi,
   useGetCartQuery,
   useGetGuestCartPreviewMutation,
   useMergeCartMutation,
@@ -92,6 +93,13 @@ import AddressModal from "./AddressModal";
 import DeleteAddressDialog from "./DeleteAddressDialog";
 import { loadRazorpayScript } from "../lib/razorpay";
 import { useThrottledCallback } from "../utils/throttle";
+import {
+  getStoredDeliveryLocation,
+  setStoredDeliveryLocation,
+  subscribeDeliveryLocation,
+  syncGuestDeliveryLocationToAccount,
+  DeliveryLocation,
+} from "../lib/deliveryLocation";
 
 const API_ORIGIN = (
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_BACKEND_URL) ||
@@ -107,6 +115,7 @@ function formatRupee(v: number) {
 
 export default function CartClient() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const user = useSelector(
     (state: { auth: { user: any | null } }) => state.auth.user
   );
@@ -118,11 +127,20 @@ export default function CartClient() {
 
   // Address State
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [activeDeliveryLoc, setActiveDeliveryLoc] = useState<DeliveryLocation | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [deletingAddress, setDeletingAddress] = useState<Address | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>("Online Payment");
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
+
+  useEffect(() => {
+    setActiveDeliveryLoc(getStoredDeliveryLocation());
+    const unsub = subscribeDeliveryLocation((loc) => {
+      setActiveDeliveryLoc(loc);
+    });
+    return unsub;
+  }, []);
 
   // Dynamic Offers & Promo Code State
   const [appliedOfferCode, setAppliedOfferCode] = useState<string>("");
@@ -201,11 +219,19 @@ export default function CartClient() {
         });
       }
     }, [user, mergeCart]);
+
+    // Safeguard: If user is logged in with an active guest delivery location without addressId, sync it to their account
+    useEffect(() => {
+      if (user && activeDeliveryLoc?.isSet && !activeDeliveryLoc?.addressId && activeDeliveryLoc?.lat && activeDeliveryLoc?.lng) {
+        syncGuestDeliveryLocationToAccount(dispatch, user);
+      }
+    }, [user, activeDeliveryLoc?.isSet, activeDeliveryLoc?.addressId, activeDeliveryLoc?.lat, activeDeliveryLoc?.lng, dispatch]);
     
   const {
     data: cartResponse,
     isLoading: isCartQueryLoading,
     isFetching,
+    refetch: refetchCart,
   } = useGetCartQuery(
     {
       addressId: selectedAddressId || undefined,
@@ -218,23 +244,143 @@ export default function CartClient() {
 
   const isLoading = user ? isCartQueryLoading : (isGuestPreviewLoading && guestCartItems.length > 0 && !guestPreviewResponse);
   
-  const { data: addressResponse, isLoading: isAddressesLoading } = useGetAddressesQuery(
+  const {
+    data: addressResponse,
+    isLoading: isAddressesLoading,
+    refetch: refetchAddresses,
+  } = useGetAddressesQuery(
     undefined,
     { skip: !user }
   );
   const addresses: Address[] = addressResponse?.data || [];
   
-  // Auto-select default or first address
+  // 1. Initial mount auto-select: prioritize starting delivery location
   useEffect(() => {
     if (addresses.length > 0) {
       if (!selectedAddressId || !addresses.some((a) => a.id === selectedAddressId)) {
+        const storedLoc = getStoredDeliveryLocation();
+        let matchedAddr: Address | undefined;
+
+        if (storedLoc?.addressId) {
+          matchedAddr = addresses.find((a) => Number(a.id) === Number(storedLoc.addressId));
+        }
+
+        if (!matchedAddr && storedLoc?.lat && storedLoc?.lng) {
+          matchedAddr = addresses.find((a) => {
+            const aLat = Number(a.latitude);
+            const aLng = Number(a.longitude);
+            return (
+              !isNaN(aLat) &&
+              !isNaN(aLng) &&
+              Math.abs(aLat - storedLoc.lat) < 0.003 &&
+              Math.abs(aLng - storedLoc.lng) < 0.003
+            );
+          });
+        }
+
+        if (!matchedAddr && storedLoc?.houseNumber) {
+          const sHouse = storedLoc.houseNumber.toLowerCase().trim();
+          matchedAddr = addresses.find((a) => (a.house_number || "").toLowerCase().trim() === sHouse);
+        }
+
         const defaultAddr = addresses.find((a) => a.is_default);
-        setSelectedAddressId(defaultAddr ? defaultAddr.id : addresses[0].id);
+        setSelectedAddressId(matchedAddr ? matchedAddr.id : defaultAddr ? defaultAddr.id : addresses[0].id);
       }
     } else {
       setSelectedAddressId(null);
     }
   }, [addresses, selectedAddressId]);
+
+  // 2. Live location change listener: When user changes location in modal, update selectedAddressId and recalculate cart immediately without refresh!
+  useEffect(() => {
+    const handleLiveLocationChange = async (e: Event) => {
+      const loc = (e as CustomEvent).detail as DeliveryLocation | null;
+      setActiveDeliveryLoc(loc);
+
+      if (!user) return;
+
+      try {
+        const res = await refetchAddresses();
+        const freshAddresses = (res?.data as any)?.data || [];
+
+        if (loc) {
+          let matched: Address | undefined;
+          if (loc.addressId) {
+            matched = freshAddresses.find((a: Address) => Number(a.id) === Number(loc.addressId));
+          }
+          if (!matched && loc.lat && loc.lng) {
+            matched = freshAddresses.find((a: Address) => {
+              const aLat = Number(a.latitude);
+              const aLng = Number(a.longitude);
+              return (
+                !isNaN(aLat) &&
+                !isNaN(aLng) &&
+                Math.abs(aLat - loc.lat) < 0.003 &&
+                Math.abs(aLng - loc.lng) < 0.003
+              );
+            });
+          }
+          if (!matched && loc.houseNumber) {
+            const sHouse = loc.houseNumber.toLowerCase().trim();
+            matched = freshAddresses.find(
+              (a: Address) => (a.house_number || "").toLowerCase().trim() === sHouse
+            );
+          }
+
+          if (matched) {
+            setSelectedAddressId(matched.id);
+          } else if (loc.addressId) {
+            setSelectedAddressId(Number(loc.addressId));
+          } else if (freshAddresses.length > 0) {
+            setSelectedAddressId(freshAddresses[0].id);
+          }
+        }
+
+        // Recalculate cart distances, delivery fee, and out-of-range flag immediately
+        refetchCart();
+      } catch (err) {
+        console.warn("Could not refetch cart after location change:", err);
+      }
+    };
+
+    window.addEventListener("sfc_delivery_location_changed", handleLiveLocationChange);
+    return () => {
+      window.removeEventListener("sfc_delivery_location_changed", handleLiveLocationChange);
+    };
+  }, [user, refetchAddresses, refetchCart]);
+
+  const handleSelectCartAddress = (addr: Address) => {
+    setSelectedAddressId(addr.id);
+
+    const lat = addr.latitude ? Number(addr.latitude) : null;
+    const lng = addr.longitude ? Number(addr.longitude) : null;
+    if (lat != null && lng != null) {
+      const shortAddr = addr.house_number
+        ? `${addr.house_number}, ${addr.city || addr.formatted_address || ""}`
+        : (addr.formatted_address || addr.city || "Delivery Address");
+
+      const updatedLoc: DeliveryLocation = {
+        lat,
+        lng,
+        address: addr.formatted_address || `${addr.house_number}, ${addr.city}`,
+        shortAddress: shortAddr,
+        houseNumber: addr.house_number || "",
+        roadArea: addr.formatted_address || "",
+        landmark: addr.landmark || "",
+        city: addr.city || "Jaipur",
+        state: addr.state || "Rajasthan",
+        pincode: addr.pincode || "",
+        receiverName: addr.receiver_name || user?.name || "",
+        phone: addr.phone_number || user?.phone || "",
+        label: addr.label || "Home",
+        addressId: addr.id,
+        storeId: activeDeliveryLoc?.storeId ?? null,
+        storeName: activeDeliveryLoc?.storeName || "Main Bakery",
+        isSet: true,
+      };
+      setStoredDeliveryLocation(updatedLoc);
+    }
+  };
   
   
   
@@ -301,10 +447,54 @@ export default function CartClient() {
     grandTotal: 0,
     hasOutOfStockItems: false,
     outOfStockCount: 0,
+    hasUndeliverableItems: false,
+    undeliverableCount: 0,
   };
   const summary: CartSummary = user
   ? (cartResponse?.data?.summary || defaultSummary)
   : (guestPreviewResponse?.data?.summary || defaultSummary);
+
+  const getItemDeliveryStatus = (
+    it: any
+  ): { cannotDeliver: boolean; reason: string } => {
+    if (it.cannot_deliver) {
+      return {
+        cannotDeliver: true,
+        reason:
+          it.cannot_deliver_reason ||
+          "This product is not available for your selected location. Please remove it from your cart.",
+      };
+    }
+  
+    if (activeDeliveryLoc && activeDeliveryLoc.isSet) {
+      const activeStoreId = activeDeliveryLoc.storeId;
+  
+      if (activeStoreId === "admin" || activeStoreId == null) {
+        if (it.store_id != null) {
+          return {
+            cannotDeliver: true,
+            reason:
+              "This product is not available for your selected location. Please remove it from your cart.",
+          };
+        }
+      } else {
+        if (Number(it.store_id) !== Number(activeStoreId)) {
+          return {
+            cannotDeliver: true,
+            reason:
+              "This product is not available for your selected location. Please remove it from your cart.",
+          };
+        }
+      }
+    }
+  
+    return { cannotDeliver: false, reason: "" };
+  };
+
+  const hasUndeliverableItems = Boolean(
+    summary.hasUndeliverableItems ||
+    items.some((it: any) => getItemDeliveryStatus(it).cannotDeliver)
+  );
   
   const handleUpdateQty = async (
     productId: number,
@@ -474,8 +664,8 @@ export default function CartClient() {
       return;
     }
     
-    if (summary.isOutOfRange) {
-      toast.error("This delivery address is outside our service area");
+    if (hasUndeliverableItems) {
+      toast.error("Please remove items that cannot be delivered to your selected location before checkout");
       return;
     }
     
@@ -974,6 +1164,7 @@ export default function CartClient() {
               {items.map((it) => {
                 const isItemUpdating = updatingId === it.id;
                 const isItemDeleting = deletingId === it.id;
+                const undeliverableInfo = getItemDeliveryStatus(it);
 
                 return (
                   <article
@@ -982,14 +1173,15 @@ export default function CartClient() {
                       overflow-hidden
                       rounded-2xl
                       border
-                      border-[var(--color-border)]
-                      bg-white
                       p-4
                       shadow-sm
                       transition-all
                       duration-200
                       hover:shadow-md
-                      
+                      ${undeliverableInfo.cannotDeliver
+                        ? "border-red-300 bg-red-50/25 ring-1 ring-red-300"
+                        : "border-[var(--color-border)] bg-white"
+                      }
                     `}
                   >
                     <div className="flex gap-4">
@@ -1042,6 +1234,11 @@ export default function CartClient() {
                               >
                                 {it.name}
                               </Link>
+                              {it.store_name && (
+                                <p className="text-[10px] font-semibold text-stone-500">
+                                  {it.store_name}
+                                </p>
+                              )}
                               <p
                                 className="mt-0.5 text-[10px] font-medium text-[var(--color-text-muted)] capitalize truncate"
                                 title={it.category_name}
@@ -1065,6 +1262,29 @@ export default function CartClient() {
                               )}
                             </div>
                           </div>
+
+                          {/* Store Mismatch / Undeliverable Alert on the Cart Item */}
+                          {undeliverableInfo.cannotDeliver && (
+                            <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-300 bg-red-50/95 p-2.5 text-red-900 shadow-2xs">
+                              <div className="flex items-start gap-2 min-w-0 flex-1">
+                                <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-600" />
+                                <div>
+                                
+                                  <p className="text-[11px] font-semibold text-red-700 mt-0.5 leading-snug">
+                                    {undeliverableInfo.reason}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                disabled={isItemDeleting}
+                                onClick={() => throttledDeleteItem(it.id)}
+                                className="shrink-0 rounded-xl bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-2xs hover:bg-red-700 active:scale-95 transition cursor-pointer disabled:opacity-50"
+                              >
+                                {isItemDeleting ? "Removing..." : "Remove"}
+                              </button>
+                            </div>
+                          )}
 
                           {/* Stock Warnings & Badges */}
                           { it.isOutOfStock ? (
@@ -1181,8 +1401,8 @@ export default function CartClient() {
                             <button
                               type="button"
                               aria-label="Increase quantity"
-                              title={!it.isMadeToOrder && it.quantity >= it.stock ? `Only ${it.stock} items available` : "Increase quantity"}
-                              disabled={isItemUpdating || isItemDeleting || (!it.isMadeToOrder && it.quantity >= it.stock) || it.isOutOfStock}
+                              title={undeliverableInfo.cannotDeliver ? "This product cannot be delivered to your selected location" : (!it.isMadeToOrder && it.quantity >= it.stock ? `Only ${it.stock} items available` : "Increase quantity")}
+                              disabled={isItemUpdating || isItemDeleting || undeliverableInfo.cannotDeliver || (!it.isMadeToOrder && it.quantity >= it.stock) || it.isOutOfStock}
                               onClick={() => handleUpdateQty(it.id, it.quantity, 1, it.stock, it.isMadeToOrder)}
                               className="
                                 flex
@@ -1332,25 +1552,107 @@ export default function CartClient() {
 
               {/* ADDRESSES LIST */}
               {!user ? (
-                <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 p-5 text-center">
-                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                    <User size={22} />
+                activeDeliveryLoc && activeDeliveryLoc.isSet ? (
+                  <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50/80 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-primary-50)] px-2.5 py-1 text-xs font-bold text-[var(--color-primary)]">
+                          <MapPin size={13} />
+                          <span>{activeDeliveryLoc.label || "Delivery Location"}</span>
+                        </span>
+                        {activeDeliveryLoc.storeName && (
+                          <span className="text-[11px] font-medium text-stone-500">
+                            Fulfilled by: <strong>{activeDeliveryLoc.storeName}</strong>
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent("sfc_open_location_modal"))}
+                        className="text-xs font-bold text-[var(--color-primary)] hover:underline cursor-pointer"
+                      >
+                        Change Address
+                      </button>
+                    </div>
+
+                    <div className="rounded-xl border border-stone-200 bg-white p-3 shadow-2xs">
+                      <p className="text-xs font-bold text-stone-800">
+                        {activeDeliveryLoc.houseNumber ? `${activeDeliveryLoc.houseNumber}, ` : ""}
+                        {activeDeliveryLoc.roadArea || activeDeliveryLoc.address}
+                      </p>
+                      {activeDeliveryLoc.landmark && (
+                        <p className="text-[11px] text-stone-500 mt-0.5">
+                          Landmark: {activeDeliveryLoc.landmark}
+                        </p>
+                      )}
+                      {(activeDeliveryLoc.city || activeDeliveryLoc.pincode) && (
+                        <p className="text-[11px] text-stone-500">
+                          {activeDeliveryLoc.city} {activeDeliveryLoc.pincode ? `- ${activeDeliveryLoc.pincode}` : ""}
+                        </p>
+                      )}
+                      {(activeDeliveryLoc.receiverName || activeDeliveryLoc.phone) && (
+                        <div className="mt-2 flex flex-wrap items-center gap-3 pt-2 border-t border-stone-100 text-[11px] text-stone-600">
+                          {activeDeliveryLoc.receiverName && (
+                            <span className="flex items-center gap-1">
+                              <User size={12} className="text-stone-400" />
+                              <span>{activeDeliveryLoc.receiverName}</span>
+                            </span>
+                          )}
+                          {activeDeliveryLoc.phone && (
+                            <span className="flex items-center gap-1 font-semibold text-stone-700">
+                              <Phone size={12} className="text-stone-400" />
+                              <span>+91 {activeDeliveryLoc.phone}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 pt-1">
+                      <p className="text-[11px] text-stone-500">
+                        Sign in to save this address to your account & place order.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setAuthOpen(true)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs hover:opacity-90 transition cursor-pointer"
+                      >
+                        <LogIn size={13} />
+                        <span>Sign In to Checkout</span>
+                      </button>
+                    </div>
                   </div>
-                  <h3 className="mt-2.5 text-xs font-black text-amber-900 sm:text-sm">
-                    Sign in to select delivery address
-                  </h3>
-                  <p className="mx-auto mt-1 max-w-sm text-[11px] leading-5 text-amber-800">
-                    You can manage your cart as a guest. Please sign in to choose or add your delivery address and checkout.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setAuthOpen(true)}
-                    className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[var(--color-primary-dark)]"
-                  >
-                    <LogIn size={14} />
-                    Sign In / Register
-                  </button>
-                </div>
+                ) : (
+                  <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 p-5 text-center">
+                    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                      <MapPin size={22} />
+                    </div>
+                    <h3 className="mt-2.5 text-xs font-black text-amber-900 sm:text-sm">
+                      Where should we deliver?
+                    </h3>
+                    <p className="mx-auto mt-1 max-w-sm text-[11px] leading-5 text-amber-800">
+                      Please select your delivery address to see live availability, delivery charges, and place order.
+                    </p>
+                    <div className="mt-3.5 flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent("sfc_open_location_modal"))}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-xs font-bold text-white shadow-sm hover:opacity-90 transition cursor-pointer"
+                      >
+                        <MapPin size={14} />
+                        <span>Set Delivery Address</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAuthOpen(true)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-stone-300 bg-white px-4 py-2 text-xs font-bold text-stone-700 shadow-2xs hover:bg-stone-50 transition cursor-pointer"
+                      >
+                        <LogIn size={14} />
+                        <span>Sign In</span>
+                      </button>
+                    </div>
+                  </div>
+                )
               ) : isAddressesLoading ? (
                 <div className="flex items-center justify-center py-6 text-xs text-[var(--color-text-muted)]">
                   <LoaderCircle size={16} className="mr-2 animate-spin text-[var(--color-primary)]" />
@@ -1383,7 +1685,7 @@ export default function CartClient() {
                     return (
                       <div
                         key={addr.id}
-                        onClick={() => setSelectedAddressId(addr.id)}
+                        onClick={() => handleSelectCartAddress(addr)}
                         className={`
                           group
                           relative
@@ -1854,15 +2156,7 @@ export default function CartClient() {
                   </div>
                 )}
 
-                {/* Out of Delivery Radius Warning */}
-                {summary.isOutOfRange && (
-                  <div className="rounded-xl bg-red-50 p-2.5 text-[11px] font-bold text-red-700 border border-red-200 flex items-start gap-2">
-                    <AlertTriangle size={14} className="shrink-0 mt-0.5" />
-                    <span>
-                      Delivery address ({summary.distanceKm} km) exceeds our maximum service radius of {summary.maxDeliveryDistance} km.
-                    </span>
-                  </div>
-                )}
+           
 
                 {/* Total Amount */}
                 <div className="border-t border-dashed border-[var(--color-border)] pt-4">
@@ -2092,10 +2386,10 @@ export default function CartClient() {
                     isStoreClosed ||
                     items.length === 0 ||
                     summary.hasOutOfStockItems ||
+                    hasUndeliverableItems ||
                     isProcessingPayment ||
                     (user ? (
                       summary.isBelowMinimumOrder ||
-                      summary.isOutOfRange ||
                       isPlacingOrder ||
                       isVerifyingPayment ||
                       !selectedAddress
@@ -2131,15 +2425,17 @@ export default function CartClient() {
                       ? "Store is Currently Closed"
                       : !user
                         ? "Sign In to Checkout"
-                        : isProcessingPayment && !isPlacingOrder && !isVerifyingPayment
-                          ? "Preparing Payment..."
-                          : isPlacingOrder
-                            ? "Creating Order..."
-                            : isVerifyingPayment
-                              ? "Verifying Payment..."
-                              : paymentMethod === "Online Payment"
-                                ? "Pay & Place Order"
-                                : "Place Order"}
+                        : hasUndeliverableItems
+                          ? "Remove Undeliverable Items"
+                          : isProcessingPayment && !isPlacingOrder && !isVerifyingPayment
+                            ? "Preparing Payment..."
+                            : isPlacingOrder
+                              ? "Creating Order..."
+                              : isVerifyingPayment
+                                ? "Verifying Payment..."
+                                : paymentMethod === "Online Payment"
+                                  ? "Pay & Place Order"
+                                  : "Place Order"}
                   </span>
                   {isPlacingOrder || isVerifyingPayment || isProcessingPayment ? (
                     <LoaderCircle size={16} className="animate-spin" />

@@ -30,6 +30,7 @@ import {
 } from "../schemas/authSchema";
 import { useMergeCartMutation } from "../redux/services/cartApi";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
+import { syncGuestDeliveryLocationToAccount } from "../lib/deliveryLocation";
 import GoogleSignInButton from "./GoogleSignInButton";
 
 type ApiError = {
@@ -146,6 +147,10 @@ export default function RegisterForm({
           dispatch(setCredentials(me));
         } catch {}
         await syncGuestCart();
+        await syncGuestDeliveryLocationToAccount(
+          dispatch,
+          (res as any)?.user || (res as any)?.data?.user
+        );
         toast.success("Account created successfully! Welcome to SFC Cafe.");
         if (onComplete) {
           onComplete();
@@ -180,6 +185,10 @@ export default function RegisterForm({
       } catch {}
 
       await syncGuestCart();
+      await syncGuestDeliveryLocationToAccount(
+        dispatch,
+        (res as any)?.user || (res as any)?.data?.user
+      );
 
       toast.success("Your account is verified. Welcome!");
       if (onComplete) {

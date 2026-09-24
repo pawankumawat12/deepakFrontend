@@ -24,12 +24,19 @@ import {
   Bell,
   Star,
   Truck,
+  MapPin,
 } from "lucide-react";
 
 import { useGetCartQuery } from "../redux/services/cartApi";
 import { getGuestCartCount, subscribeGuestCart } from "../lib/guestCart";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
+import SelectLocationModal from "./SelectLocationModal";
+import {
+  getStoredDeliveryLocation,
+  subscribeDeliveryLocation,
+  DeliveryLocation,
+} from "../lib/deliveryLocation";
 import { logout } from "../redux/features/authSlice";
 import { useLogoutMutation } from "../redux/services/authApi";
 import { useGetWishlistQuery } from "../redux/services/wishlistApi";
@@ -128,10 +135,32 @@ const Navbar = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [deliveryLoc, setDeliveryLoc] = useState<DeliveryLocation | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const mobileProfileRef = useRef<HTMLDivElement>(null);
   const desktopHeaderRef = useRef<HTMLElement>(null);
   const mobileHeaderRef = useRef<HTMLElement>(null);
+
+  // Sync delivery location from localStorage and live custom events
+  useEffect(() => {
+    setDeliveryLoc(getStoredDeliveryLocation());
+    const unsub = subscribeDeliveryLocation((loc) => {
+      setDeliveryLoc(loc);
+    });
+    return unsub;
+  }, []);
+
+  // First time customer landing check: automatically prompt to set delivery location (required)
+  useEffect(() => {
+    const loc = getStoredDeliveryLocation();
+    if (!loc || !loc.isSet || !loc.lat || !loc.lng) {
+      const timer = setTimeout(() => {
+        setLocationModalOpen(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Sync real-time navbar height (including store-closed banner) to CSS variable --navbar-height
   useEffect(() => {
@@ -341,6 +370,32 @@ const Navbar = () => {
               </div>
 
             </Link>
+
+            {/* Delivery Location Pill (Blinkit / Swiggy Style) */}
+            <button
+              type="button"
+              onClick={() => setLocationModalOpen(true)}
+              className="group hidden md:flex items-center gap-2.5 rounded-2xl border border-[var(--color-border)] bg-[var(--bg-surface)] px-3 py-1.5 text-left transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-50)] shadow-2xs cursor-pointer max-w-[220px]"
+              title="Change Delivery Location"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition shadow-2xs">
+                <MapPin size={16} />
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  Delivering to
+                </div>
+                <div className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-primary)]">
+                  <span className="truncate">
+                    {deliveryLoc?.shortAddress || "Select Location"}
+                  </span>
+                  <ChevronDown
+                    size={12}
+                    className="shrink-0 text-stone-400 group-hover:text-stone-700"
+                  />
+                </div>
+              </div>
+            </button>
 
             {/* ---------------- DESKTOP LINKS ---------------- */}
 
@@ -869,8 +924,29 @@ const Navbar = () => {
                   </span>
                 )}
               </Link>
-</div>
             </div>
+          </div>
+        </div>
+
+          {/* Mobile Delivery Sub-bar (Blinkit style) */}
+          <div
+            onClick={() => setLocationModalOpen(true)}
+            role="button"
+            tabIndex={0}
+            className="flex items-center justify-between border-t border-[var(--color-border)]/60 bg-[var(--color-primary-50)]/50 px-4 py-1.5 text-xs cursor-pointer transition hover:bg-[var(--color-primary-50)]"
+          >
+            <div className="flex items-center gap-1.5 min-w-0">
+              <MapPin size={13} className="text-[var(--color-primary)] shrink-0" />
+              <span className="text-[11px] font-medium text-stone-700 truncate">
+                Deliver to:{" "}
+                <span className="font-bold text-[var(--color-text-primary)] underline decoration-dotted">
+                  {deliveryLoc?.shortAddress || "Select delivery location"}
+                </span>
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-[var(--color-primary)] shrink-0 flex items-center gap-0.5 ml-2">
+              Change <ChevronDown size={11} />
+            </span>
           </div>
         </div>
       </header>
@@ -1184,6 +1260,12 @@ const Navbar = () => {
           setRegisterOpen(false);
           setAuthOpen(true);
         }}
+      />
+
+      <SelectLocationModal
+        open={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        canDismiss={Boolean(deliveryLoc && deliveryLoc.isSet && deliveryLoc.lat && deliveryLoc.lng)}
       />
 
       <LogoutModal open={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={handleLogout} />

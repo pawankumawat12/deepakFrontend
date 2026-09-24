@@ -31,6 +31,7 @@ import { RootState } from "../redux/store";
 import { setCredentials } from "../redux/features/authSlice";
 import { useMergeCartMutation } from "../redux/services/cartApi";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
+import { syncGuestDeliveryLocationToAccount } from "../lib/deliveryLocation";
 import GoogleSignInButton from "./GoogleSignInButton";
 import { useThrottledCallback } from "../utils/throttle";
 
@@ -134,6 +135,7 @@ export default function LoginModal({
       } catch {}
 
       await syncGuestCart();
+      await syncGuestDeliveryLocationToAccount(dispatch, res?.user);
 
       reset();
       toast.success("Logged in successfully.");
@@ -208,6 +210,7 @@ export default function LoginModal({
       } catch {}
 
       await syncGuestCart();
+      await syncGuestDeliveryLocationToAccount(dispatch, res?.user);
 
       toast.success("Email verified and logged in successfully!");
       reset();

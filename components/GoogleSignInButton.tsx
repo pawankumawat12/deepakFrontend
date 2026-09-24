@@ -8,6 +8,7 @@ import { useGoogleLoginMutation, useLazyGetMeQuery } from "../redux/services/aut
 import { setCredentials } from "../redux/features/authSlice";
 import { useMergeCartMutation } from "../redux/services/cartApi";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
+import { syncGuestDeliveryLocationToAccount } from "../lib/deliveryLocation";
 
 declare global {
   interface Window {
@@ -84,9 +85,11 @@ export default function GoogleSignInButton({
 
       dispatch(setCredentials(res));
 
+      let loggedUser = (res as any)?.user;
       try {
         const me = await getMe().unwrap();
         if (me?.user) {
+          loggedUser = me.user;
           dispatch(
             setCredentials({
               ...me,
@@ -100,6 +103,7 @@ export default function GoogleSignInButton({
       }
 
       await syncGuestCart();
+      await syncGuestDeliveryLocationToAccount(dispatch, loggedUser);
 
       toast.success(res?.message || "Signed in with Google successfully!");
       if (onSuccess) {

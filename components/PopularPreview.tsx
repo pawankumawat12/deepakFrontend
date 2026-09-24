@@ -14,7 +14,31 @@ import { useGetStoreCategoriesQuery } from "../redux/services/catalogApi";
 import SkeletonLoader from "./SkeletonLoader";
 
 export default function PopularPreview() {
-  const { data: categoryResponse, isLoading } = useGetStoreCategoriesQuery({});
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("sfc_selected_store_id");
+      if (saved) setSelectedStoreId(saved);
+    } catch {}
+
+    const handleLocationChange = (e: Event) => {
+      const loc = (e as CustomEvent).detail;
+      if (loc && loc.storeId != null) {
+        setSelectedStoreId(String(loc.storeId));
+      } else {
+        setSelectedStoreId(null);
+      }
+    };
+    window.addEventListener("sfc_delivery_location_changed", handleLocationChange);
+    return () => {
+      window.removeEventListener("sfc_delivery_location_changed", handleLocationChange);
+    };
+  }, []);
+
+  const { data: categoryResponse, isLoading } = useGetStoreCategoriesQuery({
+    ...(selectedStoreId ? { store_id: selectedStoreId } : {}),
+  });
   const categories = categoryResponse?.data || [];
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [autoplay, setAutoplay] = useState(true);

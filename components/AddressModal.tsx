@@ -14,13 +14,19 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
   Address,
   CreateAddressPayload,
   useCreateAddressMutation,
   useUpdateAddressMutation,
 } from "@/redux/services/addressApi";
+import { cartApi } from "@/redux/services/cartApi";
+import {
+  getStoredDeliveryLocation,
+  setStoredDeliveryLocation,
+  DeliveryLocation,
+} from "@/lib/deliveryLocation";
 import { isValidIndianPhone, normalizeIndianPhone, sanitizePhoneInput } from "@/lib/phone";
 import { AddressAutoFillDetails } from "@/components/CustomerLocationPicker";
 
@@ -53,6 +59,7 @@ export default function AddressModal({
   defaultUserPhone = "",
   onSuccess,
 }: AddressModalProps) {
+  const dispatch = useDispatch();
   const [createAddress, { isLoading: isCreating }] = useCreateAddressMutation();
   const [updateAddress, { isLoading: isUpdating }] = useUpdateAddressMutation();
   const isSaving = isCreating || isUpdating;
@@ -189,14 +196,82 @@ export default function AddressModal({
           data: payload,
         }).unwrap();
         toast.success(res?.message || "Address updated successfully!");
-        if (res?.data && onSuccess) {
-          onSuccess(res.data);
+        if (res?.data) {
+          const updatedAddr = res.data;
+          const lat = updatedAddr.latitude != null ? Number(updatedAddr.latitude) : (payload.latitude != null ? Number(payload.latitude) : null);
+          const lng = updatedAddr.longitude != null ? Number(updatedAddr.longitude) : (payload.longitude != null ? Number(payload.longitude) : null);
+          if (lat != null && lng != null) {
+            const shortAddr = updatedAddr.house_number
+              ? `${updatedAddr.house_number}, ${updatedAddr.city || updatedAddr.formatted_address || ""}`
+              : (updatedAddr.formatted_address || updatedAddr.city || "Delivery Address");
+
+            const currentStored = getStoredDeliveryLocation();
+            const updatedLoc: DeliveryLocation = {
+              lat,
+              lng,
+              address: updatedAddr.formatted_address || `${updatedAddr.house_number}, ${updatedAddr.city}`,
+              shortAddress: shortAddr,
+              houseNumber: updatedAddr.house_number || "",
+              roadArea: updatedAddr.formatted_address || "",
+              landmark: updatedAddr.landmark || "",
+              city: updatedAddr.city || "Jaipur",
+              state: updatedAddr.state || "Rajasthan",
+              pincode: updatedAddr.pincode || "",
+              receiverName: updatedAddr.receiver_name || authUser?.name || "",
+              phone: updatedAddr.phone_number || authUser?.phone || "",
+              label: updatedAddr.label || "Home",
+              addressId: updatedAddr.id,
+              storeId: currentStored?.storeId ?? null,
+              storeName: currentStored?.storeName || "Main Bakery",
+              isSet: true,
+            };
+            setStoredDeliveryLocation(updatedLoc);
+          }
+          dispatch(cartApi.util.invalidateTags(["Cart"]));
+
+          if (onSuccess) {
+            onSuccess(updatedAddr);
+          }
         }
       } else {
         const res = await createAddress(payload).unwrap();
         toast.success(res?.message || "Address saved successfully!");
-        if (res?.data && onSuccess) {
-          onSuccess(res.data);
+        if (res?.data) {
+          const createdAddr = res.data;
+          const lat = createdAddr.latitude != null ? Number(createdAddr.latitude) : (payload.latitude != null ? Number(payload.latitude) : null);
+          const lng = createdAddr.longitude != null ? Number(createdAddr.longitude) : (payload.longitude != null ? Number(payload.longitude) : null);
+          if (lat != null && lng != null) {
+            const shortAddr = createdAddr.house_number
+              ? `${createdAddr.house_number}, ${createdAddr.city || createdAddr.formatted_address || ""}`
+              : (createdAddr.formatted_address || createdAddr.city || "Delivery Address");
+
+            const currentStored = getStoredDeliveryLocation();
+            const newLoc: DeliveryLocation = {
+              lat,
+              lng,
+              address: createdAddr.formatted_address || `${createdAddr.house_number}, ${createdAddr.city}`,
+              shortAddress: shortAddr,
+              houseNumber: createdAddr.house_number || "",
+              roadArea: createdAddr.formatted_address || "",
+              landmark: createdAddr.landmark || "",
+              city: createdAddr.city || "Jaipur",
+              state: createdAddr.state || "Rajasthan",
+              pincode: createdAddr.pincode || "",
+              receiverName: createdAddr.receiver_name || authUser?.name || "",
+              phone: createdAddr.phone_number || authUser?.phone || "",
+              label: createdAddr.label || "Home",
+              addressId: createdAddr.id,
+              storeId: currentStored?.storeId ?? null,
+              storeName: currentStored?.storeName || "Main Bakery",
+              isSet: true,
+            };
+            setStoredDeliveryLocation(newLoc);
+          }
+          dispatch(cartApi.util.invalidateTags(["Cart"]));
+
+          if (onSuccess) {
+            onSuccess(createdAddr);
+          }
         }
       }
       onClose();

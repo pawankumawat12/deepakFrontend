@@ -42,17 +42,37 @@ export default function PairItWithSection({
   const [addCartItem] = useAddCartItemMutation();
 
   const [guestCartItems, setGuestCartItems] = useState<GuestCartItem[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("sfc_selected_store_id");
+      if (saved) setSelectedStoreId(saved);
+    } catch {}
+
+    const handleLocationChange = (e: Event) => {
+      const loc = (e as CustomEvent).detail;
+      if (loc && loc.storeId != null) {
+        setSelectedStoreId(String(loc.storeId));
+      } else {
+        setSelectedStoreId(null);
+      }
+    };
+    window.addEventListener("sfc_delivery_location_changed", handleLocationChange);
+
     setGuestCartItems(getGuestCart());
     const unsubscribe = subscribeGuestCart((items) => {
       setGuestCartItems(items);
     });
-    return unsubscribe;
+    return () => {
+      window.removeEventListener("sfc_delivery_location_changed", handleLocationChange);
+      unsubscribe();
+    };
   }, []);
 
   const { data: storeProductsResponse, isLoading } = useGetStoreProductsQuery({
     isActive: true,
+    ...(selectedStoreId ? { store_id: selectedStoreId } : {}),
   });
   const { data: offersData = [] } = useGetOffersQuery();
 

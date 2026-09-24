@@ -50,6 +50,19 @@ export default function PopularProducts() {
       const saved = localStorage.getItem("sfc_selected_store_id");
       if (saved) setSelectedStoreId(saved);
     } catch {}
+
+    const handleLocationChange = (e: Event) => {
+      const loc = (e as CustomEvent).detail;
+      if (loc && loc.storeId != null) {
+        setSelectedStoreId(String(loc.storeId));
+      } else {
+        setSelectedStoreId(null);
+      }
+    };
+    window.addEventListener("sfc_delivery_location_changed", handleLocationChange);
+    return () => {
+      window.removeEventListener("sfc_delivery_location_changed", handleLocationChange);
+    };
   }, []);
 
   const { data: productResponse, isLoading } = useGetStoreProductsQuery({

@@ -29,6 +29,9 @@ export interface CartItem {
   itemTotal: number;
   isOutOfStock: boolean;
   exceedsStock: boolean;
+  cannot_deliver?: boolean;
+  cannot_deliver_reason?: string | null;
+  is_deliverable?: boolean;
   added_at?: string;
   updated_at?: string;
 }
@@ -88,6 +91,8 @@ export interface CartSummary {
   grandTotal: number;
   hasOutOfStockItems: boolean;
   outOfStockCount: number;
+  hasUndeliverableItems?: boolean;
+  undeliverableCount?: number;
 
   timer?: {
     calculatedAt: string;
@@ -343,12 +348,14 @@ export const cartApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getCart: build.query<
       CartResponse,
-      { addressId?: number; paymentMethod?: string; offerCode?: string } | void
+      { addressId?: number; lat?: number; lng?: number; paymentMethod?: string; offerCode?: string } | void
     >({
       query: (params) => {
         if (!params) return "/cart";
         const query = new URLSearchParams();
         if (params.addressId) query.append("addressId", String(params.addressId));
+        if (params.lat != null) query.append("lat", String(params.lat));
+        if (params.lng != null) query.append("lng", String(params.lng));
         if (params.paymentMethod) query.append("paymentMethod", params.paymentMethod);
         if (params.offerCode) query.append("offerCode", params.offerCode);
         const qStr = query.toString();
@@ -359,7 +366,7 @@ export const cartApi = baseApi.injectEndpoints({
     }),
     getGuestCartPreview: build.mutation<
       CartResponse,
-      { items: { productId: number; quantity: number }[]; offerCode?: string }
+      { items: { productId: number; quantity: number }[]; offerCode?: string; lat?: number; lng?: number }
     >({
       query: (body) => ({
         url: "/cart/guest-preview",
