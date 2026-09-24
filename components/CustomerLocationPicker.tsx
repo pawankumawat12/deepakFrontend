@@ -11,6 +11,8 @@ import {
   Layers,
   X,
   CheckCircle2,
+  Crosshair,
+  Laptop,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -118,10 +120,23 @@ export default function CustomerLocationPicker({
   const [mapType, setMapType] = useState<"satellite" | "streets">("satellite");
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [searchResults, setSearchResults] = useState<SuggestionItem[]>([]);
   const [showResultsDropdown, setShowResultsDropdown] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [resolvedSpot, setResolvedSpot] = useState<string>("");
+
+  // Detect whether device has hardware GPS (Mobile / Tablet vs Laptop / PC)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ua = navigator.userAgent || "";
+    const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isClientMobile = Boolean((navigator as any).userAgentData?.mobile);
+    const isSmallTouchDevice = Boolean(navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
+
+    setIsMobileDevice(Boolean(isMobileUa || isClientMobile || isSmallTouchDevice));
+  }, []);
 
   // Sync internal state if external lat/lng changes
   useEffect(() => {
@@ -485,17 +500,105 @@ export default function CustomerLocationPicker({
     }
   };
 
+  // Device GPS Location Handler (Only for Mobile devices with hardware GPS)
+  const handleLocateMe = useCallback(() => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = Math.round(pos.coords.latitude * 1000000) / 1000000;
+          const lng = Math.round(pos.coords.longitude * 1000000) / 1000000;
+
+          setCurrentLat(lat);
+          setCurrentLng(lng);
+
+          if (markerRef.current) {
+            markerRef.current.setLatLng([lat, lng]);
+            markerRef.current
+              .bindPopup("<b>Your GPS Location</b><br/>Drag pin onto your exact door")
+              .openPopup();
+          }
+
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo([lat, lng], 17, { duration: 1.2 });
+          }
+
+          const details = await fetchAddressDetails(lat, lng);
+          onLocationChange(lat, lng, details || undefined);
+          toast.success("Current GPS location detected!");
+        } catch {
+          toast.error("Could not fetch address for this location");
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        let msg = "Could not fetch device location";
+        if (err.code === 1) {
+          msg = "Location permission denied. Please allow location access in your browser.";
+        } else if (err.code === 2) {
+          msg = "Position unavailable. Please ensure your device GPS is turned on.";
+        } else if (err.code === 3) {
+          msg = "Location request timed out. Please try again.";
+        }
+        toast.error(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }, [fetchAddressDetails, onLocationChange]);
+
   return (
     <div className="customer-location-picker rounded-2xl border border-stone-200 bg-stone-50/80 p-3">
+      {/* Notice for Laptop / Desktop Users (No GPS Hardware) */}
+      {!isMobileDevice && (
+        <div className="mb-2.5 flex items-start gap-2.5 rounded-xl border border-amber-200/90 bg-amber-50/80 p-2.5 text-stone-800 shadow-2xs">
+          <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-2xs">
+            <Laptop size={13} />
+          </div>
+          <div className="text-xs">
+            <p className="font-bold text-amber-950 leading-tight">
+              Laptop / Desktop (No Hardware GPS)
+            </p>
+            <p className="mt-0.5 text-[11px] font-medium text-amber-900/90 leading-tight">
+              इस डिवाइस में GPS चिप नहीं है। कृपया सर्च बार में अपनी कॉलोनी या एरिया सर्च करें, फिर मैप पर लाल पिन को खींचकर (Drag) अपनी सही जगह पर सेट करें।
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header bar with controls */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900">
           <MapPin size={15} className="text-[var(--color-primary)]" />
           <span>Pin Delivery Location on Map</span>
         </div>
 
-        {/* View Toggle */}
+        {/* View Toggle & Locate Button */}
         <div className="flex items-center gap-1.5">
+          {/* Only show Locate Me button on Mobile devices with hardware GPS */}
+          {isMobileDevice && (
+            <button
+              type="button"
+              onClick={handleLocateMe}
+              disabled={locating}
+              className="flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2 py-0.5 text-[11px] font-bold text-[var(--color-primary)] shadow-2xs transition hover:bg-rose-50 active:scale-95 disabled:opacity-50 cursor-pointer"
+              title="Detect current GPS location"
+            >
+              {locating ? (
+                <Loader2 size={12} className="animate-spin text-[var(--color-primary)]" />
+              ) : (
+                <Crosshair size={12} className="text-[var(--color-primary)]" />
+              )}
+              <span>{locating ? "Locating..." : "Locate Me"}</span>
+            </button>
+          )}
+
           <div className="inline-flex overflow-hidden rounded-lg border border-stone-200 bg-white p-0.5 shadow-2xs">
             <button
               type="button"
@@ -524,6 +627,38 @@ export default function CustomerLocationPicker({
           </div>
         </div>
       </div>
+
+      {/* Case A: Mobile Phone with GPS -> Show Quick 1-Tap GPS Action Banner */}
+      {isMobileDevice && (
+        <button
+          type="button"
+          onClick={handleLocateMe}
+          disabled={locating}
+          className="mb-2.5 flex w-full items-center justify-between gap-2 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-left transition hover:bg-rose-100/80 hover:border-rose-300 active:scale-[0.99] disabled:opacity-60 cursor-pointer shadow-2xs"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary)] text-white shadow-2xs">
+              {locating ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Crosshair size={14} />
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-bold text-stone-900 leading-tight flex items-center gap-1">
+                <span>{locating ? "Detecting GPS location..." : "Use Current Location"}</span>
+                <span className="text-[10px] text-rose-600 font-semibold">(GPS)</span>
+              </p>
+              <p className="text-[10.5px] font-medium text-stone-500 leading-tight">
+                Tap to auto-detect your delivery address & pinpoint on map
+              </p>
+            </div>
+          </div>
+          <span className="rounded-lg bg-white px-2.5 py-1 text-[11px] font-bold text-[var(--color-primary)] shadow-2xs border border-rose-200 shrink-0">
+            {locating ? "Locating..." : "Locate Me"}
+          </span>
+        </button>
+      )}
 
       {/* Search Input Bar with Live Suggestions Dropdown */}
       <div ref={searchWrapperRef} className="relative mb-2">
@@ -650,7 +785,7 @@ export default function CustomerLocationPicker({
           </span>
         </div>
         <span className="text-[10px] text-stone-500">
-          💡 Drag red pin onto your exact building or gate
+          Drag red pin onto your exact building or gate
         </span>
       </div>
     </div>
