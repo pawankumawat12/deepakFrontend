@@ -90,9 +90,36 @@ const Navbar = () => {
     ? "Notice: Store is currently CLOSED for new orders."
     : `Notice: Branch "${selectedBranchStatus?.name || "Selected Store"}" is currently CLOSED for new orders.`;
 
-  const { data: wishlistData } = useGetWishlistQuery(undefined, {
-    skip: !user,
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("sfc_selected_store_id") || null;
+      } catch {}
+    }
+    return null;
   });
+
+  useEffect(() => {
+    const handleLocationChange = (e: Event) => {
+      const loc = (e as CustomEvent).detail;
+      if (loc && loc.storeId != null) {
+        setSelectedStoreId(String(loc.storeId));
+      } else {
+        setSelectedStoreId(null);
+      }
+    };
+    window.addEventListener("sfc_delivery_location_changed", handleLocationChange);
+    return () => {
+      window.removeEventListener("sfc_delivery_location_changed", handleLocationChange);
+    };
+  }, []);
+
+  const { data: wishlistData } = useGetWishlistQuery(
+    selectedStoreId ? { store_id: selectedStoreId } : undefined,
+    {
+      skip: !user,
+    }
+  );
   const wishlistCount = wishlistData?.data?.length || 0;
 
   const { data: cartData } = useGetCartQuery(undefined, {

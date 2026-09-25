@@ -748,6 +748,27 @@ export default function Menu() {
               count={8}
               gridClassName="grid grid-cols-2 gap-3 pb-8 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4"
             />
+          ) : visibleProducts.length === 0 ? (
+            <div className="my-6 flex flex-col items-center justify-center rounded-3xl border border-[var(--color-border)] bg-[var(--bg-surface)] px-4 py-16 text-center shadow-xs">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                <ShoppingBag size={28} />
+              </div>
+              <h3 className="text-lg font-black text-[var(--color-text-primary)]">
+                No items in this category yet
+              </h3>
+              <p className="mt-1 max-w-sm text-xs text-[var(--color-text-muted)]">
+                We are freshly baking and preparing delicious treats. Please choose another category or check back soon!
+              </p>
+              {selected !== "all" && (
+                <button
+                  type="button"
+                  onClick={() => setSelected("all")}
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
+                >
+                  View All Products <ArrowRight size={14} />
+                </button>
+              )}
+            </div>
           ) : (
             <div
               className="
@@ -1228,10 +1249,7 @@ export default function Menu() {
           </div>
           )}
 
-          {/* =======================================================
-              INFINITE SCROLL SENTINEL
-          ======================================================= */}
-
+     
           <div
             ref={sentinelRef}
             className="h-8"

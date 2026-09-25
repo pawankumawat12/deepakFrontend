@@ -39,7 +39,7 @@ export const wishlistApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getWishlist: build.query<
       WishlistResponse,
-      { page?: number; limit?: number } | void
+      { page?: number; limit?: number; store_id?: string | number } | void
     >({
       query: (params) => ({
         url: "/wishlist",

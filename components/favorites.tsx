@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -42,6 +42,30 @@ export default function FavoritesPage() {
   );
 
   const [page, setPage] = useState(1);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("sfc_selected_store_id") || null;
+      } catch {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handleLocationChange = (e: Event) => {
+      const loc = (e as CustomEvent).detail;
+      if (loc && loc.storeId != null) {
+        setSelectedStoreId(String(loc.storeId));
+      } else {
+        setSelectedStoreId(null);
+      }
+      setPage(1);
+    };
+    window.addEventListener("sfc_delivery_location_changed", handleLocationChange);
+    return () => {
+      window.removeEventListener("sfc_delivery_location_changed", handleLocationChange);
+    };
+  }, []);
 
   const {
     data: wishlistResponse,
@@ -49,7 +73,11 @@ export default function FavoritesPage() {
     isFetching,
     error,
   } = useGetWishlistQuery(
-    { page, limit: 12 },
+    {
+      page,
+      limit: 12,
+      ...(selectedStoreId ? { store_id: selectedStoreId } : {}),
+    },
     {
       skip: !user,
     }
@@ -357,11 +385,13 @@ export default function FavoritesPage() {
             </div>
 
             <h2 className="mt-4 text-lg font-black text-[var(--color-text-primary)]">
-              No favorites saved yet
+              {selectedStoreId ? "No favorites found for this location" : "No favorites saved yet"}
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)]">
-              Explore our menu and tap the heart icon on any dish to save it here for fast ordering.
+              {selectedStoreId
+                ? "Items you've added from other branches will appear when you switch to their delivery location. Explore our menu to discover favorites available here!"
+                : "Explore our menu and tap the heart icon on any dish to save it here for fast ordering."}
             </p>
 
             <Link
