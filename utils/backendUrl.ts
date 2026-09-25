@@ -12,12 +12,12 @@ export const getBackendUrl = (): string => {
 
   if (typeof window !== "undefined") {
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-      return "http://localhost:5000";
+      return "http://localhost:3000";
     }
     return window.location.origin;
   }
 
-  return "http://localhost:5000";
+  return "http://localhost:3000";
 };
 
 export const getApiUrl = (): string => {

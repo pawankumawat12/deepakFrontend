@@ -76,7 +76,7 @@ const getBackendTargetUrl = (): string => {
       ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "")
       : "") ||
     process.env.VITE_BACKEND_URL ||
-    "http://localhost:5000";
+    "http://localhost:3000";
   return envUrl.trim().replace(/\/+$/, "");
 };
 
@@ -97,11 +97,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**",
       },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "5000",
-      },
+    
       {
         protocol: "http",
         hostname: "localhost",
@@ -111,11 +107,7 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-        port: "5000",
-      },
+     
       {
         protocol: "http",
         hostname: "127.0.0.1",
