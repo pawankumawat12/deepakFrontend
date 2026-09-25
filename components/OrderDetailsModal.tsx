@@ -28,6 +28,8 @@ import {
   FileText,
   Download,
   Loader2,
+  Store,
+  ChefHat,
 } from "lucide-react";
 
 interface OrderItem {
@@ -68,6 +70,13 @@ function StatusBadge({ status }: { status: string }) {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">
           <CheckCircle2 size={13} />
           Delivered
+        </span>
+      );
+    case "Accepted":
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">
+          <CheckCircle2 size={13} />
+          Accepted
         </span>
       );
     case "Preparing":
@@ -195,29 +204,40 @@ export default function OrderDetailsModal({
   const isCancelled = order.status === "Cancelled";
 
   const timelineSteps = [
-    { key: "Pending", label: "Pending", stepNumber: 1 },
-    { key: "Preparing", label: "Preparing", stepNumber: 2 },
-    { key: "Out for Delivery", label: "Out for Delivery", stepNumber: 3 },
-    { key: "Delivered", label: "Delivered", stepNumber: 4 },
+    { key: "Pending", label: "Order Placed", stepNumber: 1, icon: Receipt },
+    { key: "Accepted", label: "Accepted", stepNumber: 2, icon: CheckCircle2 },
+    { key: "Preparing", label: "In Kitchen", stepNumber: 3, icon: ChefHat },
+    { key: "Out for Delivery", label: "Out for Delivery", stepNumber: 4, icon: Truck },
+    { key: "Delivered", label: "Delivered", stepNumber: 5, icon: Package },
   ];
 
   const getActiveStepIndex = () => {
-    switch (order.status) {
-      case "Delivered":
-        return 4;
-      case "Out for Delivery":
-        return 3;
-      case "Preparing":
-        return 2;
-      case "Pending":
-      case "Order Placed":
-      case "Pending Payment":
-      default:
-        return 1;
-    }
+    const s = String(order.status || "").toLowerCase().trim();
+    if (s === "delivered" || s === "completed") return 5;
+    if (s === "out for delivery" || s === "out_for_delivery") return 4;
+    if (s === "preparing" || s === "in kitchen" || s === "cooking") return 3;
+    if (s === "accepted" || s === "confirmed") return 2;
+    return 1;
   };
 
   const currentStep = getActiveStepIndex();
+  const isAccepted = currentStep >= 2;
+
+  const storeName =
+    order.store_name ||
+    order.storeName ||
+    (order.store_id ? `Branch #${order.store_id}` : "Main SFC Bakery & Kitchen");
+
+  const storeAddress =
+    order.store_address ||
+    order.storeAddress ||
+    "Central Kitchen / Main Bakery";
+
+  const storePhone =
+    order.store_phone ||
+    order.storePhone ||
+    order.store_owner_phone ||
+    "";
 
   return (
     <div
@@ -310,33 +330,60 @@ export default function OrderDetailsModal({
             </div>
           ) : (
             <div className="rounded-2xl border border-[var(--color-border)] bg-stone-50/60 p-4 sm:p-5">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-3">
-                Order Status Progression
-              </p>
-              <div className="grid grid-cols-4 gap-2 text-center relative">
+              <div className="flex items-center justify-between mb-3.5">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">
+                  Live Order Tracker
+                </p>
+                {isAccepted ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                      <CheckCircle2 size={12} /> Accepted
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-100/70 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                    <Clock3 size={12} className="animate-spin text-amber-600" /> Waiting for Store Confirmation
+                  </span>
+                )}
+              </div>
+
+              {/* 5-Step Horizontal Timeline */}
+              <div className="grid grid-cols-5 gap-1.5 sm:gap-2 text-center relative items-start">
+                {/* Connecting Progress Bar */}
+                <div
+                  className="absolute top-[18px] left-[10%] right-[10%] h-[3px] -translate-y-1/2 bg-stone-200 z-0 rounded-full"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${((Math.min(Math.max(currentStep, 1), 5) - 1) / 4) * 100}%`,
+                    }}
+                  />
+                </div>
+
                 {timelineSteps.map((step, idx) => {
                   const isCompleted = currentStep >= step.stepNumber;
                   const isCurrent = currentStep === step.stepNumber;
+                  const StepIcon = step.icon;
 
                   return (
-                    <div key={step.key} className="flex flex-col items-center">
+                    <div key={step.key} className="flex flex-col items-center relative z-10">
                       <div
                         className={`
-                          flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all
-                          ${isCompleted
-                            ? "bg-[var(--color-primary)] text-white shadow-sm"
-                            : "bg-stone-200 text-stone-500"
+                          flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-all relative z-10
+                          ${
+                            isCompleted
+                              ? "bg-[var(--color-primary)] text-white shadow-sm"
+                              : "bg-stone-200 text-stone-500"
                           }
-                          ${isCurrent ? "ring-4 ring-[var(--color-primary-50)]" : ""}
+                          ${isCurrent ? "ring-4 ring-[var(--color-primary-50)] scale-110" : ""}
                         `}
                       >
-                        {isCompleted ? <CheckCircle2 size={16} /> : step.stepNumber}
+                        {isCompleted ? <CheckCircle2 size={16} /> : <StepIcon size={14} />}
                       </div>
                       <p
-                        className={`mt-1.5 text-[10px] font-bold ${isCompleted
-                            ? "text-[var(--color-text-primary)]"
-                            : "text-stone-400"
-                          }`}
+                        className={`mt-1.5 text-[9px] sm:text-[10.5px] font-bold leading-tight ${
+                          isCompleted ? "text-[var(--color-text-primary)]" : "text-stone-400"
+                        }`}
                       >
                         {step.label}
                       </p>
@@ -345,8 +392,8 @@ export default function OrderDetailsModal({
                 })}
               </div>
 
-              {/* Status explanation notice */}
-              {isPendingPayment && (
+              {/* Live Status Message & Store Confirmation Banner */}
+              {isPendingPayment ? (
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-left shadow-sm">
                   <div className="flex items-start sm:items-center gap-2.5">
                     <span className="relative flex h-2.5 w-2.5 shrink-0 mt-0.5 sm:mt-0">
@@ -372,66 +419,114 @@ export default function OrderDetailsModal({
                     </button>
                   )}
                 </div>
-              )}
-
-              {!isPendingPayment &&
-                (order.status === "Pending" ||
-                  order.status === "Order Placed" ||
-                  order.status === "Pending Payment") && (
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold text-amber-950">Waiting for order confirmation</p>
-                    <p className="text-[11px] text-amber-800 mt-0.5">
-                      Your order has been placed and received by our store. Waiting for store confirmation to begin preparation.
+              ) : isAccepted ? (
+                <div className="mt-4 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/90 p-3.5 text-left shadow-xs">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-black text-emerald-950 flex items-center gap-2 flex-wrap">
+                      <span>Order Confirmed & Accepted!</span>
+                      <span className="text-[10px] font-bold bg-emerald-200/60 text-emerald-800 px-2 py-0.5 rounded-full">
+                        {storeName}
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
+                      {currentStep === 2 && `Your order has been officially accepted by ${storeName}. Kitchen preparation will begin shortly.`}
+                      {currentStep === 3 && `The kitchen at ${storeName} is freshly baking and preparing your delicious items right now.`}
+                      {currentStep === 4 && `Your food is ready and packed! The delivery rider from ${storeName} is out for delivery.`}
+                      {currentStep === 5 && `Your order was delivered successfully from ${storeName}. Thank you for ordering with us!`}
                     </p>
                   </div>
                 </div>
-              )}
-
-              {order.status === "Preparing" && (
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50 p-3 text-left">
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold text-blue-950">Your order has been accepted and is being prepared.</p>
-                    <p className="text-[11px] text-blue-800 mt-0.5">
-                      The store accepted your order and our kitchen is preparing fresh food for you.
-                    </p>
+              ) : (
+                <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-3.5 text-left shadow-xs">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
+                    <Clock3 size={18} />
                   </div>
-                </div>
-              )}
-
-              {order.status === "Out for Delivery" && (
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-orange-200 bg-orange-50 p-3 text-left">
-                  <Truck size={16} className="text-orange-600 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-orange-950">Out for Delivery</p>
-                    <p className="text-[11px] text-orange-800 mt-0.5">
-                      Your order is on the way with our delivery partner.
+                  <div className="flex-1">
+                    <p className="text-xs font-black text-amber-950">
+                      Order Placed • Waiting for Store Acceptance
                     </p>
-                  </div>
-                </div>
-              )}
-
-              {order.status === "Delivered" && (
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-left">
-                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-emerald-950">Order Delivered</p>
-                    <p className="text-[11px] text-emerald-800 mt-0.5">
-                      Your order has been delivered successfully. Enjoy your meal!
+                    <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                      Your order has been sent to <strong>{storeName}</strong>. As soon as the branch reviews and accepts your order, complete store contact information and live preparation status will be unlocked here.
                     </p>
                   </div>
                 </div>
               )}
             </div>
           )}
+
+          {/* Fulfillment Branch Information Card */}
+          <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)]">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary-50)] text-[var(--color-primary)]">
+                  <Store size={18} />
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">
+                    Fulfillment Branch
+                  </h3>
+                  <p className="text-sm font-black text-[var(--color-text-primary)]">
+                    {storeName}
+                  </p>
+                </div>
+              </div>
+
+              {isAccepted ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
+                  <CheckCircle2 size={11} /> Accepted
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                  <Clock3 size={11} /> Awaiting Acceptance
+                </span>
+              )}
+            </div>
+
+            <div className="mt-3.5 space-y-3 text-xs">
+              {/* Branch Address */}
+              <div className="flex items-start gap-2.5">
+                <MapPin size={15} className="text-[var(--color-primary)] mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-bold text-[var(--color-text-primary)]">Branch Address: </span>
+                  <span className="text-[var(--color-text-secondary)]">
+                    {storeAddress}
+                  </span>
+                </div>
+              </div>
+
+              {/* Branch Contact Number & Call Store Button */}
+              <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-stone-100">
+                <div className="flex items-center gap-2.5">
+                  <Phone size={15} className="text-[var(--color-primary)] shrink-0" />
+                  <div>
+                    <span className="font-bold text-[var(--color-text-primary)]">Store Contact: </span>
+                    {isAccepted ? (
+                      <span className="font-semibold text-[var(--color-text-primary)]">
+                        {storePhone || "Available via Support Chat"}
+                      </span>
+                    ) : (
+                      <span className="text-stone-400 italic">
+                        Contact details unlock once order is accepted
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {isAccepted && storePhone ? (
+                  <a
+                    href={`tel:${storePhone}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition active:scale-95"
+                  >
+                    <Phone size={12} />
+                    Call Branch
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </div>
 
           {/* Items Section */}
           <div>

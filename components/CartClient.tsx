@@ -1275,14 +1275,6 @@ export default function CartClient() {
                                   </p>
                                 </div>
                               </div>
-                              <button
-                                type="button"
-                                disabled={isItemDeleting}
-                                onClick={() => throttledDeleteItem(it.id)}
-                                className="shrink-0 rounded-xl bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-2xs hover:bg-red-700 active:scale-95 transition cursor-pointer disabled:opacity-50"
-                              >
-                                {isItemDeleting ? "Removing..." : "Remove"}
-                              </button>
                             </div>
                           )}
 

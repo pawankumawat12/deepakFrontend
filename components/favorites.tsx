@@ -55,15 +55,22 @@ export default function FavoritesPage() {
     const handleLocationChange = (e: Event) => {
       const loc = (e as CustomEvent).detail;
       if (loc && loc.storeId != null) {
-        setSelectedStoreId(String(loc.storeId));
+        setSelectedStoreId(String(loc.storeId)); 
       } else {
         setSelectedStoreId(null);
       }
       setPage(1);
     };
-    window.addEventListener("sfc_delivery_location_changed", handleLocationChange);
+    
+    window.addEventListener(
+      "sfc_delivery_location_changed",
+      handleLocationChange
+    );
     return () => {
-      window.removeEventListener("sfc_delivery_location_changed", handleLocationChange);
+      window.removeEventListener(
+        "sfc_delivery_location_changed",
+        handleLocationChange
+      );
     };
   }, []);
 
@@ -144,7 +151,10 @@ export default function FavoritesPage() {
       return;
     }
     try {
-      await addCartItem({ productId: Number(product.id), quantity: 1 }).unwrap();
+      await addCartItem({
+        productId: Number(product.id),
+        quantity: 1,
+      }).unwrap();
       setAddedItems((current) =>
         current.includes(product.id) ? current : [...current, product.id]
       );
@@ -156,8 +166,9 @@ export default function FavoritesPage() {
         );
       }, 1200);
     } catch (err: any) {
-      toast.error(err?.data?.message || "This product is not available right now.");
-      
+      toast.error(
+        err?.data?.message || "This product is not available right now."
+      );
     }
   };
 
@@ -202,7 +213,7 @@ export default function FavoritesPage() {
               transition
               hover:text-white
             "
-            style={{color:"white"}}
+            style={{ color: "white" }}
           >
             <ArrowLeft size={15} />
             Back to Profile
@@ -236,7 +247,8 @@ export default function FavoritesPage() {
               </h1>
 
               <p className="mt-1 text-xs text-white/70 sm:text-sm">
-                The food you love the most, saved in one place for quick reordering.
+                The food you love the most, saved in one place for quick
+                reordering.
               </p>
             </div>
 
@@ -307,7 +319,9 @@ export default function FavoritesPage() {
 
             <button
               type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("sfc_open_login"))}
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("sfc_open_login"))
+              }
               className="
                 mt-6
                 inline-flex
@@ -385,7 +399,9 @@ export default function FavoritesPage() {
             </div>
 
             <h2 className="mt-4 text-lg font-black text-[var(--color-text-primary)]">
-              {selectedStoreId ? "No favorites found for this location" : "No favorites saved yet"}
+              {selectedStoreId
+                ? "No favorites found for this location"
+                : "No favorites saved yet"}
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)]">
@@ -412,10 +428,9 @@ export default function FavoritesPage() {
                 transition
                 hover:bg-[var(--color-primary-dark)]
               "
-              style={{color:"white"}}
+              style={{ color: "white" }}
             >
-              <ShoppingCart size={15}              style={{color:"white"}}
- />
+              <ShoppingCart size={15} style={{ color: "white" }} />
               Browse Menu
             </Link>
           </div>
@@ -437,7 +452,9 @@ export default function FavoritesPage() {
               const inCart = inCartQty > 0;
               const isMadeToOrder = Boolean(
                 (product as any).isMadeToOrder ||
-                String((product as any).availability_type || "").toUpperCase() === "MADE_TO_ORDER"
+                  String(
+                    (product as any).availability_type || ""
+                  ).toUpperCase() === "MADE_TO_ORDER"
               );
 
               return (
@@ -464,7 +481,10 @@ export default function FavoritesPage() {
                 >
                   {/* IMAGE */}
                   <div className="relative aspect-square sm:aspect-[4/3] md:aspect-square w-full overflow-hidden bg-stone-100">
-                    <Link href={`/product/${product.id}`} className="relative block h-full w-full">
+                    <Link
+                      href={`/product/${product.id}`}
+                      className="relative block h-full w-full"
+                    >
                       {product.img ? (
                         <Image
                           src={product.img}
@@ -531,7 +551,10 @@ export default function FavoritesPage() {
                       "
                     >
                       {isItemRemoving ? (
-                        <LoaderCircle size={15} className="animate-spin text-red-500" />
+                        <LoaderCircle
+                          size={15}
+                          className="animate-spin text-red-500"
+                        />
                       ) : (
                         <Heart size={15} fill="currentColor" />
                       )}
@@ -543,7 +566,9 @@ export default function FavoritesPage() {
                     <div>
                       <p
                         className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--color-primary)] truncate"
-                        title={product.category || product.category_name || "Food"}
+                        title={
+                          product.category || product.category_name || "Food"
+                        }
                       >
                         {product.category || product.category_name || "Food"}
                       </p>
@@ -563,9 +588,14 @@ export default function FavoritesPage() {
                         </span>
 
                         <div className="flex items-center gap-1 rounded-full bg-[var(--color-star)]/10 px-1.5 py-0.5 sm:px-2 text-[10px] sm:text-xs font-bold text-[var(--color-text-primary)]">
-                          <Star size={10} fill="currentColor" className="text-[var(--color-star)]" />
+                          <Star
+                            size={10}
+                            fill="currentColor"
+                            className="text-[var(--color-star)]"
+                          />
                           <span>
-                            {Number(product.total_reviews || 0) > 0 && Number(product.rating || 0) > 0
+                            {Number(product.total_reviews || 0) > 0 &&
+                            Number(product.rating || 0) > 0
                               ? Number(product.rating).toFixed(1)
                               : "New"}
                           </span>
@@ -626,7 +656,11 @@ export default function FavoritesPage() {
                               active:scale-90
                             "
                           >
-                            <Minus size={12} className="sm:w-3.5 sm:h-3.5" strokeWidth={3} />
+                            <Minus
+                              size={12}
+                              className="sm:w-3.5 sm:h-3.5"
+                              strokeWidth={3}
+                            />
                           </button>
 
                           <span
@@ -637,7 +671,8 @@ export default function FavoritesPage() {
                               text-[var(--color-primary)]
                             "
                           >
-                            {inCartQty} <span className="hidden sm:inline">in cart</span>
+                            {inCartQty}{" "}
+                            <span className="hidden sm:inline">in cart</span>
                           </span>
 
                           <button
@@ -675,7 +710,11 @@ export default function FavoritesPage() {
                               active:scale-90
                             "
                           >
-                            <Plus size={12} className="sm:w-3.5 sm:h-3.5" strokeWidth={3} />
+                            <Plus
+                              size={12}
+                              className="sm:w-3.5 sm:h-3.5"
+                              strokeWidth={3}
+                            />
                           </button>
                         </div>
                       ) : (
@@ -719,7 +758,9 @@ export default function FavoritesPage() {
                             <>
                               <Plus size={13} className="sm:w-3.5 sm:h-3.5" />
                               <span>Add</span>
-                              <span className="hidden sm:inline">&nbsp;to Cart</span>
+                              <span className="hidden sm:inline">
+                                &nbsp;to Cart
+                              </span>
                             </>
                           )}
                         </button>

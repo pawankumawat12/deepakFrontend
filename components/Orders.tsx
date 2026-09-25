@@ -17,6 +17,7 @@ import {
   Banknote,
   Eye,
   CreditCard,
+  Store,
 } from "lucide-react";
 import OrderChat from "./OrderChat";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -37,6 +38,7 @@ type OrderStatus =
   | "Pending"
   | "Order Placed"
   | "Pending Payment"
+  | "Accepted"
   | "Preparing"
   | "Out for Delivery"
   | "Delivered"
@@ -58,6 +60,10 @@ function formatRupee(value: number) {
 
 function StatusIcon({ status }: { status: string }) {
   if (status === "Delivered") {
+    return <CheckCircle2 size={17} />;
+  }
+
+  if (status === "Accepted") {
     return <CheckCircle2 size={17} />;
   }
 
@@ -84,6 +90,9 @@ function statusClasses(status: string) {
   switch (status) {
     case "Delivered":
       return "bg-green-50 text-green-700 border-green-200";
+
+    case "Accepted":
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
 
     case "Cancelled":
       return "bg-red-50 text-red-600 border-red-200";
@@ -366,6 +375,13 @@ export default function Orders() {
         delivered_at: (o as any).delivered_at,
         chatStatus: (o as any).chatStatus || (o as any).chat_status,
         chat_status: (o as any).chat_status || (o as any).chatStatus,
+        store_id: (o as any).store_id,
+        store_name: (o as any).store_name,
+        store_address: (o as any).store_address,
+        store_phone: (o as any).store_phone,
+        store_owner_phone: (o as any).store_owner_phone,
+        store_latitude: (o as any).store_latitude,
+        store_longitude: (o as any).store_longitude,
         items: (o.items || []).map((it) => ({
           id: it.id,
           name: it.product_name,
@@ -379,6 +395,14 @@ export default function Orders() {
     });
   }, [rawOrders]);
 
+  const activeDetailsOrder = useMemo(() => {
+    if (!selectedDetailsOrder) return null;
+    const found = orders.find(
+      (o: any) => o.dbId === selectedDetailsOrder.dbId || o.id === selectedDetailsOrder.id
+    );
+    return found || selectedDetailsOrder;
+  }, [orders, selectedDetailsOrder]);
+
   const filteredOrders = useMemo(() => {
     if (activeFilter === "All") return orders;
     if (activeFilter === "Pending") {
@@ -387,6 +411,11 @@ export default function Orders() {
           order.status === "Pending" ||
           order.status === "Order Placed" ||
           order.status === "Pending Payment"
+      );
+    }
+    if (activeFilter === "Preparing") {
+      return orders.filter(
+        (order) => order.status === "Preparing" || order.status === "Accepted"
       );
     }
     return orders.filter((order) => order.status === activeFilter);
@@ -754,6 +783,26 @@ export default function Orders() {
                         <MapPin size={12} />
                         {order.address}
                       </span>
+
+                      <span className="hidden sm:block">•</span>
+
+                      {(() => {
+                        const s = String(order.status || "").toLowerCase().trim();
+                        const isAccepted = ["accepted", "preparing", "out for delivery", "delivered", "completed"].includes(s);
+                        const storeName = order.store_name || "Main SFC Bakery";
+
+                        return isAccepted ? (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 font-bold text-emerald-800 border border-emerald-200">
+                            <Store size={12} className="text-emerald-600 shrink-0" />
+                            <span>Accepted by: {storeName}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-stone-100 px-2 py-0.5 font-medium text-stone-600 border border-stone-200">
+                            <Store size={12} className="text-stone-500 shrink-0" />
+                            <span>Fulfillment: {storeName}</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -862,6 +911,19 @@ export default function Orders() {
                       </div>
                     )}
 
+                  {order.status === "Accepted" && (
+                    <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs text-emerald-900">
+                      <span className="relative flex h-2.5 w-2.5 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      <div>
+                        <span className="font-bold">Order accepted by {order.store_name || "store"}!</span>
+                        <span className="text-emerald-800"> Your order has been confirmed and queued for preparation.</span>
+                      </div>
+                    </div>
+                  )}
+
                   {order.status === "Preparing" && (
                     <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-blue-50 border border-blue-200 px-3.5 py-2.5 text-xs text-blue-900">
                       <span className="relative flex h-2.5 w-2.5 shrink-0">
@@ -869,8 +931,8 @@ export default function Orders() {
                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
                       </span>
                       <div>
-                        <span className="font-bold">Your order has been accepted and is being prepared.</span>
-                        <span className="text-blue-800"> Our kitchen is preparing fresh food for you.</span>
+                        <span className="font-bold">Your order is being prepared by {order.store_name || "our kitchen"}.</span>
+                        <span className="text-blue-800"> Fresh food is being prepared right now.</span>
                       </div>
                     </div>
                   )}
@@ -1088,7 +1150,7 @@ export default function Orders() {
 
       {selectedDetailsOrder && (
         <OrderDetailsModal
-          order={selectedDetailsOrder}
+          order={activeDetailsOrder}
           onClose={() => setSelectedDetailsOrder(null)}
           onOpenChat={(ord) => {
             setSelectedDetailsOrder(null);
